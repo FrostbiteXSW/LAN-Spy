@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Threading;
+using LAN_Spy;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using PacketDotNet;
 using SharpPcap;
 using SharpPcap.WinPcap;
-using LAN_Spy;
+using System.Diagnostics;
 
 namespace TestProject {
     [TestClass]
@@ -15,24 +13,32 @@ namespace TestProject {
         /// </summary>
         [TestMethod]
         public void TestGetAddresses() {
-            WinPcapDevice device = (WinPcapDevice)CaptureDeviceList.Instance[2];
-
-            // 设备IPv6地址
-            Trace.WriteLine(device.Addresses[0].Addr.ipAddress);
-
-            // 设备IPv4地址
-            Trace.WriteLine(device.Addresses[1].Addr.ipAddress);
-            // 设备IPv4地址子网掩码
-            Trace.WriteLine(device.Addresses[1].Netmask.ipAddress);
-
-            // 设备MAC地址
-            Trace.WriteLine(device.Addresses[2].Addr.hardwareAddress);
-
-            /* Addr.sa_family的含义（按照在Addresses里的顺序先后排列）：
-             * 23：IPv6
-             * 2：IPv4
-             * 0：MAC
-             */
+            int n = 1;
+            foreach (var item in CaptureDeviceList.Instance) {
+                var device = (WinPcapDevice) item;
+                Trace.WriteLine("Device " + n++ + ": " + device.Interface.FriendlyName);
+                foreach (var address in device.Addresses) {
+                    switch (address.Addr.sa_family) {
+                        case 23:
+                            // IPv6
+                            Trace.WriteLine("IPv6 address: " + address.Addr.ipAddress);
+                            break;
+                        case 2:
+                            // IPv4
+                            Trace.WriteLine("IPv4 address: " + address.Addr.ipAddress);
+                            Trace.WriteLine("Netmask: " + address.Netmask.ipAddress);
+                            break;
+                        case 0:
+                            // MAC
+                            Trace.WriteLine("MAC address: " + address.Addr.hardwareAddress);
+                            // Trace.WriteLine("MAC address: " + device.Interface.MacAddress);
+                            break;
+                        default:
+                            throw new Exception("Unknown sa_family: " + address.Addr.sa_family);
+                    }
+                }
+                Trace.WriteLine("");
+            }
         }
 
         /// <summary>
@@ -40,7 +46,7 @@ namespace TestProject {
         /// </summary>
         [TestMethod]
         public void TestCalculateAddressRange() {
-            Scanner scanner = new Scanner {CurDevIndex = 2};
+            Scanner scanner = new Scanner {CurDevIndex = 1};
             scanner.CalculateAddressRange();
             Trace.WriteLine(scanner.AddressCount);
         }
