@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using PacketDotNet;
 using SharpPcap;
 using SharpPcap.WinPcap;
 
@@ -82,7 +77,6 @@ namespace LAN_Spy {
         /// <summary>
         ///     设备扫描发包线程。
         /// </summary>
-        /// <param name="device">使用的设备。</param>
         private void ScanPacketSendThread() {
             // 获取当前设备
             var device = DeviceList[CurDevIndex];
@@ -93,7 +87,6 @@ namespace LAN_Spy {
         /// <summary>
         ///     设备扫描分析线程。
         /// </summary>
-        /// <param name="device">使用的设备。</param>
         private void ScanPacketAnalyzeThread() {
             throw new NotImplementedException();
         }
