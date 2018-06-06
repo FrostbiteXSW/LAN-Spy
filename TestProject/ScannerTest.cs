@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace TestProject {
     [TestClass]
-    public class UnitTest1 {
+    public class ScannerTest {
         /// <summary>
         ///     测试通过 <see cref="WinPcapDevice"/> 获取IP地址、子网掩码和MAC地址。
         /// </summary>
@@ -54,7 +54,6 @@ namespace TestProject {
             foreach (var host in scanner.HostList)
                 Trace.WriteLine(host.IPAddress + " is at " + host.PhysicalAddress);
         }
-
         
         /// <summary>
         ///     测试 <see cref="Scanner"/> 的 ScanForTarget 方法。
@@ -66,6 +65,8 @@ namespace TestProject {
             thread.Start();
             Thread.Sleep(30 * 1000);
             thread.Abort();
+            while (thread.IsAlive)
+                Thread.Sleep(100);
             Trace.WriteLine("Total hosts: " + scanner.HostList.Count);
             foreach (var host in scanner.HostList)
                 Trace.WriteLine(host.IPAddress + " is at " + host.PhysicalAddress);

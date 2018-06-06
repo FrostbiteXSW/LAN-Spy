@@ -1,52 +1,26 @@
 ﻿using System;
+using PacketDotNet;
+using PacketDotNet.Utils;
+using SharpPcap;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
-using PacketDotNet;
-using PacketDotNet.Utils;
-using SharpPcap;
-using SharpPcap.WinPcap;
 
 namespace LAN_Spy {
     /// <summary>
     ///     子网主机扫描器。
     /// </summary>
-    public class Scanner {
-        /// <summary>
-        ///     获取可用网络设备列表。
-        /// </summary>
-        public CaptureDeviceList DeviceList { get; } = CaptureDeviceList.Instance;
-
-        /// <summary>
-        ///     获取或设置当前使用的设备编号。
-        /// </summary>
-        public int CurDevIndex;
-        
-        /// <summary>
-        ///     当前选中设备的IPv4地址。
-        /// </summary>
-        private IPAddress _ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
-
-        /// <summary>
-        ///     当前选中设备所在网段的网络号。
-        /// </summary>
-        private IPAddress _networkNumber = new IPAddress(new byte[] {0, 0, 0, 0});
-        
-        /// <summary>
-        ///     当前选中设备所在网段的广播地址。
-        /// </summary>
-        private IPAddress _broadcastAddress = new IPAddress(new byte[] {0, 0, 0, 0});
-
+    public class Scanner : BasicClass {
         /// <summary>
         ///     获取当前选中设备所在网段的所有可用主机IP地址数量。
         /// </summary>
         public double AddressCount {
             get {
-                byte[] minAddress = _networkNumber.GetAddressBytes(),
-                    maxAddress = _broadcastAddress.GetAddressBytes();
+                byte[] minAddress = NetworkNumber.GetAddressBytes(),
+                    maxAddress = BroadcastAddress.GetAddressBytes();
                 double count = maxAddress[3] - minAddress[3] + 1;
                 for (int j = 0; j < 3; j++)
                     count *= maxAddress[j] - minAddress[j] + 1;
@@ -57,11 +31,17 @@ namespace LAN_Spy {
         /// <summary>
         ///     已知主机列表。
         /// </summary>
-        private List<Host> _hostList = new List<Host>();
+        private readonly List<Host> _hostList = new List<Host>();
+
         /// <summary>
         ///     获取已知主机列表的只读封装。
         /// </summary>
-        public ReadOnlyCollection<Host> HostList => _hostList.AsReadOnly();
+        public ReadOnlyCollection<Host> HostList {
+            get {
+                lock (_hostList)
+                    return _hostList.AsReadOnly();
+            }
+        }
 
         /// <summary>
         ///     Device_OnPacketArrival方法中使用，缓存获得的ARP原始数据包。
@@ -73,7 +53,7 @@ namespace LAN_Spy {
         /// </summary>
         public void ScanForTarget() {
             // 计算可用主机地址范围
-            CalculateAddressRange();
+            GetNetInfo();
 
             // 获取当前设备
             var device = DeviceList[CurDevIndex];
@@ -97,10 +77,11 @@ namespace LAN_Spy {
             }
             
             // 去除网络号和广播地址，产生地址集合
-            byte[] minAddress = _networkNumber.GetAddressBytes(),
-                maxAddress = _broadcastAddress.GetAddressBytes(),
+            byte[] minAddress = NetworkNumber.GetAddressBytes(),
+                maxAddress = BroadcastAddress.GetAddressBytes(),
                 tempAddress = minAddress;
             List<IPAddress> ipAddresses = new List<IPAddress>();
+            List<Thread> sendThreads = new List<Thread>();
             tempAddress[3]++;
             while (!(tempAddress[0] == maxAddress[0]
                      && tempAddress[1] == maxAddress[1]
@@ -111,6 +92,7 @@ namespace LAN_Spy {
                     // 创建发包线程
                     Thread sendThread = new Thread(ScanPacketSendThread);
                     sendThread.Start(ipAddresses);
+                    sendThreads.Add(sendThread);
                     ipAddresses = new List<IPAddress>();
                 }
                 int i = 3;
@@ -119,6 +101,23 @@ namespace LAN_Spy {
                     i--;
                 }
                 tempAddress[i]++;
+            }
+
+            // 最后一个发送线程
+            Thread lastsendThread = new Thread(ScanPacketSendThread);
+            lastsendThread.Start(ipAddresses);
+            sendThreads.Add(lastsendThread);
+
+            // 等待数据包发送完成
+            bool flag = true;
+            while (flag) {
+                flag = false;
+                foreach (var sendThread in sendThreads)
+                    if (sendThread.IsAlive) {
+                        flag = true;
+                        Thread.Sleep(100);
+                        break;
+                    }
             }
 
             // 等待接收目标机反馈消息
@@ -131,6 +130,9 @@ namespace LAN_Spy {
             // 清理缓冲区及其他内容
             lock (_rawArpCaptures) {
                 _rawArpCaptures.Clear();
+            }
+            lock (_hostList) {
+                _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
             }
             device.OnPacketArrival -= Device_OnPacketArrival;
             device.StopCapture();
@@ -165,6 +167,7 @@ namespace LAN_Spy {
                     analyzeThreads[i].Start();
                 }
 
+                // 如果分析线程异常终止，则结束监听
                 while (true) {
                     if (analyzeThreads.Any(analyzeThread => !analyzeThread.IsAlive)) return;
                     Thread.Sleep(800);
@@ -184,6 +187,9 @@ namespace LAN_Spy {
                 // 清理缓冲区及其他内容
                 lock (_rawArpCaptures) {
                     _rawArpCaptures.Clear();
+                }
+                lock (_hostList) {
+                    _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
                 }
                 device.OnPacketArrival -= Device_OnPacketArrival;
                 device.StopCapture();
@@ -218,7 +224,7 @@ namespace LAN_Spy {
                 new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0}),
                 new IPAddress(new byte[] {0, 0, 0, 0}),
                 device.MacAddress,
-                _ipv4Address) {
+                Ipv4Address) {
                 HardwareAddressType = LinkLayers.Ethernet,
                 ProtocolAddressType = EthernetPacketType.IpV4
             };
@@ -253,13 +259,15 @@ namespace LAN_Spy {
                         // 分析数据包中的数据
                         EthernetPacket ether = new EthernetPacket(new ByteArraySegment(packet.Data));
                         ARPPacket arp = (ARPPacket) ether.PayloadPacket;
-                        Host host = _hostList.Find(item => item.PhysicalAddress.Equals(arp.SenderHardwareAddress));
-                        if (host == null)
-                            // 添加新的主机记录
-                            _hostList.Add(new Host(arp.SenderProtocolAddress, arp.SenderHardwareAddress));
-                        else
-                            // 更新已有主机记录
-                            host.IPAddress = arp.SenderProtocolAddress;
+                        lock (_hostList) {
+                            Host host = _hostList.Find(item => item.PhysicalAddress.ToString().Equals(arp.SenderHardwareAddress.ToString()));
+                            if (host == null)
+                                // 添加新的主机记录
+                                _hostList.Add(new Host(arp.SenderProtocolAddress, arp.SenderHardwareAddress));
+                            else
+                                // 更新已有主机记录
+                                host.IPAddress = arp.SenderProtocolAddress;
+                        }
                     }
                     else {
                         // 队列尚未获得数据，挂起等待
@@ -269,75 +277,18 @@ namespace LAN_Spy {
             }
             catch (ThreadAbortException) { }
         }
-
-        /// <summary>
-        ///     计算当前选中设备所在网段的可用主机IP地址范围。
-        /// </summary>
-        /// <exception cref="InvalidOperationException">未能获得有效的IPv4地址或子网掩码。</exception>
-        /// <exception cref="FormatException">无效的子网掩码。</exception>
-        public void CalculateAddressRange() {
-            // 获取当前设备
-            WinPcapDevice device = (WinPcapDevice) DeviceList[CurDevIndex];
-            
-            // 设备首选IPv4地址
-            byte[] ipAddress = null;
-            // 设备IPv4地址子网掩码
-            byte[] netMask = null;
-
-            // 获取首选IPv4地址及子网掩码
-            foreach (var address in device.Addresses) {
-                if (address.Addr.sa_family != 2) continue;
-                ipAddress = address.Addr.ipAddress.GetAddressBytes();
-                netMask = address.Netmask.ipAddress.GetAddressBytes();
-                break;
-            }
-
-            // 检查是否获得了有效的IPv4地址及子网掩码
-            if (ipAddress == null || netMask == null) 
-                throw new InvalidOperationException("未能获得有效的IPv4地址或子网掩码。");
-
-            // 子网掩码查错——基本格式
-            bool flag = false;
-            for (int i = 0; i < 4; i++) {
-                if (flag && netMask[i] != 0) throw new FormatException("无效的子网掩码。");
-                if (flag || netMask[i] == 255) continue;
-                byte b = netMask[i];
-                while (b != 0) {
-                    if ((b & 128) == 128) b <<= 1;
-                    else throw new FormatException("无效的子网掩码。");
-                }
-                flag = true;
-            }
-
-            // 子网掩码查错——数据有效性
-            if (netMask[3] > 252) throw new FormatException("无效的子网掩码。");
-
-            // 记录可能最小地址和最大地址
-            byte[] minAddress = new byte[4], maxAddress = new byte[4];
-
-            // 通过子网掩码计算最小最大地址
-            for (int i = 0; i < 4; i++) {
-                minAddress[i] = (byte) (ipAddress[i] & netMask[i]);
-                maxAddress[i] = (byte) (ipAddress[i] | 255 - netMask[i]);
-            }
-
-            // 保存到IP地址、网络号和广播地址
-            _ipv4Address = new IPAddress(ipAddress);
-            _networkNumber = new IPAddress(minAddress);
-            _broadcastAddress = new IPAddress(maxAddress);
-        }
-
+        
         /// <summary>
         ///     重置扫描器到初始状态。
         /// </summary>
-        public void Reset() {
-            _hostList.Clear();
+        public new void Reset() {
+            lock (_hostList) {
+                _hostList.Clear();
+            }
             lock (_rawArpCaptures) {
                 _rawArpCaptures.Clear();
             }
-            _ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
-            _networkNumber = new IPAddress(new byte[] {0, 0, 0, 0});
-            _broadcastAddress = new IPAddress(new byte[] {0, 0, 0, 0});
+            base.Reset();
         }
     }
 }
