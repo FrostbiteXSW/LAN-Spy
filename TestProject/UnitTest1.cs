@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpPcap;
 using SharpPcap.WinPcap;
 using System.Diagnostics;
+using System.Threading;
 
 namespace TestProject {
     [TestClass]
@@ -42,13 +43,32 @@ namespace TestProject {
         }
 
         /// <summary>
-        ///     测试 <see cref="Scanner"/> 的 CalculateAddressRange 方法。
+        ///     测试 <see cref="Scanner"/> 的 ScanForTarget 方法。
         /// </summary>
         [TestMethod]
-        public void TestCalculateAddressRange() {
+        public void TestScanForTarget() {
             Scanner scanner = new Scanner {CurDevIndex = 1};
-            scanner.CalculateAddressRange();
-            Trace.WriteLine(scanner.AddressCount);
+            scanner.ScanForTarget();
+            Trace.WriteLine("Total avaliable addresses: " + scanner.AddressCount);
+            Trace.WriteLine("Total hosts: " + scanner.HostList.Count);
+            foreach (var host in scanner.HostList)
+                Trace.WriteLine(host.IPAddress + " is at " + host.PhysicalAddress);
+        }
+
+        
+        /// <summary>
+        ///     测试 <see cref="Scanner"/> 的 ScanForTarget 方法。
+        /// </summary>
+        [TestMethod]
+        public void TestSpyForTarget() {
+            Scanner scanner = new Scanner {CurDevIndex = 1};
+            Thread thread = new Thread(scanner.SpyForTarget);
+            thread.Start();
+            Thread.Sleep(30 * 1000);
+            thread.Abort();
+            Trace.WriteLine("Total hosts: " + scanner.HostList.Count);
+            foreach (var host in scanner.HostList)
+                Trace.WriteLine(host.IPAddress + " is at " + host.PhysicalAddress);
         }
     }
 }
