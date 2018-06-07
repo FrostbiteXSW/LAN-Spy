@@ -44,13 +44,9 @@ namespace LAN_Spy {
         }
 
         /// <summary>
-        ///     Device_OnPacketArrival方法中使用，缓存获得的ARP原始数据包。
-        /// </summary>
-        private readonly Queue<RawCapture> _rawArpCaptures = new Queue<RawCapture>();
-
-        /// <summary>
         ///     尝试搜寻目前局域网内的所有设备。
         /// </summary>
+        /// <exception cref="TimeoutException">等待线程结束超时。</exception>
         public void ScanForTarget() {
             // 计算可用主机地址范围
             GetNetInfo();
@@ -109,13 +105,14 @@ namespace LAN_Spy {
             sendThreads.Add(lastsendThread);
 
             // 等待数据包发送完成
-            bool flag = true;
-            while (flag) {
-                flag = false;
+            int waitTime = 60 * 1000;
+            while (waitTime >= 0) {
+                waitTime = -waitTime;
                 foreach (var sendThread in sendThreads)
                     if (sendThread.IsAlive) {
-                        flag = true;
                         Thread.Sleep(100);
+                        if ((waitTime = -waitTime - 100) == 0)
+                            throw new TimeoutException("等待线程结束超时。");
                         break;
                     }
             }
@@ -128,9 +125,7 @@ namespace LAN_Spy {
                 analyzeThread.Abort();
 
             // 清理缓冲区及其他内容
-            lock (_rawArpCaptures) {
-                _rawArpCaptures.Clear();
-            }
+            ClearCaptures();
             lock (_hostList) {
                 _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
             }
@@ -185,9 +180,7 @@ namespace LAN_Spy {
                         analyzeThread.Abort();
 
                 // 清理缓冲区及其他内容
-                lock (_rawArpCaptures) {
-                    _rawArpCaptures.Clear();
-                }
+                ClearCaptures();
                 lock (_hostList) {
                     _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
                 }
@@ -197,14 +190,6 @@ namespace LAN_Spy {
             }
         }
 
-        /// <summary>
-        ///     ScanForTarget方法中使用，抓包事件处理方法。
-        /// </summary>
-        /// <param name="sender">事件发送者。</param>
-        /// <param name="e">事件参数。</param>
-        private void Device_OnPacketArrival(object sender, CaptureEventArgs e) {
-            lock (_rawArpCaptures) _rawArpCaptures.Enqueue(e.Packet);
-        }
 
         /// <summary>
         ///     设备扫描发包线程。
@@ -245,17 +230,9 @@ namespace LAN_Spy {
         private void ScanPacketAnalyzeThread() {
             try {
                 while (true) {
-                    RawCapture packet = null;
-
                     // 从队列中请求一个数据包
-                    lock (_rawArpCaptures) {
-                        if (_rawArpCaptures.Count > 0) {
-                            packet = _rawArpCaptures.Peek();
-                            _rawArpCaptures.Dequeue();
-                        }
-                    }
-
-                    if (packet != null) {
+                    RawCapture packet;
+                    if ((packet = NextRawCapture) != null) {
                         // 分析数据包中的数据
                         EthernetPacket ether = new EthernetPacket(new ByteArraySegment(packet.Data));
                         ARPPacket arp = (ARPPacket) ether.PayloadPacket;
@@ -284,9 +261,6 @@ namespace LAN_Spy {
         public new void Reset() {
             lock (_hostList) {
                 _hostList.Clear();
-            }
-            lock (_rawArpCaptures) {
-                _rawArpCaptures.Clear();
             }
             base.Reset();
         }

@@ -1,6 +1,7 @@
 ﻿using SharpPcap;
 using SharpPcap.WinPcap;
 using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace LAN_Spy {
@@ -25,11 +26,44 @@ namespace LAN_Spy {
                 GetNetInfo();
             }
         }
+
+        /// <summary>
+        ///     缓存获得的原始数据包。
+        /// </summary>
+        private readonly Queue<RawCapture> _rawCaptures = new Queue<RawCapture>();
+
+        /// <summary>
+        ///     获取下一个原始数据包并将其从缓存中移除。
+        /// </summary>
+        protected RawCapture NextRawCapture {
+            get {
+                lock (_rawCaptures) {
+                    if (_rawCaptures.Count <= 0) return null;
+                    RawCapture packet = _rawCaptures.Peek();
+                    _rawCaptures.Dequeue();
+                    return packet;
+                }
+            }
+        }
         
+        /// <summary>
+        ///     通用抓包事件处理方法。
+        /// </summary>
+        /// <param name="sender">事件发送者。</param>
+        /// <param name="e">事件参数。</param>
+        protected void Device_OnPacketArrival(object sender, CaptureEventArgs e) {
+            lock (_rawCaptures) _rawCaptures.Enqueue(e.Packet);
+        }
+
         /// <summary>
         ///     当前选中设备的IPv4地址。
         /// </summary>
         protected IPAddress Ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
+        
+        /// <summary>
+        ///     当前选中设备的网关地址。
+        /// </summary>
+        protected IPAddress GatewayAddress = new IPAddress(new byte[] {0, 0, 0, 0});
 
         /// <summary>
         ///     当前选中设备所在网段的网络号。
@@ -50,6 +84,9 @@ namespace LAN_Spy {
             // 获取当前设备
             WinPcapDevice device = (WinPcapDevice) DeviceList[CurDevIndex];
             
+            // 保存设备网关地址
+            GatewayAddress = device.Interface.GatewayAddress;
+
             // 设备首选IPv4地址
             byte[] ipAddress = null;
             // 设备IPv4地址子网掩码
@@ -105,6 +142,16 @@ namespace LAN_Spy {
             Ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
             NetworkNumber = new IPAddress(new byte[] {0, 0, 0, 0});
             BroadcastAddress = new IPAddress(new byte[] {0, 0, 0, 0});
+            lock (_rawCaptures) {
+                _rawCaptures.Clear();
+            }
+        }
+
+        /// <summary>
+        ///     清空抓包缓冲区。
+        /// </summary>
+        protected void ClearCaptures() {
+            lock (_rawCaptures) { _rawCaptures.Clear(); }
         }
     }
 }
