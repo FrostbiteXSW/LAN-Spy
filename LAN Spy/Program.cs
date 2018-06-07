@@ -3,7 +3,7 @@ using System;
 using System.Threading;
 
 namespace LAN_Spy {
-    internal class Program {
+    internal static class Program {
         private static void Main(string[] args) {
             var scanner = new Scanner();
             Console.WriteLine("Available devices: ");
@@ -60,7 +60,8 @@ namespace LAN_Spy {
                 if (index >= n) throw new IndexOutOfRangeException("No such host.");
                 poisoner.Target2.Add(scanner.HostList[index - 1]);
             }
-            poisoner.Gateway = scanner.HostList[0];
+            Console.Write("Select gateway: ");
+            poisoner.Gateway = scanner.HostList[int.Parse(Console.ReadLine() ?? throw new FormatException()) - 1];
 
             Console.WriteLine();
             Console.WriteLine("Poisoning...");

