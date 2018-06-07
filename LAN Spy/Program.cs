@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace LAN_Spy {
     internal static class Program {
-        private static void Main(string[] args) {
+        private static void Main() {
             var scanner = new Scanner();
             Console.WriteLine("Available devices: ");
             var n = 1;

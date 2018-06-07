@@ -1,13 +1,10 @@
 ﻿using PacketDotNet;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Threading;
 using PacketDotNet.Utils;
 using SharpPcap;
-using SharpPcap.WinPcap;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading;
 
 namespace LAN_Spy {
     /// <summary>
@@ -220,8 +217,8 @@ namespace LAN_Spy {
                                 HardwareAddressType = LinkLayers.Ethernet,
                                 ProtocolAddressType = EthernetPacketType.IpV4
                             };
-                            ether.PayloadPacket = arp;
-                            arp.ParentPacket = ether;
+                            e.PayloadPacket = a;
+                            a.ParentPacket = e;
 
                             // 发送响应包到指定目标
                             _device.SendPacket(e);
