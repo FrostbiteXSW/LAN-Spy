@@ -84,7 +84,7 @@ namespace LAN_Spy {
                      && tempAddress[2] == maxAddress[2]
                      && tempAddress[3] == maxAddress[3])) {
                 ipAddresses.Add(new IPAddress(tempAddress));
-                if (ipAddresses.Count >= (AddressCount / 8 >= 30 ? 30 : AddressCount / 8)) {
+                if (ipAddresses.Count >= (AddressCount / 8 >= 254 ? 254 : AddressCount / 8)) {
                     // 创建发包线程
                     Thread sendThread = new Thread(ScanPacketSendThread);
                     sendThread.Start(ipAddresses);
@@ -105,20 +105,20 @@ namespace LAN_Spy {
             sendThreads.Add(lastsendThread);
 
             // 等待数据包发送完成
-            int waitTime = 60 * 1000;
+            int waitTime = (int) (60 * 1000 * Math.Log(AddressCount, 254));
             while (waitTime >= 0) {
                 waitTime = -waitTime;
                 foreach (var sendThread in sendThreads)
                     if (sendThread.IsAlive) {
                         Thread.Sleep(100);
-                        if ((waitTime = -waitTime - 100) == 0)
+                        if ((waitTime = -waitTime - 100) <= 0)
                             throw new TimeoutException("等待线程结束超时。");
                         break;
                     }
             }
 
             // 等待接收目标机反馈消息
-            Thread.Sleep(8 * 1000);
+            Thread.Sleep((int)(8 * 1000 * Math.Log(AddressCount, 254)));
 
             // 接收完成，终止分析线程
             foreach (var analyzeThread in analyzeThreads)
@@ -189,39 +189,41 @@ namespace LAN_Spy {
                 device.Close();
             }
         }
-
-
+        
         /// <summary>
         ///     设备扫描发包线程。
         /// </summary>
         private void ScanPacketSendThread(object obj) {
-            // 获取当前设备
-            var device = DeviceList[CurDevIndex];
+            try {
+                // 获取当前设备
+                var device = DeviceList[CurDevIndex];
 
-            // 获取地址列表
-            List<IPAddress> ipAddresses = (List<IPAddress>) obj;
+                // 获取地址列表
+                List<IPAddress> ipAddresses = (List<IPAddress>) obj;
 
-            // 构建包信息
-            EthernetPacket ether = new EthernetPacket(device.MacAddress,
-                new PhysicalAddress(new byte[] {255, 255, 255, 255, 255, 255}),
-                EthernetPacketType.Arp);
-            ARPPacket arp = new ARPPacket(ARPOperation.Request,
-                new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0}),
-                new IPAddress(new byte[] {0, 0, 0, 0}),
-                device.MacAddress,
-                Ipv4Address) {
-                HardwareAddressType = LinkLayers.Ethernet,
-                ProtocolAddressType = EthernetPacketType.IpV4
-            };
-            ether.PayloadPacket = arp;
-            arp.ParentPacket = ether;
+                // 构建包信息
+                EthernetPacket ether = new EthernetPacket(device.MacAddress,
+                    new PhysicalAddress(new byte[] {255, 255, 255, 255, 255, 255}),
+                    EthernetPacketType.Arp);
+                ARPPacket arp = new ARPPacket(ARPOperation.Request,
+                    new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0}),
+                    new IPAddress(new byte[] {0, 0, 0, 0}),
+                    device.MacAddress,
+                    Ipv4Address) {
+                    HardwareAddressType = LinkLayers.Ethernet,
+                    ProtocolAddressType = EthernetPacketType.IpV4
+                };
+                ether.PayloadPacket = arp;
+                arp.ParentPacket = ether;
 
-            // 根据目标地址信息发送ARP请求
-            foreach (var targetAddress in ipAddresses) {
-                arp.TargetProtocolAddress = targetAddress;
-                arp.UpdateCalculatedValues();
-                device.SendPacket(ether);
+                // 根据目标地址信息发送ARP请求
+                foreach (var targetAddress in ipAddresses) {
+                    arp.TargetProtocolAddress = targetAddress;
+                    arp.UpdateCalculatedValues();
+                    device.SendPacket(ether);
+                }
             }
+            catch (ThreadAbortException) { }
         }
         
         /// <summary>
