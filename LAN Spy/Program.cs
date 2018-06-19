@@ -1,20 +1,21 @@
-﻿using SharpPcap.WinPcap;
+﻿using SharpPcap;
+using SharpPcap.WinPcap;
 using System;
 using System.Threading;
 
 namespace LAN_Spy {
     internal static class Program {
         private static void Main() {
-            var scanner = new Scanner();
             Console.WriteLine("Available devices: ");
             var n = 1;
-            foreach (var item in scanner.DeviceList) {
+            foreach (var item in CaptureDeviceList.Instance) {
                 var device = (WinPcapDevice) item;
                 Console.WriteLine(n++ + ". " + device.Interface.FriendlyName);
             }
 
             Console.WriteLine();
             Console.Write("Select using device: ");
+            var scanner = new Scanner();
             var index = int.Parse(Console.ReadLine() ?? throw new FormatException("Not valid number."));
             if (index >= n) throw new IndexOutOfRangeException("No such device.");
             scanner.CurDevIndex = index - 1;

@@ -1,7 +1,7 @@
-﻿using System;
-using PacketDotNet;
+﻿using PacketDotNet;
 using PacketDotNet.Utils;
 using SharpPcap;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -48,9 +48,6 @@ namespace LAN_Spy {
         /// </summary>
         /// <exception cref="TimeoutException">等待线程结束超时。</exception>
         public void ScanForTarget() {
-            // 计算可用主机地址范围
-            GetNetInfo();
-
             // 获取当前设备
             var device = DeviceList[CurDevIndex];
 
@@ -260,11 +257,11 @@ namespace LAN_Spy {
         /// <summary>
         ///     重置扫描器到初始状态。
         /// </summary>
-        public new void Reset() {
+        public void Reset() {
             lock (_hostList) {
                 _hostList.Clear();
             }
-            base.Reset();
+            ClearCaptures();
         }
     }
 }

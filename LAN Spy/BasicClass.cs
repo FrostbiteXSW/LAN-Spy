@@ -7,20 +7,24 @@ using System.Net;
 namespace LAN_Spy {
     public abstract class BasicClass {
         /// <summary>
-        ///     获取可用网络设备列表。
+        ///     获取可用网络设备列表，在模块中进行抓包发包作业时请使用此对象。
         /// </summary>
-        public CaptureDeviceList DeviceList { get; } = CaptureDeviceList.Instance;
-        
+        protected CaptureDeviceList DeviceList { get; } = CaptureDeviceList.New();
+
         /// <summary>
         ///     当前使用的设备编号。
         /// </summary>
-        private int _curDevIndex;
+        private int _curDevIndex = -1;
 
         /// <summary>
         ///     获取或设置当前使用的设备编号。
         /// </summary>
         public int CurDevIndex {
-            get => _curDevIndex;
+            get {
+                if (_curDevIndex == -1)
+                    throw new ArgumentNullException($"CurDevIndex");
+                return _curDevIndex;
+            }
             set {
                 _curDevIndex = value;
                 GetNetInfo();
@@ -100,7 +104,7 @@ namespace LAN_Spy {
         /// </summary>
         /// <exception cref="InvalidOperationException">未能获得有效的IPv4地址或子网掩码。</exception>
         /// <exception cref="FormatException">无效的子网掩码。</exception>
-        protected void GetNetInfo() {
+        private void GetNetInfo() {
             // 获取当前设备
             WinPcapDevice device = (WinPcapDevice) DeviceList[CurDevIndex];
             
@@ -155,18 +159,6 @@ namespace LAN_Spy {
             _broadcastAddress = new IPAddress(maxAddress);
         }
         
-        /// <summary>
-        ///     重置为初始状态。
-        /// </summary>
-        protected void Reset() {
-            _ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
-            _networkNumber = new IPAddress(new byte[] {0, 0, 0, 0});
-            _broadcastAddress = new IPAddress(new byte[] {0, 0, 0, 0});
-            lock (_rawCaptures) {
-                _rawCaptures.Clear();
-            }
-        }
-
         /// <summary>
         ///     清空抓包缓冲区。
         /// </summary>
