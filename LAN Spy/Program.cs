@@ -18,7 +18,6 @@ namespace LAN_Spy {
             var index = int.Parse(Console.ReadLine() ?? throw new FormatException("Not valid number."));
             if (index >= n) throw new IndexOutOfRangeException("No such device.");
             scanner.CurDevIndex = index - 1;
-
             
             Console.WriteLine();
             Console.Write("Current network has " + scanner.AddressCount + " available addresses. Start scan? [Y/N]");
@@ -39,8 +38,14 @@ namespace LAN_Spy {
             Console.WriteLine();
             Console.WriteLine("Total hosts: " + scanner.HostList.Count);
             n = 1;
-            foreach (var host in scanner.HostList)
-                Console.WriteLine(n++ + ". " + host.IPAddress + " is at " + host.PhysicalAddress);
+            foreach (var host in scanner.HostList) {
+                if (Equals(host.IPAddress, scanner.GatewayAddress))
+                    Console.WriteLine(n++ + ". " + host.IPAddress + " is at " + host.PhysicalAddress + " (Possible Gateway Address)");
+                else if (Equals(host.IPAddress, scanner.Ipv4Address))
+                    Console.WriteLine(n++ + ". " + host.IPAddress + " is at " + host.PhysicalAddress + " (Possible Device Address)");
+                else
+                    Console.WriteLine(n++ + ". " + host.IPAddress + " is at " + host.PhysicalAddress);
+            }
 
             Console.WriteLine();
             Console.Write("Select target1: ");
@@ -60,8 +65,20 @@ namespace LAN_Spy {
                 if (index >= n) throw new IndexOutOfRangeException("No such host.");
                 poisoner.Target2.Add(scanner.HostList[index - 1]);
             }
-            Console.Write("Select gateway: ");
-            poisoner.Gateway = scanner.HostList[int.Parse(Console.ReadLine() ?? throw new FormatException()) - 1];
+            var flag = false;
+            foreach (var host in scanner.HostList) {
+                if (!Equals(host.IPAddress, scanner.GatewayAddress)) continue;
+                Console.Write("Gateway detected(" + host.IPAddress + "). Use it? [Y/N]");
+                if (Console.ReadLine()?.ToUpperInvariant() != "Y")
+                    break;
+                poisoner.Gateway = host;
+                flag = true;
+                break;
+            }
+            if (!flag) {
+                Console.Write("Select gateway: ");
+                poisoner.Gateway = scanner.HostList[int.Parse(Console.ReadLine() ?? throw new FormatException()) - 1];
+            }
 
             Console.WriteLine();
             Console.WriteLine("Poisoning...");

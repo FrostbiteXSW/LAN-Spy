@@ -58,23 +58,43 @@ namespace LAN_Spy {
         /// <summary>
         ///     当前选中设备的IPv4地址。
         /// </summary>
-        protected IPAddress Ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
-        
+        private IPAddress _ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
+
+        /// <summary>
+        ///     获取当前选中设备的IPv4地址。
+        /// </summary>
+        public IPAddress Ipv4Address => new IPAddress(_ipv4Address.GetAddressBytes());
+
         /// <summary>
         ///     当前选中设备的网关地址。
         /// </summary>
-        protected IPAddress GatewayAddress = new IPAddress(new byte[] {0, 0, 0, 0});
+        private IPAddress _gatewayAddress = new IPAddress(new byte[] {0, 0, 0, 0});
+        
+        /// <summary>
+        ///     获取当前选中设备的网关地址。
+        /// </summary>
+        public IPAddress GatewayAddress => new IPAddress(_gatewayAddress.GetAddressBytes());
 
         /// <summary>
         ///     当前选中设备所在网段的网络号。
         /// </summary>
-        protected IPAddress NetworkNumber = new IPAddress(new byte[] {0, 0, 0, 0});
+        private IPAddress _networkNumber = new IPAddress(new byte[] {0, 0, 0, 0});
         
+        /// <summary>
+        ///     获取当前选中设备所在网段的网络号。
+        /// </summary>
+        public IPAddress NetworkNumber => new IPAddress(_networkNumber.GetAddressBytes());
+
         /// <summary>
         ///     当前选中设备所在网段的广播地址。
         /// </summary>
-        protected IPAddress BroadcastAddress = new IPAddress(new byte[] {0, 0, 0, 0});
+        private IPAddress _broadcastAddress = new IPAddress(new byte[] {0, 0, 0, 0});
         
+        /// <summary>
+        ///     获取当前选中设备所在网段的广播地址。
+        /// </summary>
+        public IPAddress BroadcastAddress => new IPAddress(_broadcastAddress.GetAddressBytes());
+
         /// <summary>
         ///     获取当前设备所在网络的IPv4地址、网络号和广播地址。
         /// </summary>
@@ -85,7 +105,7 @@ namespace LAN_Spy {
             WinPcapDevice device = (WinPcapDevice) DeviceList[CurDevIndex];
             
             // 保存设备网关地址
-            GatewayAddress = device.Interface.GatewayAddress;
+            _gatewayAddress = device.Interface.GatewayAddress;
 
             // 设备首选IPv4地址
             byte[] ipAddress = null;
@@ -130,18 +150,18 @@ namespace LAN_Spy {
             }
 
             // 保存到IP地址、网络号和广播地址
-            Ipv4Address = new IPAddress(ipAddress);
-            NetworkNumber = new IPAddress(minAddress);
-            BroadcastAddress = new IPAddress(maxAddress);
+            _ipv4Address = new IPAddress(ipAddress);
+            _networkNumber = new IPAddress(minAddress);
+            _broadcastAddress = new IPAddress(maxAddress);
         }
         
         /// <summary>
         ///     重置为初始状态。
         /// </summary>
         protected void Reset() {
-            Ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
-            NetworkNumber = new IPAddress(new byte[] {0, 0, 0, 0});
-            BroadcastAddress = new IPAddress(new byte[] {0, 0, 0, 0});
+            _ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
+            _networkNumber = new IPAddress(new byte[] {0, 0, 0, 0});
+            _broadcastAddress = new IPAddress(new byte[] {0, 0, 0, 0});
             lock (_rawCaptures) {
                 _rawCaptures.Clear();
             }
