@@ -57,6 +57,7 @@
     <Compile Include="PoisonerTest.cs" />
     <Compile Include="ScannerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WatcherTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

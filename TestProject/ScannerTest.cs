@@ -1,11 +1,10 @@
-﻿using System;
-using LAN_Spy;
+﻿using LAN_Spy.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SharpPcap;
 using SharpPcap.WinPcap;
+using System;
 using System.Diagnostics;
 using System.Threading;
-using LAN_Spy.Model;
 
 namespace TestProject {
     [TestClass]

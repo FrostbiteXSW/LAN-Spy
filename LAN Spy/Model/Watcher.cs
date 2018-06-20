@@ -239,5 +239,15 @@ namespace LAN_Spy.Model {
             // 清理缓冲区
             ClearCaptures();
         }
+
+        /// <summary>
+        ///     重置TCP连接列表为空并清空数据包缓冲区。
+        /// </summary>
+        public void Reset() {
+            lock (_tcpLinks) {
+                _tcpLinks.Clear();
+            }
+            ClearCaptures();
+        }
     }
 }
