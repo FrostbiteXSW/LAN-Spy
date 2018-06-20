@@ -56,12 +56,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BasicClass.cs" />
-    <Compile Include="Host.cs" />
-    <Compile Include="Poisoner.cs" />
+    <Compile Include="Model\BasicClass.cs" />
+    <Compile Include="Model\Host.cs" />
+    <Compile Include="Model\Poisoner.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Scanner.cs" />
+    <Compile Include="Model\Scanner.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

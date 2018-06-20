@@ -2,6 +2,7 @@
 using SharpPcap.WinPcap;
 using System;
 using System.Threading;
+using LAN_Spy.Model;
 
 namespace LAN_Spy {
     internal static class Program {

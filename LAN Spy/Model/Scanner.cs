@@ -1,19 +1,24 @@
-﻿using PacketDotNet;
-using PacketDotNet.Utils;
-using SharpPcap;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
+using PacketDotNet;
+using PacketDotNet.Utils;
+using SharpPcap;
 
-namespace LAN_Spy {
+namespace LAN_Spy.Model {
     /// <summary>
     ///     子网主机扫描器。
     /// </summary>
     public class Scanner : BasicClass {
+        /// <summary>
+        ///     已知主机列表。
+        /// </summary>
+        private readonly List<Host> _hostList = new List<Host>();
+
         /// <summary>
         ///     获取当前选中设备所在网段的所有可用主机IP地址数量。
         /// </summary>
@@ -22,24 +27,20 @@ namespace LAN_Spy {
                 byte[] minAddress = NetworkNumber.GetAddressBytes(),
                     maxAddress = BroadcastAddress.GetAddressBytes();
                 double count = maxAddress[3] - minAddress[3] + 1;
-                for (int j = 0; j < 3; j++)
+                for (var j = 0; j < 3; j++)
                     count *= maxAddress[j] - minAddress[j] + 1;
                 return count - 2;
             }
         }
 
         /// <summary>
-        ///     已知主机列表。
-        /// </summary>
-        private readonly List<Host> _hostList = new List<Host>();
-
-        /// <summary>
         ///     获取已知主机列表的只读封装。
         /// </summary>
         public ReadOnlyCollection<Host> HostList {
             get {
-                lock (_hostList)
+                lock (_hostList) {
                     return _hostList.AsReadOnly();
+                }
             }
         }
 
@@ -53,7 +54,7 @@ namespace LAN_Spy {
 
             // 绑定抓包事件处理方法
             device.OnPacketArrival += Device_OnPacketArrival;
-            
+
             // 打开设备并开始扫描
             if (!device.Started) {
                 device.Open();
@@ -61,20 +62,20 @@ namespace LAN_Spy {
                 device.Filter = "arp [6:2] = 2";
                 device.StartCapture();
             }
-            
+
             // 创建分析线程
-            Thread[] analyzeThreads = new Thread[4];
-            for (int i = 0; i < 4; i++) {
+            var analyzeThreads = new Thread[4];
+            for (var i = 0; i < 4; i++) {
                 analyzeThreads[i] = new Thread(ScanPacketAnalyzeThread);
                 analyzeThreads[i].Start();
             }
-            
+
             // 去除网络号和广播地址，产生地址集合
             byte[] minAddress = NetworkNumber.GetAddressBytes(),
                 maxAddress = BroadcastAddress.GetAddressBytes(),
                 tempAddress = minAddress;
-            List<IPAddress> ipAddresses = new List<IPAddress>();
-            List<Thread> sendThreads = new List<Thread>();
+            var ipAddresses = new List<IPAddress>();
+            var sendThreads = new List<Thread>();
             tempAddress[3]++;
             while (!(tempAddress[0] == maxAddress[0]
                      && tempAddress[1] == maxAddress[1]
@@ -83,12 +84,12 @@ namespace LAN_Spy {
                 ipAddresses.Add(new IPAddress(tempAddress));
                 if (ipAddresses.Count >= (AddressCount / 8 >= 254 ? 254 : AddressCount / 8)) {
                     // 创建发包线程
-                    Thread sendThread = new Thread(ScanPacketSendThread);
+                    var sendThread = new Thread(ScanPacketSendThread);
                     sendThread.Start(ipAddresses);
                     sendThreads.Add(sendThread);
                     ipAddresses = new List<IPAddress>();
                 }
-                int i = 3;
+                var i = 3;
                 while (i >= 0 && tempAddress[i] == 255) {
                     tempAddress[i] = 0;
                     i--;
@@ -97,12 +98,12 @@ namespace LAN_Spy {
             }
 
             // 最后一个发送线程
-            Thread lastsendThread = new Thread(ScanPacketSendThread);
+            var lastsendThread = new Thread(ScanPacketSendThread);
             lastsendThread.Start(ipAddresses);
             sendThreads.Add(lastsendThread);
 
             // 等待数据包发送完成
-            int waitTime = (int) (60 * 1000 * Math.Log(AddressCount, 254));
+            var waitTime = (int) (60 * 1000 * Math.Log(AddressCount, 254));
             while (waitTime >= 0) {
                 waitTime = -waitTime;
                 foreach (var sendThread in sendThreads)
@@ -115,7 +116,7 @@ namespace LAN_Spy {
             }
 
             // 等待接收目标机反馈消息
-            Thread.Sleep((int)(8 * 1000 * Math.Log(AddressCount, 254)));
+            Thread.Sleep((int) (8 * 1000 * Math.Log(AddressCount, 254)));
 
             // 接收完成，终止分析线程
             foreach (var analyzeThread in analyzeThreads)
@@ -140,7 +141,7 @@ namespace LAN_Spy {
             var device = DeviceList[CurDevIndex];
 
             // 创建分析线程
-            Thread[] analyzeThreads = new Thread[8];
+            var analyzeThreads = new Thread[8];
 
             try {
                 // 绑定抓包事件处理方法
@@ -154,7 +155,7 @@ namespace LAN_Spy {
                 }
 
                 // 初始化分析线程
-                for (int i = 0; i < 8; i++) {
+                for (var i = 0; i < 8; i++) {
                     analyzeThreads[i] = new Thread(ScanPacketAnalyzeThread);
                     analyzeThreads[i].Start();
                 }
@@ -186,7 +187,7 @@ namespace LAN_Spy {
                 device.Close();
             }
         }
-        
+
         /// <summary>
         ///     设备扫描发包线程。
         /// </summary>
@@ -196,13 +197,13 @@ namespace LAN_Spy {
                 var device = DeviceList[CurDevIndex];
 
                 // 获取地址列表
-                List<IPAddress> ipAddresses = (List<IPAddress>) obj;
+                var ipAddresses = (List<IPAddress>) obj;
 
                 // 构建包信息
-                EthernetPacket ether = new EthernetPacket(device.MacAddress,
+                var ether = new EthernetPacket(device.MacAddress,
                     new PhysicalAddress(new byte[] {255, 255, 255, 255, 255, 255}),
                     EthernetPacketType.Arp);
-                ARPPacket arp = new ARPPacket(ARPOperation.Request,
+                var arp = new ARPPacket(ARPOperation.Request,
                     new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0}),
                     new IPAddress(new byte[] {0, 0, 0, 0}),
                     device.MacAddress,
@@ -222,7 +223,7 @@ namespace LAN_Spy {
             }
             catch (ThreadAbortException) { }
         }
-        
+
         /// <summary>
         ///     设备扫描分析线程。
         /// </summary>
@@ -233,10 +234,10 @@ namespace LAN_Spy {
                     RawCapture packet;
                     if ((packet = NextRawCapture) != null) {
                         // 分析数据包中的数据
-                        EthernetPacket ether = new EthernetPacket(new ByteArraySegment(packet.Data));
-                        ARPPacket arp = (ARPPacket) ether.PayloadPacket;
+                        var ether = new EthernetPacket(new ByteArraySegment(packet.Data));
+                        var arp = (ARPPacket) ether.PayloadPacket;
                         lock (_hostList) {
-                            Host host = _hostList.Find(item => item.PhysicalAddress.ToString().Equals(arp.SenderHardwareAddress.ToString()));
+                            var host = _hostList.Find(item => item.PhysicalAddress.ToString().Equals(arp.SenderHardwareAddress.ToString()));
                             if (host == null)
                                 // 添加新的主机记录
                                 _hostList.Add(new Host(arp.SenderProtocolAddress, arp.SenderHardwareAddress));
@@ -253,7 +254,7 @@ namespace LAN_Spy {
             }
             catch (ThreadAbortException) { }
         }
-        
+
         /// <summary>
         ///     重置扫描器到初始状态。
         /// </summary>

