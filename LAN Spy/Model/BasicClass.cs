@@ -32,6 +32,11 @@ namespace LAN_Spy.Model {
         private IPAddress _ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
 
         /// <summary>
+        ///     当前选中设备所在网段的子网掩码。
+        /// </summary>
+        private IPAddress _netmask = new IPAddress(new byte[] {0, 0, 0, 0});
+
+        /// <summary>
         ///     当前选中设备所在网段的网络号。
         /// </summary>
         private IPAddress _networkNumber = new IPAddress(new byte[] {0, 0, 0, 0});
@@ -86,6 +91,11 @@ namespace LAN_Spy.Model {
         public IPAddress NetworkNumber => new IPAddress(_networkNumber.GetAddressBytes());
 
         /// <summary>
+        ///     获取当前选中设备所在网段的子网掩码。
+        /// </summary>
+        public IPAddress Netmask => new IPAddress(_netmask.GetAddressBytes());
+
+        /// <summary>
         ///     获取当前选中设备所在网段的广播地址。
         /// </summary>
         public IPAddress BroadcastAddress => new IPAddress(_broadcastAddress.GetAddressBytes());
@@ -116,26 +126,26 @@ namespace LAN_Spy.Model {
             // 设备首选IPv4地址
             byte[] ipAddress = null;
             // 设备IPv4地址子网掩码
-            byte[] netMask = null;
+            byte[] netmask = null;
 
             // 获取首选IPv4地址及子网掩码
             foreach (var address in device.Addresses) {
                 if (address.Addr.sa_family != 2) continue;
                 ipAddress = address.Addr.ipAddress.GetAddressBytes();
-                netMask = address.Netmask.ipAddress.GetAddressBytes();
+                netmask = address.Netmask.ipAddress.GetAddressBytes();
                 break;
             }
 
             // 检查是否获得了有效的IPv4地址及子网掩码
-            if (ipAddress == null || netMask == null)
+            if (ipAddress == null || netmask == null)
                 throw new InvalidOperationException("未能获得有效的IPv4地址或子网掩码。");
 
             // 子网掩码查错——基本格式
             var flag = false;
             for (var i = 0; i < 4; i++) {
-                if (flag && netMask[i] != 0) throw new FormatException("无效的子网掩码。");
-                if (flag || netMask[i] == 255) continue;
-                var b = netMask[i];
+                if (flag && netmask[i] != 0) throw new FormatException("无效的子网掩码。");
+                if (flag || netmask[i] == 255) continue;
+                var b = netmask[i];
                 while (b != 0)
                     if ((b & 128) == 128)
                         b <<= 1;
@@ -145,21 +155,22 @@ namespace LAN_Spy.Model {
             }
 
             // 子网掩码查错——数据有效性
-            if (netMask[3] > 252) throw new FormatException("无效的子网掩码。");
+            if (netmask[3] > 252) throw new FormatException("无效的子网掩码。");
 
             // 记录可能最小地址和最大地址
             byte[] minAddress = new byte[4], maxAddress = new byte[4];
 
             // 通过子网掩码计算最小最大地址
             for (var i = 0; i < 4; i++) {
-                minAddress[i] = (byte) (ipAddress[i] & netMask[i]);
-                maxAddress[i] = (byte) (ipAddress[i] | (255 - netMask[i]));
+                minAddress[i] = (byte) (ipAddress[i] & netmask[i]);
+                maxAddress[i] = (byte) (ipAddress[i] | (255 - netmask[i]));
             }
 
-            // 保存到IP地址、网络号和广播地址
+            // 保存到IP地址、网络号、子网掩码和广播地址
             _ipv4Address = new IPAddress(ipAddress);
             _networkNumber = new IPAddress(minAddress);
             _broadcastAddress = new IPAddress(maxAddress);
+            _netmask = new IPAddress(netmask);
         }
 
         /// <summary>

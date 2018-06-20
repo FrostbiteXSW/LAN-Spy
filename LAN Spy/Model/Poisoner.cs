@@ -12,12 +12,12 @@ namespace LAN_Spy.Model {
     /// </summary>
     public class Poisoner : BasicClass {
         /// <summary>
-        ///     毒化线程句柄
+        ///     毒化线程句柄。
         /// </summary>
         private readonly List<Thread> _poisonThreads = new List<Thread>();
 
         /// <summary>
-        ///     包转发线程句柄
+        ///     包转发线程句柄。
         /// </summary>
         private readonly List<Thread> _retransmissionThreads = new List<Thread>();
 
@@ -53,7 +53,7 @@ namespace LAN_Spy.Model {
         /// <exception cref="NullReferenceException">未设置默认网关。</exception>
         public void StartPoisoning() {
             // 判断是否有未停止的毒化工作
-            if (_poisonThreads.Count > 0)
+            if (_device != null)
                 throw new InvalidOperationException("已有一项毒化工作正在进行。");
 
             // 深复制以缓存目标
@@ -68,12 +68,11 @@ namespace LAN_Spy.Model {
             _gateway = Gateway ?? throw new NullReferenceException("未设置默认网关。");
 
             // 缓存并打开当前设备
-            if (!(_device = DeviceList[CurDevIndex]).Started) {
-                _device.OnPacketArrival += Device_OnPacketArrival;
-                _device.Open();
-                _device.Filter = "arp or ip";
-                _device.StartCapture();
-            }
+            _device = DeviceList[CurDevIndex];
+            _device.OnPacketArrival += Device_OnPacketArrival;
+            _device.Open();
+            _device.Filter = "arp or ip";
+            _device.StartCapture();
 
             // 创建包转发线程
             for (var i = 0; i < 32; i++) {
@@ -248,9 +247,6 @@ namespace LAN_Spy.Model {
         /// </summary>
         /// <exception cref="TimeoutException">等待线程结束超时。</exception>
         public void StopPoisoning() {
-            // 清理缓冲区
-            ClearCaptures();
-
             // 向毒化线程发送终止信号
             foreach (var poisonThread in _poisonThreads)
                 if (poisonThread.IsAlive)
@@ -290,10 +286,13 @@ namespace LAN_Spy.Model {
             _retransmissionThreads.Clear();
 
             // 关闭设备
-            if (!(_device = DeviceList[CurDevIndex]).Started) return;
-            _device.OnPacketArrival -= Device_OnPacketArrival;
             _device.StopCapture();
+            _device.OnPacketArrival -= Device_OnPacketArrival;
             _device.Close();
+            _device = null;
+            
+            // 清理缓冲区
+            ClearCaptures();
         }
     }
 }

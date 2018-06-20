@@ -56,12 +56,11 @@ namespace LAN_Spy.Model {
             device.OnPacketArrival += Device_OnPacketArrival;
 
             // 打开设备并开始扫描
-            if (!device.Started) {
-                device.Open();
-                // arp头起始位置向后偏移6字节后，取2字节内容即为arp包类型
-                device.Filter = "arp [6:2] = 2";
-                device.StartCapture();
-            }
+            device.Open();
+
+            // arp头起始位置向后偏移6字节后，取2字节内容即为arp包类型
+            device.Filter = "arp [6:2] = 2";
+            device.StartCapture();
 
             // 创建分析线程
             var analyzeThreads = new Thread[4];
@@ -123,13 +122,13 @@ namespace LAN_Spy.Model {
                 analyzeThread.Abort();
 
             // 清理缓冲区及其他内容
-            ClearCaptures();
             lock (_hostList) {
                 _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
             }
-            device.OnPacketArrival -= Device_OnPacketArrival;
             device.StopCapture();
+            device.OnPacketArrival -= Device_OnPacketArrival;
             device.Close();
+            ClearCaptures();
         }
 
         /// <summary>
@@ -148,11 +147,9 @@ namespace LAN_Spy.Model {
                 device.OnPacketArrival += Device_OnPacketArrival;
 
                 // 打开设备并开始扫描
-                if (!device.Started) {
-                    device.Open();
-                    device.Filter = "arp";
-                    device.StartCapture();
-                }
+                device.Open();
+                device.Filter = "arp";
+                device.StartCapture();
 
                 // 初始化分析线程
                 for (var i = 0; i < 8; i++) {
@@ -178,19 +175,20 @@ namespace LAN_Spy.Model {
                         analyzeThread.Abort();
 
                 // 清理缓冲区及其他内容
-                ClearCaptures();
                 lock (_hostList) {
                     _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
                 }
-                device.OnPacketArrival -= Device_OnPacketArrival;
                 device.StopCapture();
+                device.OnPacketArrival -= Device_OnPacketArrival;
                 device.Close();
+                ClearCaptures();
             }
         }
 
         /// <summary>
         ///     设备扫描发包线程。
         /// </summary>
+        /// <param name="obj">地址列表。</param>
         private void ScanPacketSendThread(object obj) {
             try {
                 // 获取当前设备
@@ -256,7 +254,7 @@ namespace LAN_Spy.Model {
         }
 
         /// <summary>
-        ///     重置扫描器到初始状态。
+        ///     重置主机列表及数据包缓冲区。
         /// </summary>
         public void Reset() {
             lock (_hostList) {
