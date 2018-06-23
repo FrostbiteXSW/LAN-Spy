@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Threading;
 using PacketDotNet;
@@ -12,14 +13,14 @@ namespace LAN_Spy.Model {
     /// </summary>
     public class Watcher : BasicClass {
         /// <summary>
+        ///     监测到的Tcp连接列表。
+        /// </summary>
+        private readonly List<TcpLink> _tcpLinks = new List<TcpLink>();
+
+        /// <summary>
         ///     监视线程句柄。
         /// </summary>
         private readonly List<Thread> _watchThreads = new List<Thread>();
-
-        /// <summary>
-        ///     过期连接丢弃线程句柄。
-        /// </summary>
-        private Thread _dropOutdatedLinksThread;
 
         /// <summary>
         ///     当前使用的设备句柄。
@@ -27,57 +28,20 @@ namespace LAN_Spy.Model {
         private ICaptureDevice _device;
 
         /// <summary>
-        ///     监测到的Tcp连接列表。
+        ///     过期连接丢弃线程句柄。
         /// </summary>
-        private readonly List<TcpLink> _tcpLinks = new List<TcpLink>();
+        private Thread _dropOutdatedLinksThread;
 
         /// <summary>
         ///     获取监测到的Tcp连接列表。
         /// </summary>
-        public IReadOnlyCollection<TcpLink> TcpLinks {
+        public ReadOnlyCollection<TcpLink> TcpLinks {
             get {
-                lock (_tcpLinks)
+                lock (_tcpLinks) {
                     return _tcpLinks.AsReadOnly();
+                }
             }
         }
-
-        /// <summary>
-        ///     网路上一组TCP连接的两端主机。
-        /// </summary>
-        public class TcpLink {
-            /// <summary>
-            ///     连接的起点。
-            /// </summary>
-            public IPAddress Src { get; }
-
-            /// <summary>
-            ///     连接的终点，
-            /// </summary>
-            public IPAddress Dst { get; }
-
-            /// <summary>
-            ///     最后检测到连接的时间，并非确切的连接开始时间，而是侦测到连接时的本地时间。
-            /// </summary>
-            public DateTime Time { get; private set; }
-
-            /// <summary>
-            ///     更新最后检测到连接的时间。
-            /// </summary>
-            public void UpdateTime() {
-                Time = DateTime.Now;
-            }
-
-            /// <summary>
-            ///     初始化 <see cref="TcpLink"/> 类的实例。
-            /// </summary>
-            /// <param name="src">连接的起点，推荐以当前子网的主机作为起点。</param>
-            /// <param name="dst">连接的终点，推荐以非当前子网的主机作为终点。</param>
-            public TcpLink(IPAddress src, IPAddress dst) {
-                Src = src;
-                Dst = dst;
-                UpdateTime();
-            }
-        } 
 
         /// <summary>
         ///     打开设备并开始监听网路连接。
@@ -95,8 +59,8 @@ namespace LAN_Spy.Model {
             _device.StartCapture();
 
             // 创建监听线程
-            for (int i = 0; i < 8; i++) {
-                Thread watchThread = new Thread(WatchThread);
+            for (var i = 0; i < 8; i++) {
+                var watchThread = new Thread(WatchThread);
                 watchThread.Start();
                 _watchThreads.Add(watchThread);
             }
@@ -128,8 +92,8 @@ namespace LAN_Spy.Model {
                         if (!tcp.Ack) continue;
 
                         // 获取IP数据包内的源地址、目标地址以及设备上的子网掩码
-                        byte[] src = ipv4.SourceAddress.GetAddressBytes(), 
-                            dst = ipv4.DestinationAddress.GetAddressBytes(), 
+                        byte[] src = ipv4.SourceAddress.GetAddressBytes(),
+                            dst = ipv4.DestinationAddress.GetAddressBytes(),
                             netmask = Netmask.GetAddressBytes();
 
                         // 通过子网掩码计算网络号
@@ -148,19 +112,15 @@ namespace LAN_Spy.Model {
                             srcAddress = ipv4.DestinationAddress;
                             dstAddress = ipv4.SourceAddress;
                         }
-                            
+
                         // 保存TCP连接信息
                         lock (_tcpLinks) {
                             // 查找连接信息
                             var tcpLink = _tcpLinks.Find(item => Equals(item.Src, srcAddress) && Equals(item.Dst, dstAddress));
-                            if (tcpLink == null) {
-                                // 此连接信息尚不存在于列表中，进行添加
+                            if (tcpLink == null)
                                 _tcpLinks.Add(new TcpLink(srcAddress, dstAddress));
-                            }
-                            else {
-                                // 此连接信息已存在于列表中，进行更新
+                            else
                                 tcpLink.UpdateTime();
-                            }
                         }
                     }
                     else {
@@ -181,7 +141,7 @@ namespace LAN_Spy.Model {
                     Thread.Sleep(120 * 1000);
                     lock (_tcpLinks) {
                         foreach (var tcpLink in _tcpLinks) {
-                            TimeSpan timeSpan = DateTime.Now - tcpLink.Time;
+                            var timeSpan = DateTime.Now - tcpLink.Time;
                             if (timeSpan.TotalSeconds >= 300)
                                 _tcpLinks.Remove(tcpLink);
                         }
@@ -235,7 +195,7 @@ namespace LAN_Spy.Model {
             _device.OnPacketArrival -= Device_OnPacketArrival;
             _device.Close();
             _device = null;
-            
+
             // 清理缓冲区
             ClearCaptures();
         }
@@ -248,6 +208,44 @@ namespace LAN_Spy.Model {
                 _tcpLinks.Clear();
             }
             ClearCaptures();
+        }
+
+        /// <summary>
+        ///     网路上一组TCP连接的两端主机。
+        /// </summary>
+        public class TcpLink {
+            /// <summary>
+            ///     初始化 <see cref="TcpLink" /> 类的实例。
+            /// </summary>
+            /// <param name="src">连接的起点，推荐以当前子网的主机作为起点。</param>
+            /// <param name="dst">连接的终点，推荐以非当前子网的主机作为终点。</param>
+            public TcpLink(IPAddress src, IPAddress dst) {
+                Src = src;
+                Dst = dst;
+                UpdateTime();
+            }
+
+            /// <summary>
+            ///     连接的起点。
+            /// </summary>
+            public IPAddress Src { get; }
+
+            /// <summary>
+            ///     连接的终点，
+            /// </summary>
+            public IPAddress Dst { get; }
+
+            /// <summary>
+            ///     最后检测到连接的时间，并非确切的连接开始时间，而是侦测到连接时的本地时间。
+            /// </summary>
+            public DateTime Time { get; private set; }
+
+            /// <summary>
+            ///     更新最后检测到连接的时间。
+            /// </summary>
+            public void UpdateTime() {
+                Time = DateTime.Now;
+            }
         }
     }
 }
