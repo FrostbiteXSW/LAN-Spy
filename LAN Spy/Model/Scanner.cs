@@ -134,7 +134,7 @@ namespace LAN_Spy.Model {
         /// <summary>
         ///     被动监测目前局域网内的所有设备（导致阻塞）。
         /// </summary>
-        /// <exception cref="ThreadAbortException"></exception>
+        /// <exception cref="TimeoutException">等待分析线程终止超时。</exception>
         public void SpyForTarget() {
             // 获取当前设备
             var device = DeviceList[CurDevIndex];
@@ -159,7 +159,7 @@ namespace LAN_Spy.Model {
 
                 // 如果分析线程异常终止，则结束监听
                 while (true) {
-                    if (analyzeThreads.Any(analyzeThread => !analyzeThread.IsAlive)) return;
+                    if (analyzeThreads.Any(analyzeThread => !analyzeThread.IsAlive)) break;
                     Thread.Sleep(800);
                 }
             }
@@ -173,6 +173,15 @@ namespace LAN_Spy.Model {
                 foreach (var analyzeThread in analyzeThreads)
                     if (analyzeThread.IsAlive)
                         analyzeThread.Abort();
+
+                // 等待分析线程终止
+                var waitTime = 30 * 1000;
+                while (true) {
+                    if (analyzeThreads.All(analyzeThread => !analyzeThread.IsAlive)) break;
+                    Thread.Sleep(500);
+                    if ((waitTime -= 500) == 0)
+                        throw new TimeoutException("等待分析线程终止超时。");
+                }
 
                 // 清理缓冲区及其他内容
                 lock (_hostList) {

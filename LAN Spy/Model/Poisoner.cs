@@ -22,6 +22,11 @@ namespace LAN_Spy.Model {
         private readonly List<Thread> _retransmissionThreads = new List<Thread>();
 
         /// <summary>
+        ///     毒化目标缓存。
+        /// </summary>
+        private readonly List<Host> _target1 = new List<Host>(), _target2 = new List<Host>();
+
+        /// <summary>
         ///     使用设备缓存。
         /// </summary>
         private ICaptureDevice _device;
@@ -32,14 +37,9 @@ namespace LAN_Spy.Model {
         private Host _gateway;
 
         /// <summary>
-        ///     毒化目标缓存。
-        /// </summary>
-        private List<Host> _target1, _target2;
-
-        /// <summary>
         ///     默认网关。
         /// </summary>
-        public Host Gateway = null;
+        public Host Gateway;
 
         /// <summary>
         ///     毒化目标。
@@ -57,15 +57,15 @@ namespace LAN_Spy.Model {
                 throw new InvalidOperationException("已有一项毒化工作正在进行。");
 
             // 深复制以缓存目标
-            _target1 = new List<Host>();
-            _target2 = new List<Host>();
             foreach (var target in Target1)
                 _target1.Add(new Host(target.IPAddress, target.PhysicalAddress));
             foreach (var target in Target2)
                 _target2.Add(new Host(target.IPAddress, target.PhysicalAddress));
 
-            // 缓存网关
-            _gateway = Gateway ?? throw new NullReferenceException("未设置默认网关。");
+            // 深复制以缓存网关
+            if (Gateway == null)
+                throw new NullReferenceException("未设置默认网关。");
+            _gateway = new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
 
             // 缓存并打开当前设备
             _device = DeviceList[CurDevIndex];
@@ -290,8 +290,19 @@ namespace LAN_Spy.Model {
             _device.OnPacketArrival -= Device_OnPacketArrival;
             _device.Close();
             _device = null;
-            
+
             // 清理缓冲区
+            _gateway = null;
+            ClearCaptures();
+        }
+
+        /// <summary>
+        ///     重置目标、默认网关设置并清空数据包缓冲区，不会对正在进行的毒化工作的设置造成影响。
+        /// </summary>
+        public void Reset() {
+            Target1.Clear();
+            Target2.Clear();
+            Gateway = null;
             ClearCaptures();
         }
     }

@@ -38,6 +38,7 @@ namespace LAN_Spy.Model {
         public ReadOnlyCollection<TcpLink> TcpLinks {
             get {
                 lock (_tcpLinks) {
+                    _tcpLinks.Sort((a, b) => string.CompareOrdinal(a.Src.ToString(), b.Src.ToString()));
                     return _tcpLinks.AsReadOnly();
                 }
             }
