@@ -145,10 +145,10 @@ namespace LAN_Spy.Model {
                 while (true) {
                     Thread.Sleep(120 * 1000);
                     lock (_tcpLinks) {
-                        foreach (var tcpLink in _tcpLinks) {
-                            var timeSpan = DateTime.Now - tcpLink.Time;
+                        for (var i = 0; i < _tcpLinks.Count; i++) {
+                            var timeSpan = DateTime.Now - _tcpLinks[i].Time;
                             if (timeSpan.TotalSeconds >= 300)
-                                _tcpLinks.Remove(tcpLink);
+                                _tcpLinks.RemoveAt(i);
                         }
                     }
                 }
