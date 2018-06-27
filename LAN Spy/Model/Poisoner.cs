@@ -57,10 +57,8 @@ namespace LAN_Spy.Model {
                 throw new InvalidOperationException("已有一项毒化工作正在进行。");
 
             // 深复制以缓存目标
-            foreach (var target in Target1)
-                _target1.Add(new Host(target.IPAddress, target.PhysicalAddress));
-            foreach (var target in Target2)
-                _target2.Add(new Host(target.IPAddress, target.PhysicalAddress));
+            _target1.AddRange(Target1);
+            _target2.AddRange(Target2);
 
             // 深复制以缓存网关
             if (Gateway == null)
