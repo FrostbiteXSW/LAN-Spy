@@ -63,17 +63,17 @@ namespace LAN_Spy {
             var targets = Console.ReadLine()?.Split(' ');
             if (targets == null) throw new FormatException("Not valid numbers.");
             foreach (var target in targets) {
-                index = int.Parse(target);
-                if (index >= n) throw new IndexOutOfRangeException("No such host.");
-                poisoner.Target1.Add(scanner.HostList[index - 1]);
+                var tindex = int.Parse(target);
+                if (tindex >= n) throw new IndexOutOfRangeException("No such host.");
+                poisoner.Target1.Add(scanner.HostList[tindex - 1]);
             }
             Console.Write("Select target2: ");
             targets = Console.ReadLine()?.Split(' ');
             if (targets == null) throw new FormatException("Not valid numbers.");
             foreach (var target in targets) {
-                index = int.Parse(target);
-                if (index >= n) throw new IndexOutOfRangeException("No such host.");
-                poisoner.Target2.Add(scanner.HostList[index - 1]);
+                var tindex = int.Parse(target);
+                if (tindex >= n) throw new IndexOutOfRangeException("No such host.");
+                poisoner.Target2.Add(scanner.HostList[tindex - 1]);
             }
 
             // 设定默认网关
