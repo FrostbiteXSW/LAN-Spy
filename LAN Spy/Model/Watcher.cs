@@ -41,9 +41,7 @@ namespace LAN_Spy.Model {
                 lock (_tcpLinks) {
                     tcpLinksCopy.AddRange(_tcpLinks);
                 }
-                tcpLinksCopy.Sort((a, b) => 
-                    string.CompareOrdinal(a.Src.ToString() + " " + a.Dst.ToString(),
-                    b.Src.ToString() + " " + b.Dst.ToString()));
+                tcpLinksCopy.Sort((a, b) => string.CompareOrdinal(a.Src.ToString(), b.Src.ToString()));
                 return tcpLinksCopy.AsReadOnly();
             }
         }
