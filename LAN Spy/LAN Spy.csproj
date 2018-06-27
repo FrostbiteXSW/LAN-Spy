@@ -59,6 +59,7 @@
     <Compile Include="Model\BasicClass.cs" />
     <Compile Include="Model\Host.cs" />
     <Compile Include="Model\Poisoner.cs" />
+    <Compile Include="Model\TcpLink.cs" />
     <Compile Include="Model\Watcher.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
