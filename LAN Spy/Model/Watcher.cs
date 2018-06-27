@@ -37,10 +37,12 @@ namespace LAN_Spy.Model {
         /// </summary>
         public ReadOnlyCollection<TcpLink> TcpLinks {
             get {
+                var tcpLinksCopy = new List<TcpLink>();
                 lock (_tcpLinks) {
-                    _tcpLinks.Sort((a, b) => string.CompareOrdinal(a.Src.ToString(), b.Src.ToString()));
-                    return _tcpLinks.AsReadOnly();
+                    tcpLinksCopy.AddRange(_tcpLinks);
                 }
+                tcpLinksCopy.Sort((a, b) => string.CompareOrdinal(a.Src.ToString(), b.Src.ToString()));
+                return tcpLinksCopy.AsReadOnly();
             }
         }
 

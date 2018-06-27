@@ -38,9 +38,11 @@ namespace LAN_Spy.Model {
         /// </summary>
         public ReadOnlyCollection<Host> HostList {
             get {
+                var hostListCopy = new List<Host>();
                 lock (_hostList) {
-                    return _hostList.AsReadOnly();
+                    hostListCopy.AddRange(_hostList);
                 }
+                return hostListCopy.AsReadOnly();
             }
         }
 
