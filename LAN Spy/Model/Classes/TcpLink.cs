@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace LAN_Spy.Model {
+namespace LAN_Spy.Model.Classes {
 
     /// <summary>
     ///     网路上一组TCP连接的两端主机。

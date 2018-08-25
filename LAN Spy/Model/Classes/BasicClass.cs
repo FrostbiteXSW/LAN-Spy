@@ -4,7 +4,7 @@ using System.Net;
 using SharpPcap;
 using SharpPcap.WinPcap;
 
-namespace LAN_Spy.Model {
+namespace LAN_Spy.Model.Classes {
     public abstract class BasicClass {
         /// <summary>
         ///     缓存获得的原始数据包。
@@ -22,11 +22,6 @@ namespace LAN_Spy.Model {
         private int _curDevIndex = -1;
 
         /// <summary>
-        ///     当前选中设备的网关地址。
-        /// </summary>
-        private IPAddress _gatewayAddress = new IPAddress(new byte[] {0, 0, 0, 0});
-
-        /// <summary>
         ///     当前选中设备的IPv4地址。
         /// </summary>
         private IPAddress _ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
@@ -42,6 +37,11 @@ namespace LAN_Spy.Model {
         private IPAddress _networkNumber = new IPAddress(new byte[] {0, 0, 0, 0});
 
         /// <summary>
+        ///     当前选中设备的网关地址。
+        /// </summary>
+        public IReadOnlyList<IPAddress> GatewayAddresses => ((WinPcapDevice) DeviceList[CurDevIndex]).Interface.GatewayAddresses.AsReadOnly();
+
+        /// <summary>
         ///     获取可用网络设备列表，在模块中进行抓包发包作业时请使用此对象。
         /// </summary>
         protected CaptureDeviceList DeviceList { get; } = CaptureDeviceList.New();
@@ -51,13 +51,15 @@ namespace LAN_Spy.Model {
         /// </summary>
         public int CurDevIndex {
             get {
-                if (_curDevIndex == -1)
-                    throw new ArgumentNullException($"CurDevIndex");
+                if (_curDevIndex >= DeviceList.Count || _curDevIndex < -1)
+                    throw new IndexOutOfRangeException("无效的设备编号。");
                 return _curDevIndex;
             }
             set {
+                if (value >= DeviceList.Count || value < -1)
+                    throw new IndexOutOfRangeException("无效的设备编号。");
                 _curDevIndex = value;
-                GetNetInfo();
+                if (_curDevIndex != -1) GetNetInfo();
             }
         }
 
@@ -79,11 +81,6 @@ namespace LAN_Spy.Model {
         ///     获取当前选中设备的IPv4地址。
         /// </summary>
         public IPAddress Ipv4Address => new IPAddress(_ipv4Address.GetAddressBytes());
-
-        /// <summary>
-        ///     获取当前选中设备的网关地址。
-        /// </summary>
-        public IPAddress GatewayAddress => new IPAddress(_gatewayAddress.GetAddressBytes());
 
         /// <summary>
         ///     获取当前选中设备所在网段的网络号。
@@ -119,9 +116,6 @@ namespace LAN_Spy.Model {
         private void GetNetInfo() {
             // 获取当前设备
             var device = (WinPcapDevice) DeviceList[CurDevIndex];
-
-            // 保存设备网关地址
-            _gatewayAddress = device.Interface.GatewayAddress;
 
             // 设备首选IPv4地址
             byte[] ipAddress = null;

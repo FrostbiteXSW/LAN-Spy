@@ -4,6 +4,7 @@ using SharpPcap;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using LAN_Spy.Model.Classes;
 
 namespace TestProject {
     [TestClass]

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
+using LAN_Spy.Model.Classes;
 using PacketDotNet;
 using PacketDotNet.Utils;
 using SharpPcap;
@@ -218,7 +219,7 @@ namespace LAN_Spy.Model {
                     device.MacAddress,
                     Ipv4Address) {
                     HardwareAddressType = LinkLayers.Ethernet,
-                    ProtocolAddressType = EthernetPacketType.IpV4
+                    ProtocolAddressType = EthernetPacketType.IPv4
                 };
                 ether.PayloadPacket = arp;
                 arp.ParentPacket = ether;

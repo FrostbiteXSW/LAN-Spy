@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Net;
-using System.Threading;
+﻿using LAN_Spy.Model.Classes;
 using PacketDotNet;
 using PacketDotNet.Utils;
 using SharpPcap;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading;
 
 namespace LAN_Spy.Model {
     /// <summary>
@@ -31,11 +31,16 @@ namespace LAN_Spy.Model {
         ///     过期连接丢弃线程句柄。
         /// </summary>
         private Thread _dropOutdatedLinksThread;
+        
+        /// <summary>
+        ///     指示模块是否处在工作状态。
+        /// </summary>
+        public bool IsStarted { get; private set; }
 
         /// <summary>
         ///     获取监测到的Tcp连接列表。
         /// </summary>
-        public ReadOnlyCollection<TcpLink> TcpLinks {
+        public IReadOnlyList<TcpLink> TcpLinks {
             get {
                 var tcpLinksCopy = new List<TcpLink>();
                 lock (_tcpLinks) {
@@ -49,10 +54,13 @@ namespace LAN_Spy.Model {
         }
 
         /// <summary>
-        ///     打开设备并开始监听网路连接。
+        ///     打开设备并开始监听网路连接，如果模块已在工作状态则不会有效果。
         /// </summary>
         /// <exception cref="InvalidOperationException">已有一项监听工作正在进行。</exception>
         public void StartWatching() {
+            // 判断是否为工作状态
+            if (IsStarted) return;
+
             // 判断是否存在未停止的监听操作
             if (_device != null)
                 throw new InvalidOperationException("已有一项监听工作正在进行。");
@@ -73,6 +81,9 @@ namespace LAN_Spy.Model {
             // 创建超时检测线程
             _dropOutdatedLinksThread = new Thread(DropOutdatedLinksThread);
             _dropOutdatedLinksThread.Start();
+
+            // 进入工作状态
+            IsStarted = true;
         }
 
         /// <summary>
@@ -86,7 +97,7 @@ namespace LAN_Spy.Model {
                     if ((packet = NextRawCapture) != null) {
                         // 分析数据包中的数据
                         var ether = new EthernetPacket(new ByteArraySegment(packet.Data));
-                        if (ether.Type != EthernetPacketType.IpV4) continue;
+                        if (ether.Type != EthernetPacketType.IPv4) continue;
 
                         // 分析IPv4数据包
                         var ipv4 = (IPv4Packet) ether.PayloadPacket;
@@ -161,6 +172,9 @@ namespace LAN_Spy.Model {
         /// </summary>
         /// <exception cref="TimeoutException">等待线程结束超时。</exception>
         public void StopWatching() {
+            // 判断是否为工作状态
+            if (!IsStarted) return;
+
             // 向监听线程发送终止信号
             foreach (var watchThread in _watchThreads)
                 if (watchThread.IsAlive)
@@ -203,6 +217,9 @@ namespace LAN_Spy.Model {
 
             // 清理缓冲区
             ClearCaptures();
+
+            // 退出工作状态
+            IsStarted = false;
         }
 
         /// <summary>
