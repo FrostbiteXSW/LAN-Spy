@@ -1,6 +1,7 @@
 ﻿//#define TEST_CONSOLE
 
 using LAN_Spy.Model;
+using LAN_Spy.Model.Classes;
 using LAN_Spy.View;
 using SharpPcap;
 using SharpPcap.WinPcap;
@@ -60,8 +61,9 @@ namespace LAN_Spy {
             loadingThread.Abort();
             while (loadingThread.IsAlive)
                 Thread.Sleep(500);
-            
-            Application.Run(new MainForm(ref scanner, ref poisoner, ref watcher));
+
+            var models = new BasicClass[] {scanner, poisoner, watcher};
+            Application.Run(new MainForm(ref models));
 #endif
         }
 

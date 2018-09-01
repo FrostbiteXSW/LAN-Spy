@@ -1,39 +1,44 @@
 ﻿using System;
 using System.Windows.Forms;
 using LAN_Spy.Model;
+using LAN_Spy.Model.Classes;
 
 namespace LAN_Spy.View {
     public partial class MainForm : Form {
         /// <summary>
-        ///     <see cref="Scanner"/> 模块实例。
+        ///     <see cref="Model.Scanner"/> 模块实例。
         /// </summary>
-        private readonly Scanner _scanner;
+        private Scanner Scanner { get; }
         
         /// <summary>
-        ///     <see cref="Poisoner"/> 模块实例。
+        ///     <see cref="Model.Poisoner"/> 模块实例。
         /// </summary>
-        private readonly Poisoner _poisoner;
+        private Poisoner Poisoner { get; }
         
         /// <summary>
-        ///     <see cref="Watcher"/> 模块实例。
+        ///     <see cref="Model.Watcher"/> 模块实例。
         /// </summary>
-        private readonly Watcher _watcher;
+        private Watcher Watcher { get; }
 
         /// <inheritdoc />
         /// <summary> 
-        ///     初始化 <see cref="T:LAN_Spy.View.MainForm" /> 窗口。
+        ///     初始化 <see cref="MainForm" /> 窗口。
         /// </summary>
-        /// <param name="scanner">传入的创建完成的扫描器实例，此实例句柄在绑定完成后将被清除。</param>
-        /// <param name="poisoner">传入的创建完成的毒化器实例，此实例句柄在绑定完成后将被清除。</param>
-        /// <param name="watcher">传入的创建完成的监视器实例，此实例句柄在绑定完成后将被清除。</param>
-        public MainForm(ref Scanner scanner, ref Poisoner poisoner, ref Watcher watcher) {
+        /// <param name="models">传入的创建完成的模块实例组，此实例句柄在绑定完成后将被清除。</param>
+        public MainForm(ref BasicClass[] models) {
             InitializeComponent();
-            _scanner = scanner;
-            _poisoner = poisoner;
-            _watcher = watcher;
-            scanner = null;
-            poisoner = null;
-            watcher = null;
+
+            foreach (var model in models) {
+                var type = model.GetType();
+                if (type == typeof(Scanner))
+                    Scanner = model as Scanner;
+                else if (type == typeof(Poisoner))
+                    Poisoner = model as Poisoner;
+                else if (type == typeof(Watcher))
+                    Watcher = model as Watcher;
+            }
+
+            models = null;
             TopMost = true;
         }
 
@@ -43,11 +48,11 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void 启动所有模块ToolStripMenuItem_Click(object sender, EventArgs e) {
-            var chooseDevice = new ChooseDevice(_scanner);
+            var chooseDevice = new ChooseDevice(Scanner);
             chooseDevice.ShowDialog();
 
             // TODO:初始化模块，移除下面的测试用代码
-            Text = _scanner.CurDevIndex.ToString();
+            Text = Scanner.CurDevIndex.ToString();
         }
         
         /// <summary>
@@ -66,10 +71,23 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void 退出ToolStripMenuItem_Click(object sender, EventArgs e) {
-            _poisoner.StopPoisoning();
-            _watcher.StopWatching();
+            var error = false;
 
-            if (!_poisoner.IsStarted && !_watcher.IsStarted)
+            if (Poisoner is null) {
+                error = true;
+                MessageBox.Show(@"检测到毒化器实例初始化异常。", @"警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else
+                Poisoner.StopPoisoning();
+
+            if (Watcher is null) {
+                error = true;
+                MessageBox.Show(@"检测到监视器实例初始化异常。", @"警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else
+                Watcher.StopWatching();
+
+            if (!error && !Poisoner.IsStarted && !Watcher.IsStarted)
                 Close();
             else
                 Environment.Exit(0);
