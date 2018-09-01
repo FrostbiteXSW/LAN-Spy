@@ -1,16 +1,16 @@
-﻿using System;
+﻿using LAN_Spy.Model.Classes;
+using SharpPcap;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
-using LAN_Spy.Model.Classes;
-using SharpPcap;
 
 namespace LAN_Spy.View {
     public partial class ChooseDevice : Form {
         /// <summary>
-        ///     回传设备选项的 <see cref="BasicClass"/> 基类模块句柄。
+        ///     回传设备选项的 <see cref="PointerPacker"/> 句柄。
         /// </summary>
-        private readonly BasicClass _model;
+        private PointerPacker _index;
         
         /// <summary>
         ///     设备列表鼠标悬停弹出窗口。
@@ -31,10 +31,10 @@ namespace LAN_Spy.View {
         /// <summary>
         ///     初始化 <see cref="ChooseDevice" /> 窗口。
         /// </summary>
-        /// <param name="model">用于回传设备选项的模块。</param>
-        public ChooseDevice(BasicClass model) {
+        /// <param name="index">用于回传设备选项的编号。</param>
+        public ChooseDevice(ref PointerPacker index) {
             InitializeComponent();
-            _model = model;
+            _index = index;
             
             // 设置鼠标悬停弹出窗口参数
             _deviceListTooltip.AutoPopDelay = 5000;
@@ -95,7 +95,7 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void CommitButton_Click(object sender, EventArgs e) {
-            _model.CurDevIndex = DeviceList.SelectedIndex;
+            _index.Item = DeviceList.SelectedIndex;
             Close();
         }
 
@@ -105,7 +105,7 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void CancelButton_Click(object sender, EventArgs e) {
-            _model.CurDevIndex = -1;
+            _index.Item = -1;
             Close();
         }
 

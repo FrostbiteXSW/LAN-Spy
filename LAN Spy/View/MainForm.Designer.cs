@@ -38,6 +38,7 @@
             // 
             // MainMenu
             // 
+            this.MainMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.MainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.开始ToolStripMenuItem,
             this.扫描ToolStripMenuItem,
@@ -45,7 +46,8 @@
             this.监视ToolStripMenuItem});
             this.MainMenu.Location = new System.Drawing.Point(0, 0);
             this.MainMenu.Name = "MainMenu";
-            this.MainMenu.Size = new System.Drawing.Size(584, 25);
+            this.MainMenu.Padding = new System.Windows.Forms.Padding(9, 3, 0, 3);
+            this.MainMenu.Size = new System.Drawing.Size(876, 34);
             this.MainMenu.TabIndex = 0;
             // 
             // 开始ToolStripMenuItem
@@ -56,14 +58,14 @@
             this.关于ToolStripMenuItem,
             this.退出ToolStripMenuItem});
             this.开始ToolStripMenuItem.Name = "开始ToolStripMenuItem";
-            this.开始ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
+            this.开始ToolStripMenuItem.Size = new System.Drawing.Size(58, 28);
             this.开始ToolStripMenuItem.Text = "开始";
             // 
             // 启动所有模块ToolStripMenuItem
             // 
             this.启动所有模块ToolStripMenuItem.Name = "启动所有模块ToolStripMenuItem";
             this.启动所有模块ToolStripMenuItem.ShortcutKeyDisplayString = "";
-            this.启动所有模块ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.启动所有模块ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
             this.启动所有模块ToolStripMenuItem.Text = "启动所有模块";
             this.启动所有模块ToolStripMenuItem.Click += new System.EventHandler(this.启动所有模块ToolStripMenuItem_Click);
             // 
@@ -71,58 +73,62 @@
             // 
             this.停止所有模块ToolStripMenuItem.Name = "停止所有模块ToolStripMenuItem";
             this.停止所有模块ToolStripMenuItem.ShortcutKeyDisplayString = "";
-            this.停止所有模块ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.停止所有模块ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
             this.停止所有模块ToolStripMenuItem.Text = "停止所有模块";
+            this.停止所有模块ToolStripMenuItem.Click += new System.EventHandler(this.停止所有模块ToolStripMenuItem_Click);
             // 
             // 关于ToolStripMenuItem
             // 
             this.关于ToolStripMenuItem.Name = "关于ToolStripMenuItem";
-            this.关于ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.关于ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
             this.关于ToolStripMenuItem.Text = "关于...";
+            this.关于ToolStripMenuItem.Click += new System.EventHandler(this.关于ToolStripMenuItem_Click);
             // 
             // 退出ToolStripMenuItem
             // 
             this.退出ToolStripMenuItem.Name = "退出ToolStripMenuItem";
-            this.退出ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.退出ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
             this.退出ToolStripMenuItem.Text = "退出";
             this.退出ToolStripMenuItem.Click += new System.EventHandler(this.退出ToolStripMenuItem_Click);
             // 
             // 扫描ToolStripMenuItem
             // 
             this.扫描ToolStripMenuItem.Name = "扫描ToolStripMenuItem";
-            this.扫描ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
+            this.扫描ToolStripMenuItem.Size = new System.Drawing.Size(58, 28);
             this.扫描ToolStripMenuItem.Text = "扫描";
             // 
             // 毒化ToolStripMenuItem
             // 
             this.毒化ToolStripMenuItem.Name = "毒化ToolStripMenuItem";
-            this.毒化ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
+            this.毒化ToolStripMenuItem.Size = new System.Drawing.Size(58, 28);
             this.毒化ToolStripMenuItem.Text = "毒化";
             // 
             // 监视ToolStripMenuItem
             // 
             this.监视ToolStripMenuItem.Name = "监视ToolStripMenuItem";
-            this.监视ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
+            this.监视ToolStripMenuItem.Size = new System.Drawing.Size(58, 28);
             this.监视ToolStripMenuItem.Text = "监视";
             // 
             // SplitLine
             // 
             this.SplitLine.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.SplitLine.Location = new System.Drawing.Point(0, 27);
+            this.SplitLine.Location = new System.Drawing.Point(0, 40);
+            this.SplitLine.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.SplitLine.Name = "SplitLine";
-            this.SplitLine.Size = new System.Drawing.Size(584, 2);
+            this.SplitLine.Size = new System.Drawing.Size(876, 3);
             this.SplitLine.TabIndex = 1;
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(584, 361);
+            this.ClientSize = new System.Drawing.Size(876, 542);
             this.Controls.Add(this.SplitLine);
             this.Controls.Add(this.MainMenu);
             this.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MainMenuStrip = this.MainMenu;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.ShowIcon = false;

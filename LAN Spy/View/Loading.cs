@@ -12,8 +12,9 @@ namespace LAN_Spy.View {
         /// <summary>
         ///     初始化 <see cref="Loading" /> 窗口。
         /// </summary>
-        public Loading() {
+        public Loading(string message) {
             InitializeComponent();
+            LoadingInfoLabel.Text = message;
         }
         
         /// <summary>

@@ -35,9 +35,8 @@
             this.LoadingInfoLabel.Font = new System.Drawing.Font("黑体", 15F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.LoadingInfoLabel.Location = new System.Drawing.Point(63, 23);
             this.LoadingInfoLabel.Name = "LoadingInfoLabel";
-            this.LoadingInfoLabel.Size = new System.Drawing.Size(209, 20);
+            this.LoadingInfoLabel.Size = new System.Drawing.Size(0, 30);
             this.LoadingInfoLabel.TabIndex = 0;
-            this.LoadingInfoLabel.Text = "初始化模块中，请稍候";
             // 
             // CancelButton
             // 
@@ -58,7 +57,7 @@
             // 
             // Loading
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(334, 111);
             this.ControlBox = false;

@@ -5,6 +5,9 @@ using SharpPcap;
 using SharpPcap.WinPcap;
 
 namespace LAN_Spy.Model.Classes {
+    /// <summary>
+    ///     为所有模块提供基类支持。
+    /// </summary>
     public abstract class BasicClass {
         /// <summary>
         ///     缓存获得的原始数据包。
@@ -42,9 +45,23 @@ namespace LAN_Spy.Model.Classes {
         public IReadOnlyList<IPAddress> GatewayAddresses => ((WinPcapDevice) DeviceList[CurDevIndex]).Interface.GatewayAddresses.AsReadOnly();
 
         /// <summary>
+        ///     当前实例使用的 <see cref="CaptureDeviceList"/> 实例。
+        /// </summary>
+        private CaptureDeviceList _deviceList;
+
+        /// <summary>
         ///     获取可用网络设备列表，在模块中进行抓包发包作业时请使用此对象。
         /// </summary>
-        protected CaptureDeviceList DeviceList { get; } = CaptureDeviceList.New();
+        protected CaptureDeviceList DeviceList {
+            get {
+                if (!(_deviceList is null)) return _deviceList;
+                // 在某些平台上进行测试时出现了同时调用返回WinPcap错误的情况，因此添加线程锁
+                lock (this) {
+                    _deviceList = CaptureDeviceList.New();
+                }
+                return _deviceList;
+            }
+        }
 
         /// <summary>
         ///     获取或设置当前使用的设备编号。
@@ -131,8 +148,12 @@ namespace LAN_Spy.Model.Classes {
             }
 
             // 检查是否获得了有效的IPv4地址及子网掩码
-            if (ipAddress == null || netmask == null)
-                throw new InvalidOperationException("未能获得有效的IPv4地址或子网掩码。");
+            if (ipAddress is null) {
+                Console.Error.WriteLine("未能获得有效的IPv4地址。");
+                return;
+                // 无效的网络会导致网络设备无法获取IP地址信息，因此此处不再丢置异常，而是发出警告
+                // throw new InvalidOperationException("未能获得有效的IPv4地址。");
+            }
 
             // 子网掩码查错——基本格式
             var flag = false;
