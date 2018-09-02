@@ -10,7 +10,7 @@ namespace LAN_Spy.View {
         /// <summary>
         ///     回传设备选项的 <see cref="PointerPacker"/> 句柄。
         /// </summary>
-        private PointerPacker _index;
+        private readonly PointerPacker _index;
         
         /// <summary>
         ///     设备列表鼠标悬停弹出窗口。

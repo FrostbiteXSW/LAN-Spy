@@ -23,6 +23,7 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
@@ -44,8 +45,13 @@
             this.HostList = new System.Windows.Forms.DataGridView();
             this.HostIP = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.HostMAC = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.HostListMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.复制ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.添加到目标组1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.添加到目标组2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.HostList)).BeginInit();
+            this.HostListMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // MainMenu
@@ -132,7 +138,7 @@
             // 
             this.侦测主机ToolStripMenuItem.Enabled = false;
             this.侦测主机ToolStripMenuItem.Name = "侦测主机ToolStripMenuItem";
-            this.侦测主机ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.侦测主机ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
             this.侦测主机ToolStripMenuItem.Text = "侦测主机";
             this.侦测主机ToolStripMenuItem.Click += new System.EventHandler(this.侦测主机ToolStripMenuItem_Click);
             // 
@@ -149,6 +155,7 @@
             this.启动毒化模块ToolStripMenuItem.Name = "启动毒化模块ToolStripMenuItem";
             this.启动毒化模块ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
             this.启动毒化模块ToolStripMenuItem.Text = "启动模块";
+            this.启动毒化模块ToolStripMenuItem.Click += new System.EventHandler(this.启动毒化模块ToolStripMenuItem_Click);
             // 
             // 监视ToolStripMenuItem
             // 
@@ -231,6 +238,36 @@
             this.HostMAC.Name = "HostMAC";
             this.HostMAC.ReadOnly = true;
             // 
+            // HostListMenuStrip
+            // 
+            this.HostListMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.HostListMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.复制ToolStripMenuItem,
+            this.添加到目标组1ToolStripMenuItem,
+            this.添加到目标组2ToolStripMenuItem});
+            this.HostListMenuStrip.Name = "HostListMenuStrip";
+            this.HostListMenuStrip.Size = new System.Drawing.Size(241, 121);
+            this.HostListMenuStrip.Opened += new System.EventHandler(this.HostListMenuStrip_Opened);
+            // 
+            // 复制ToolStripMenuItem
+            // 
+            this.复制ToolStripMenuItem.Name = "复制ToolStripMenuItem";
+            this.复制ToolStripMenuItem.Size = new System.Drawing.Size(199, 28);
+            this.复制ToolStripMenuItem.Text = "复制选中项";
+            this.复制ToolStripMenuItem.Click += new System.EventHandler(this.复制ToolStripMenuItem_Click);
+            // 
+            // 添加到目标组1ToolStripMenuItem
+            // 
+            this.添加到目标组1ToolStripMenuItem.Name = "添加到目标组1ToolStripMenuItem";
+            this.添加到目标组1ToolStripMenuItem.Size = new System.Drawing.Size(199, 28);
+            this.添加到目标组1ToolStripMenuItem.Text = "添加到目标组1";
+            // 
+            // 添加到目标组2ToolStripMenuItem
+            // 
+            this.添加到目标组2ToolStripMenuItem.Name = "添加到目标组2ToolStripMenuItem";
+            this.添加到目标组2ToolStripMenuItem.Size = new System.Drawing.Size(199, 28);
+            this.添加到目标组2ToolStripMenuItem.Text = "添加到目标组2";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
@@ -252,6 +289,7 @@
             this.MainMenu.ResumeLayout(false);
             this.MainMenu.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.HostList)).EndInit();
+            this.HostListMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -277,5 +315,9 @@
         private System.Windows.Forms.ToolStripMenuItem 启动扫描模块ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 启动毒化模块ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 启动监视模块ToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip HostListMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem 复制ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 添加到目标组1ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 添加到目标组2ToolStripMenuItem;
     }
 }

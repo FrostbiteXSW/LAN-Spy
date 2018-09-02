@@ -13,35 +13,14 @@ using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View {
     public partial class MainForm : Form {
-        /// <summary>
-        ///     <see cref="Model.Scanner"/> 模块实例。
-        /// </summary>
-        private Scanner Scanner { get; }
-        
-        /// <summary>
-        ///     <see cref="Model.Poisoner"/> 模块实例。
-        /// </summary>
-        private Poisoner Poisoner { get; }
-        
-        /// <summary>
-        ///     <see cref="Model.Watcher"/> 模块实例。
-        /// </summary>
-        private Watcher Watcher { get; }
-
-        /// <summary>
-        ///     获取所有模块的实例组合。
-        /// </summary>
-        // TODO:新增模块时请更新此处的代码
-        private BasicClass[] Models => new BasicClass[] {Scanner, Poisoner, Watcher};
-
         /// <inheritdoc />
-        /// <summary> 
+        /// <summary>
         ///     初始化 <see cref="MainForm" /> 窗口。
         /// </summary>
         /// <param name="models">传入的创建完成的模块实例组，此实例句柄在绑定完成后将被清除。</param>
         public MainForm(ref BasicClass[] models) {
             InitializeComponent();
-            
+
             // TODO:新增模块时请更新此处的代码
             foreach (var model in models) {
                 var type = model.GetType();
@@ -56,6 +35,27 @@ namespace LAN_Spy.View {
             models = null;
             TopMost = true;
         }
+
+        /// <summary>
+        ///     <see cref="Model.Scanner" /> 模块实例。
+        /// </summary>
+        private Scanner Scanner { get; }
+
+        /// <summary>
+        ///     <see cref="Model.Poisoner" /> 模块实例。
+        /// </summary>
+        private Poisoner Poisoner { get; }
+
+        /// <summary>
+        ///     <see cref="Model.Watcher" /> 模块实例。
+        /// </summary>
+        private Watcher Watcher { get; }
+
+        /// <summary>
+        ///     获取所有模块的实例组合。
+        /// </summary>
+        // TODO:新增模块时请更新此处的代码
+        private IEnumerable<BasicClass> Models => new BasicClass[] {Scanner, Poisoner, Watcher};
 
         /// <summary>
         ///     菜单项“启动所有模块”单击时的事件。
@@ -78,12 +78,13 @@ namespace LAN_Spy.View {
                 扫描主机ToolStripMenuItem.Enabled = true;
                 侦测主机ToolStripMenuItem.Enabled = true;
             }
-            else
+            else {
                 MessageBox.Show("一个或多个模块未能成功初始化，请单独启动模块。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
-        ///     <see cref="MainForm"/> 激活时的事件。
+        ///     <see cref="MainForm" /> 激活时的事件。
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
@@ -91,7 +92,7 @@ namespace LAN_Spy.View {
             TopMost = false;
             Activated -= MainForm_Activated;
         }
-        
+
         /// <summary>
         ///     菜单项“退出”单击时的事件。
         /// </summary>
@@ -101,16 +102,16 @@ namespace LAN_Spy.View {
             StopModels();
             Close();
         }
-        
+
         /// <summary>
         ///     菜单项“停止所有模块”单击时的事件。
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void 停止所有模块ToolStripMenuItem_Click(object sender, EventArgs e) {
-            if (!StopModels()) 
+            if (!StopModels())
                 MessageBox.Show("一个或多个模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            else 
+            else
                 MessageBox.Show("所有模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
             启动所有模块ToolStripMenuItem.Text = "启动所有模块";
             启动扫描模块ToolStripMenuItem.Text = 启动毒化模块ToolStripMenuItem.Text = 启动监视模块ToolStripMenuItem.Text = "启动模块";
@@ -124,25 +125,28 @@ namespace LAN_Spy.View {
         /// <returns>成功返回true，错误返回false。</returns>
         private bool StopModels() {
             var result = true;
-            
+
             // TODO:新增模块时请更新此处的代码
-            if (Scanner is null)
+            if (Scanner is null) {
                 result = false;
+            }
             else {
                 Scanner.Reset();
                 Scanner.CurDevIndex = -1;
             }
 
-            if (Poisoner is null)
+            if (Poisoner is null) {
                 result = false;
+            }
             else {
                 Poisoner.StopPoisoning();
                 Poisoner.Reset();
                 Poisoner.CurDevIndex = -1;
             }
 
-            if (Watcher is null)
+            if (Watcher is null) {
                 result = false;
+            }
             else {
                 Watcher.StopWatching();
                 Watcher.Reset();
@@ -151,7 +155,7 @@ namespace LAN_Spy.View {
 
             return result;
         }
-        
+
         /// <summary>
         ///     菜单项“关于”单击时的事件。
         /// </summary>
@@ -171,14 +175,15 @@ namespace LAN_Spy.View {
         private void 启动扫描模块ToolStripMenuItem_Click(object sender, EventArgs e) {
             // 判断工作模式
             if (启动扫描模块ToolStripMenuItem.Text == "启动模块") {
-                if (!StartupModels(new []{Scanner}))
+                if (!StartupModels(new[] {Scanner}))
                     MessageBox.Show("模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                else
+                else if (Scanner.CurDevIndex != -1) {
                     MessageBox.Show("模块已成功设置。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                启动所有模块ToolStripMenuItem.Text = "重启所有模块";
-                启动扫描模块ToolStripMenuItem.Text = "停止模块";
-                扫描主机ToolStripMenuItem.Enabled = true;
-                侦测主机ToolStripMenuItem.Enabled = true;
+                    启动所有模块ToolStripMenuItem.Text = "重启所有模块";
+                    启动扫描模块ToolStripMenuItem.Text = "停止模块";
+                    扫描主机ToolStripMenuItem.Enabled = true;
+                    侦测主机ToolStripMenuItem.Enabled = true;
+                }
             }
             else {
                 Scanner.Reset();
@@ -187,7 +192,7 @@ namespace LAN_Spy.View {
                 启动扫描模块ToolStripMenuItem.Text = "启动模块";
                 扫描主机ToolStripMenuItem.Enabled = false;
                 侦测主机ToolStripMenuItem.Enabled = false;
-                
+
                 // TODO:新增模块时请更新此处的代码
                 if (启动毒化模块ToolStripMenuItem.Text == "启动模块"
                     && 启动监视模块ToolStripMenuItem.Text == "启动模块")
@@ -200,7 +205,7 @@ namespace LAN_Spy.View {
         /// </summary>
         /// <param name="models">需要启动的模块列表。</param>
         /// <returns>成功返回true，错误返回false。</returns>
-        private bool StartupModels(IEnumerable<BasicClass> models) {
+        private static bool StartupModels(IEnumerable<BasicClass> models) {
             // 判断模块是否初始化
             var modelsList = models.ToList();
             if (modelsList.Contains(null))
@@ -246,21 +251,23 @@ namespace LAN_Spy.View {
                             model.CurDevIndex = -1;
                     }
                 }
-                finally { loading.Close(); }
+                finally {
+                    loading.Close();
+                }
             });
             MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
             loading.ShowDialog();
 
             // 等待结果
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
 
-            if (MessagePipe.TopOutMessage.Key != Message.UserCancel) 
+            if (MessagePipe.TopOutMessage.Key != Message.UserCancel)
                 return MessagePipe.GetNextOutMessage().Key == Message.TaskOut;
-            
+
             // 用户取消
             MessagePipe.GetNextOutMessage();
             MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, null));
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
             if (MessagePipe.GetNextOutMessage().Key != Message.TaskAborted)
                 throw new Exception("核心模块工作异常，请检查。");
             return false;
@@ -278,29 +285,41 @@ namespace LAN_Spy.View {
             // 创建载入界面
             var loading = new Loading("正在扫描，请稍候");
             var task = new Thread(scan => {
-                try { Thread.Sleep(1000); lock (Scanner) { Scanner.ScanForTarget(); }}
-                catch (ThreadAbortException) { lock (Scanner) { Scanner.Reset();}}
-                finally { loading.Close(); }
+                try {
+                    Thread.Sleep(1000);
+                    lock (Scanner) {
+                        Scanner.ScanForTarget();
+                    }
+                }
+                catch (ThreadAbortException) {
+                    lock (Scanner) {
+                        Scanner.Reset();
+                    }
+                }
+                finally {
+                    loading.Close();
+                }
             });
             MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
             loading.ShowDialog();
             Thread.Sleep(1000);
-            
+
             // 等待结果
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
 
             // 用户取消
             if (MessagePipe.TopOutMessage.Key == Message.UserCancel) {
                 MessagePipe.GetNextOutMessage();
                 MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, null));
-                while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+                while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
                 if (MessagePipe.GetNextOutMessage().Key != Message.TaskAborted)
                     throw new Exception("核心模块工作异常，请检查。");
                 return;
             }
 
             if (MessagePipe.GetNextOutMessage().Key != Message.TaskOut) {
-                MessageBox.Show("扫描过程出现异常，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);Scanner.Reset();
+                MessageBox.Show("扫描过程出现异常，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Scanner.Reset();
                 Scanner.Reset();
                 Scanner.CurDevIndex = -1;
                 启动扫描模块ToolStripMenuItem.Text = "启动模块";
@@ -317,10 +336,11 @@ namespace LAN_Spy.View {
                     if (temp.Length == 12)
                         temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
                     HostList.Rows.Add(host.IPAddress, temp);
+                    HostList.Rows[HostList.Rows.Count - 1].ContextMenuStrip = HostListMenuStrip;
                 }
             }
         }
-        
+
         /// <summary>
         ///     窗口关闭时的事件。
         /// </summary>
@@ -329,40 +349,47 @@ namespace LAN_Spy.View {
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e) {
             Environment.Exit(0);
         }
-        
+
         /// <summary>
         ///     菜单项“侦测主机”单击时的事件。
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void 侦测主机ToolStripMenuItem_Click(object sender, EventArgs e) {
-             // 清空历史纪录
+            // 清空历史纪录
             HostList.Rows.Clear();
 
             // 创建载入界面
             var loading = new Loading("正在侦测，取消以停止");
             var task = new Thread(scan => {
-                try { Thread.Sleep(1000); lock (Scanner) { Scanner.SpyForTarget(); }}
+                try {
+                    Thread.Sleep(1000);
+                    lock (Scanner) {
+                        Scanner.SpyForTarget();
+                    }
+                }
                 catch (ThreadAbortException) { }
-                finally { loading.Close(); }
+                finally {
+                    loading.Close();
+                }
             });
             MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
             loading.ShowDialog();
             Thread.Sleep(1000);
-            
-            // 等待结果
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
 
-            if (MessagePipe.TopOutMessage.Key != Message.UserCancel) 
+            // 等待结果
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
+
+            if (MessagePipe.TopOutMessage.Key != Message.UserCancel)
                 throw new Exception("核心模块工作异常，请检查。");
-            
+
             // 用户取消
             MessagePipe.GetNextOutMessage();
             MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, null));
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
             if (MessagePipe.GetNextOutMessage().Key != Message.TaskAborted)
                 throw new Exception("核心模块工作异常，请检查。");
-                
+
             // 输出侦测结果
             lock (Scanner) {
                 foreach (var host in Scanner.HostList) {
@@ -371,8 +398,70 @@ namespace LAN_Spy.View {
                     if (temp.Length == 12)
                         temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
                     HostList.Rows.Add(host.IPAddress, temp);
+                    HostList.Rows[HostList.Rows.Count - 1].ContextMenuStrip = HostListMenuStrip;
                 }
             }
+        }
+
+        /// <summary>
+        ///     菜单项“启动模块”（毒化）单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 启动毒化模块ToolStripMenuItem_Click(object sender, EventArgs e) {
+            // 判断工作模式
+            if (启动毒化模块ToolStripMenuItem.Text == "启动模块") {
+                if (!StartupModels(new[] {Poisoner}))
+                    MessageBox.Show("模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                else if (Poisoner.CurDevIndex != -1) {
+                    MessageBox.Show("模块已成功设置。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    启动所有模块ToolStripMenuItem.Text = "重启所有模块";
+                    启动毒化模块ToolStripMenuItem.Text = "停止模块";
+                    扫描主机ToolStripMenuItem.Enabled = true;
+                    侦测主机ToolStripMenuItem.Enabled = true;
+                }
+            }
+            else {
+                Poisoner.StopPoisoning();
+                Poisoner.Reset();
+                Poisoner.CurDevIndex = -1;
+                MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                启动毒化模块ToolStripMenuItem.Text = "启动模块";
+
+                // TODO:新增模块时请更新此处的代码
+                if (启动扫描模块ToolStripMenuItem.Text == "启动模块"
+                    && 启动监视模块ToolStripMenuItem.Text == "启动模块")
+                    启动所有模块ToolStripMenuItem.Text = "启动所有模块";
+            }
+        }
+        
+        /// <summary>
+        ///     菜单项“复制”单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 复制ToolStripMenuItem_Click(object sender, EventArgs e) {
+            var str = new StringBuilder();
+            foreach (DataGridViewRow row in HostList.Rows) {
+                if (!row.Selected) continue;
+                foreach (DataGridViewCell cell in row.Cells)
+                    str.Append($"{cell.Value} ");
+                str.Replace(" ", "\r\n", str.Length - 1, 1);
+            }
+
+            Clipboard.SetDataObject(str.ToString().Substring(0, str.Length - 2), true);
+        }
+
+        /// <summary>
+        ///     右键菜单打开后触发的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void HostListMenuStrip_Opened(object sender, EventArgs e) {
+            var index = HostList.PointToClient(MousePosition).Y / HostList.Rows[0].Height - 1;
+            if (HostList.Rows[index].Selected) return;
+            HostList.ClearSelection();
+            HostList.Rows[index].Selected = true;
         }
     }
 }
