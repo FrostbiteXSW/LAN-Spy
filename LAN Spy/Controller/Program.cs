@@ -6,11 +6,12 @@ using LAN_Spy.View;
 using SharpPcap;
 using SharpPcap.WinPcap;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace LAN_Spy {
+namespace LAN_Spy.Controller {
     internal static class Program {
         /// <summary>
         ///     应用程序的主入口点。
@@ -25,49 +26,67 @@ namespace LAN_Spy {
             Application.SetCompatibleTextRenderingDefault(false);
 
             // 检测WinPcap库
-            try { CaptureDeviceList.New(); }
+            try {
+                CaptureDeviceList.New();
+            }
             catch (Exception) {
                 MessageBox.Show("本程序需要WinPcap支持，请确保已安装WinPcap库！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             // 初始化模块
-            var loadingThread = new Thread(load => {
-                var loading = new Loading("初始化模块中，请稍候");
-                try { Application.Run(loading); }
-                catch (Exception) { loading.Close(); }
-            });
-            loadingThread.Start();
-
+            TaskHandler.Init();
             Scanner scanner = null;
-            var scannerThread = new Thread(init => { scanner = new Scanner(); });
-
             Poisoner poisoner = null;
-            var poisonerThread = new Thread(init => { poisoner = new Poisoner(); });
-
             Watcher watcher = null;
-            var watcherThread = new Thread(init => { scannerThread.Start(); watcher = new Watcher(); });
+            var loading = new Loading("设置模块中，请稍候");
+            var task = new Thread(load => {
+                Thread.Sleep(1000);
+                try {
+                    var scannerThread = new Thread(init => { scanner = new Scanner(); });
+                    var poisonerThread = new Thread(init => { poisoner = new Poisoner(); });
+                    var watcherThread = new Thread(init => {
+                        scannerThread.Start();
+                        watcher = new Watcher();
+                    });
 
-            watcherThread.Start();
-            poisonerThread.Start();
+                    watcherThread.Start();
+                    poisonerThread.Start();
 
-            /*----------------------------------------------------------------
-                                       （时间段1）
-                    mainThread ---------------------------> watcherThread
-                        |                                         |
-                        |              （时间段2）                |
-                        V                                         V
-                  poisonerThread                            scannerThread
+                    /*----------------------------------------------------------------
+                                               （时间段1）
+                            mainThread ---------------------------> watcherThread
+                                |                                         |
+                                |              （时间段2）                |
+                                V                                         V
+                          poisonerThread                            scannerThread
+        
+                                    将启动线程工作的一部分分摊给子线程
+                    ----------------------------------------------------------------*/
 
-                            将启动线程工作的一部分分摊给子线程
-            ----------------------------------------------------------------*/
+                    while (scannerThread.IsAlive || poisonerThread.IsAlive || watcherThread.IsAlive)
+                        Thread.Sleep(500);
+                }
+                catch (ThreadAbortException) {
+                    Environment.Exit(-1);
+                }
+                finally {
+                    loading.Close();
+                }
+            });
 
-            while (scannerThread.IsAlive || poisonerThread.IsAlive || watcherThread.IsAlive)
-                Thread.Sleep(500);
+            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
+            loading.ShowDialog();
+
+            // 等待结果
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
             
-            loadingThread.Abort();
-            while (loadingThread.IsAlive)
-                Thread.Sleep(500);
+            // 用户取消
+            if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
+                Environment.Exit(-1);
+
+            if (MessagePipe.GetNextOutMessage().Key != Message.TaskOut)
+                throw new Exception("核心模块初始化失败。");
 
             var models = new BasicClass[] {scanner, poisoner, watcher};
             Application.Run(new MainForm(ref models));

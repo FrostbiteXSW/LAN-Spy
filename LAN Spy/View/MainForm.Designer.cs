@@ -124,7 +124,7 @@
             // 
             this.扫描主机ToolStripMenuItem.Enabled = false;
             this.扫描主机ToolStripMenuItem.Name = "扫描主机ToolStripMenuItem";
-            this.扫描主机ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.扫描主机ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
             this.扫描主机ToolStripMenuItem.Text = "扫描主机";
             this.扫描主机ToolStripMenuItem.Click += new System.EventHandler(this.扫描主机ToolStripMenuItem_Click);
             // 
@@ -134,6 +134,7 @@
             this.侦测主机ToolStripMenuItem.Name = "侦测主机ToolStripMenuItem";
             this.侦测主机ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
             this.侦测主机ToolStripMenuItem.Text = "侦测主机";
+            this.侦测主机ToolStripMenuItem.Click += new System.EventHandler(this.侦测主机ToolStripMenuItem_Click);
             // 
             // 毒化ToolStripMenuItem
             // 
@@ -247,6 +248,7 @@
             this.ShowIcon = false;
             this.Text = "GUI for LAN Spy";
             this.Activated += new System.EventHandler(this.MainForm_Activated);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.MainMenu.ResumeLayout(false);
             this.MainMenu.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.HostList)).EndInit();

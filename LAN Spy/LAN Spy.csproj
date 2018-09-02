@@ -66,6 +66,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controller\MessagePipe.cs" />
+    <Compile Include="Controller\TaskHandler.cs" />
     <Compile Include="Model\Classes\PointerPacker.cs" />
     <Compile Include="View\ChooseDevice.cs">
       <SubType>Form</SubType>
@@ -90,7 +92,7 @@
     <Compile Include="Model\Poisoner.cs" />
     <Compile Include="Model\Classes\TcpLink.cs" />
     <Compile Include="Model\Watcher.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Controller\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Model\Scanner.cs" />
   </ItemGroup>

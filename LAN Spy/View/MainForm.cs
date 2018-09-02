@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using LAN_Spy.Controller;
 using LAN_Spy.Model;
 using LAN_Spy.Model.Classes;
 using SharpPcap;
 using SharpPcap.WinPcap;
+using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View {
     public partial class MainForm : Form {
@@ -62,21 +64,22 @@ namespace LAN_Spy.View {
         /// <param name="e">事件的参数。</param>
         private void 启动所有模块ToolStripMenuItem_Click(object sender, EventArgs e) {
             // 判断是否为重启
-            if (启动所有模块ToolStripMenuItem.Text == "重启所有模块" && StopModels()) {
+            if (启动所有模块ToolStripMenuItem.Text == "重启所有模块" && !StopModels()) {
                 MessageBox.Show("一个或多个模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             // 启动模块
-            if (!StartupModels(Models))
-                MessageBox.Show("一个或多个模块未能成功初始化，请单独启动模块。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            else if (Models.First(item => item.CurDevIndex == -1) is null) {
+            if (StartupModels(Models)) {
+                if (Models.Count(item => item.CurDevIndex == -1) != 0) return;
                 MessageBox.Show("所有模块均已成功设置。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动所有模块ToolStripMenuItem.Text = "重启所有模块";
                 启动扫描模块ToolStripMenuItem.Text = 启动毒化模块ToolStripMenuItem.Text = 启动监视模块ToolStripMenuItem.Text = "停止模块";
                 扫描主机ToolStripMenuItem.Enabled = true;
                 侦测主机ToolStripMenuItem.Enabled = true;
             }
+            else
+                MessageBox.Show("一个或多个模块未能成功初始化，请单独启动模块。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         /// <summary>
@@ -95,10 +98,8 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void 退出ToolStripMenuItem_Click(object sender, EventArgs e) {
-            if (StopModels())
-                Close();
-            else
-                Environment.Exit(0);
+            StopModels();
+            Close();
         }
         
         /// <summary>
@@ -182,9 +183,15 @@ namespace LAN_Spy.View {
             else {
                 Scanner.Reset();
                 Scanner.CurDevIndex = -1;
+                MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动扫描模块ToolStripMenuItem.Text = "启动模块";
                 扫描主机ToolStripMenuItem.Enabled = false;
                 侦测主机ToolStripMenuItem.Enabled = false;
+                
+                // TODO:新增模块时请更新此处的代码
+                if (启动毒化模块ToolStripMenuItem.Text == "启动模块"
+                    && 启动监视模块ToolStripMenuItem.Text == "启动模块")
+                    启动所有模块ToolStripMenuItem.Text = "启动所有模块";
             }
         }
 
@@ -224,53 +231,148 @@ namespace LAN_Spy.View {
             }
 
             // 创建载入界面
-            var loadingThread = new Thread(load => {
-                var loading = new Loading("设置模块中，请稍候");
-                try { Application.Run(loading); }
-                catch (Exception) { loading.Close(); }
+            var loading = new Loading("设置模块中，请稍候");
+            var task = new Thread(scan => {
+                Thread.Sleep(1000);
+                try {
+                    lock (modelsList) {
+                        foreach (var model in modelsList)
+                            model.CurDevIndex = (int) index.Item;
+                    }
+                }
+                catch (ThreadAbortException) {
+                    lock (modelsList) {
+                        foreach (var model in modelsList)
+                            model.CurDevIndex = -1;
+                    }
+                }
+                finally { loading.Close(); }
             });
-            loadingThread.Start();
-            
-            // 设置模块
-            foreach (var model in modelsList)
-                model.CurDevIndex = (int) index.Item;
-            
-            // 终止载入界面
-            loadingThread.Abort();
-            while (loadingThread.IsAlive)
-                Thread.Sleep(500);
+            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
+            loading.ShowDialog();
 
-            return true;
+            // 等待结果
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+
+            if (MessagePipe.TopOutMessage.Key != Message.UserCancel) 
+                return MessagePipe.GetNextOutMessage().Key == Message.TaskOut;
+            
+            // 用户取消
+            MessagePipe.GetNextOutMessage();
+            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, null));
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+            if (MessagePipe.GetNextOutMessage().Key != Message.TaskAborted)
+                throw new Exception("核心模块工作异常，请检查。");
+            return false;
         }
-        
+
         /// <summary>
-        ///     菜单项“启动模块”单击时的事件。
+        ///     菜单项“扫描主机”单击时的事件。
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void 扫描主机ToolStripMenuItem_Click(object sender, EventArgs e) {
-            // 创建载入界面
-            var loadingThread = new Thread(load => {
-                var loading = new Loading("正在扫描，请稍候");
-                try { Application.Run(loading); }
-                catch (Exception) { loading.Close(); }
-            });
-            loadingThread.Start();
+            // 清空历史纪录
+            HostList.Rows.Clear();
 
-            // 扫描主机
-            Scanner.ScanForTarget();
-            foreach (var host in Scanner.HostList) {
-                // 格式化MAC地址
-                var temp = new StringBuilder(host.PhysicalAddress.ToString());
-                if (temp.Length == 12)
-                    temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
-                HostList.Rows.Add(host.IPAddress, temp);
+            // 创建载入界面
+            var loading = new Loading("正在扫描，请稍候");
+            var task = new Thread(scan => {
+                try { Thread.Sleep(1000); lock (Scanner) { Scanner.ScanForTarget(); }}
+                catch (ThreadAbortException) { lock (Scanner) { Scanner.Reset();}}
+                finally { loading.Close(); }
+            });
+            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
+            loading.ShowDialog();
+            Thread.Sleep(1000);
+            
+            // 等待结果
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+
+            // 用户取消
+            if (MessagePipe.TopOutMessage.Key == Message.UserCancel) {
+                MessagePipe.GetNextOutMessage();
+                MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, null));
+                while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+                if (MessagePipe.GetNextOutMessage().Key != Message.TaskAborted)
+                    throw new Exception("核心模块工作异常，请检查。");
+                return;
             }
 
-            // 终止载入界面
-            loadingThread.Abort();
-            while (loadingThread.IsAlive)
-                Thread.Sleep(500);
+            if (MessagePipe.GetNextOutMessage().Key != Message.TaskOut) {
+                MessageBox.Show("扫描过程出现异常，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);Scanner.Reset();
+                Scanner.Reset();
+                Scanner.CurDevIndex = -1;
+                启动扫描模块ToolStripMenuItem.Text = "启动模块";
+                扫描主机ToolStripMenuItem.Enabled = false;
+                侦测主机ToolStripMenuItem.Enabled = false;
+                return;
+            }
+
+            // 输出扫描结果
+            lock (Scanner) {
+                foreach (var host in Scanner.HostList) {
+                    // 格式化MAC地址
+                    var temp = new StringBuilder(host.PhysicalAddress.ToString());
+                    if (temp.Length == 12)
+                        temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
+                    HostList.Rows.Add(host.IPAddress, temp);
+                }
+            }
+        }
+        
+        /// <summary>
+        ///     窗口关闭时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e) {
+            Environment.Exit(0);
+        }
+        
+        /// <summary>
+        ///     菜单项“侦测主机”单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 侦测主机ToolStripMenuItem_Click(object sender, EventArgs e) {
+             // 清空历史纪录
+            HostList.Rows.Clear();
+
+            // 创建载入界面
+            var loading = new Loading("正在侦测，取消以停止");
+            var task = new Thread(scan => {
+                try { Thread.Sleep(1000); lock (Scanner) { Scanner.SpyForTarget(); }}
+                catch (ThreadAbortException) { }
+                finally { loading.Close(); }
+            });
+            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
+            loading.ShowDialog();
+            Thread.Sleep(1000);
+            
+            // 等待结果
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+
+            if (MessagePipe.TopOutMessage.Key != Message.UserCancel) 
+                throw new Exception("核心模块工作异常，请检查。");
+            
+            // 用户取消
+            MessagePipe.GetNextOutMessage();
+            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, null));
+            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
+            if (MessagePipe.GetNextOutMessage().Key != Message.TaskAborted)
+                throw new Exception("核心模块工作异常，请检查。");
+                
+            // 输出侦测结果
+            lock (Scanner) {
+                foreach (var host in Scanner.HostList) {
+                    // 格式化MAC地址
+                    var temp = new StringBuilder(host.PhysicalAddress.ToString());
+                    if (temp.Length == 12)
+                        temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
+                    HostList.Rows.Add(host.IPAddress, temp);
+                }
+            }
         }
     }
 }

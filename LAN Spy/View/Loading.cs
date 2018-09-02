@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Windows.Forms;
+using LAN_Spy.Controller;
+using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View {
     public partial class Loading : Form {
@@ -7,13 +11,15 @@ namespace LAN_Spy.View {
         ///     载入提示信息末尾的点的数量。
         /// </summary>
         private int _dotCount;
-
+        
         /// <inheritdoc />
         /// <summary>
         ///     初始化 <see cref="Loading" /> 窗口。
         /// </summary>
+        /// <param name="message">载入窗口需要显示的信息。</param>
         public Loading(string message) {
             InitializeComponent();
+            CheckForIllegalCrossThreadCalls = false;
             LoadingInfoLabel.Text = message;
         }
         
@@ -22,8 +28,10 @@ namespace LAN_Spy.View {
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
+        /// <exception cref=""></exception>
         private void CancelButton_Click(object sender, EventArgs e) {
-            Environment.Exit(-1);
+            MessagePipe.SendOutMessage(new KeyValuePair<Message, object>(Message.UserCancel, null));
+            Close();
         }
 
         /// <summary>

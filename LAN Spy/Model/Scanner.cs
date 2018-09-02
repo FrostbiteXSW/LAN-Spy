@@ -54,84 +54,99 @@ namespace LAN_Spy.Model {
         public void ScanForTarget() {
             // 获取当前设备
             var device = DeviceList[CurDevIndex];
-
-            // 绑定抓包事件处理方法
-            device.OnPacketArrival += Device_OnPacketArrival;
-
-            // 打开设备并开始扫描
-            device.Open();
-
-            // arp头起始位置向后偏移6字节后，取2字节内容即为arp包类型
-            device.Filter = "arp [6:2] = 2";
-            device.StartCapture();
-
+            
             // 创建分析线程
-            var analyzeThreads = new Thread[4];
-            for (var i = 0; i < 4; i++) {
+            const int analyzeThreadsCount = 4;
+            var analyzeThreads = new Thread[analyzeThreadsCount];
+            for (var i = 0; i < analyzeThreadsCount; i++)
                 analyzeThreads[i] = new Thread(ScanPacketAnalyzeThread);
-                analyzeThreads[i].Start();
-            }
 
-            // 去除网络号和广播地址，产生地址集合
-            byte[] minAddress = NetworkNumber.GetAddressBytes(),
-                maxAddress = BroadcastAddress.GetAddressBytes(),
-                tempAddress = minAddress;
-            var ipAddresses = new List<IPAddress>();
+            // 创建发包线程队列
             var sendThreads = new List<Thread>();
-            tempAddress[3]++;
-            while (!(tempAddress[0] == maxAddress[0]
-                     && tempAddress[1] == maxAddress[1]
-                     && tempAddress[2] == maxAddress[2]
-                     && tempAddress[3] == maxAddress[3])) {
-                ipAddresses.Add(new IPAddress(tempAddress));
-                if (ipAddresses.Count >= (AddressCount / 8 >= 254 ? 254 : AddressCount / 8)) {
-                    // 创建发包线程
-                    var sendThread = new Thread(ScanPacketSendThread);
-                    sendThread.Start(ipAddresses);
-                    sendThreads.Add(sendThread);
-                    ipAddresses = new List<IPAddress>();
-                }
-                var i = 3;
-                while (i >= 0 && tempAddress[i] == 255) {
-                    tempAddress[i] = 0;
-                    i--;
-                }
-                tempAddress[i]++;
-            }
 
-            // 最后一个发送线程
-            var lastsendThread = new Thread(ScanPacketSendThread);
-            lastsendThread.Start(ipAddresses);
-            sendThreads.Add(lastsendThread);
+            try {
 
-            // 等待数据包发送完成
-            var waitTime = (int) (60 * 1000 * Math.Log(AddressCount, 254));
-            while (waitTime >= 0) {
-                waitTime = -waitTime;
-                foreach (var sendThread in sendThreads)
-                    if (sendThread.IsAlive) {
-                        Thread.Sleep(100);
-                        if ((waitTime = -waitTime - 100) <= 0)
-                            throw new TimeoutException("等待线程结束超时。");
-                        break;
+                // 绑定抓包事件处理方法
+                device.OnPacketArrival += Device_OnPacketArrival;
+
+                // 打开设备并开始扫描
+                device.Open();
+
+                // arp头起始位置向后偏移6字节后，取2字节内容即为arp包类型
+                device.Filter = "arp [6:2] = 2";
+                device.StartCapture();
+
+                // 启动分析线程
+                for (var i = 0; i < analyzeThreadsCount; i++)
+                    analyzeThreads[i].Start();
+
+                // 去除网络号和广播地址，产生地址集合
+                byte[] minAddress = NetworkNumber.GetAddressBytes(),
+                    maxAddress = BroadcastAddress.GetAddressBytes(),
+                    tempAddress = minAddress;
+                var ipAddresses = new List<IPAddress>();
+                tempAddress[3]++;
+                while (!(tempAddress[0] == maxAddress[0]
+                         && tempAddress[1] == maxAddress[1]
+                         && tempAddress[2] == maxAddress[2]
+                         && tempAddress[3] == maxAddress[3])) {
+                    ipAddresses.Add(new IPAddress(tempAddress));
+                    if (ipAddresses.Count >= (AddressCount / 8 >= 254 ? 254 : AddressCount / 8)) {
+                        // 创建发包线程
+                        var sendThread = new Thread(ScanPacketSendThread);
+                        sendThread.Start(ipAddresses);
+                        sendThreads.Add(sendThread);
+                        ipAddresses = new List<IPAddress>();
                     }
+                    var i = 3;
+                    while (i >= 0 && tempAddress[i] == 255) {
+                        tempAddress[i] = 0;
+                        i--;
+                    }
+                    tempAddress[i]++;
+                }
+
+                // 最后一个发送线程
+                var lastsendThread = new Thread(ScanPacketSendThread);
+                lastsendThread.Start(ipAddresses);
+                sendThreads.Add(lastsendThread);
+
+                // 等待数据包发送完成
+                var waitTime = (int) (60 * 1000 * Math.Log(AddressCount, 254));
+                while (waitTime >= 0) {
+                    waitTime = -waitTime;
+                    foreach (var sendThread in sendThreads)
+                        if (sendThread.IsAlive) {
+                            Thread.Sleep(100);
+                            if ((waitTime = -waitTime - 100) <= 0)
+                                throw new TimeoutException("等待线程结束超时。");
+                            break;
+                        }
+                }
+
+                // 等待接收目标机反馈消息
+                Thread.Sleep((int) (8 * 1000 * Math.Log(AddressCount, 254)));
             }
+            finally {
+                // 终止发包线程
+                foreach (var sendThread in sendThreads)
+                    if (sendThread.IsAlive)
+                        sendThread.Abort();
 
-            // 等待接收目标机反馈消息
-            Thread.Sleep((int) (8 * 1000 * Math.Log(AddressCount, 254)));
+                // 终止分析线程
+                foreach (var analyzeThread in analyzeThreads)
+                    if (analyzeThread.IsAlive)
+                        analyzeThread.Abort();
 
-            // 接收完成，终止分析线程
-            foreach (var analyzeThread in analyzeThreads)
-                analyzeThread.Abort();
-
-            // 清理缓冲区及其他内容
-            lock (_hostList) {
-                _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
+                // 清理缓冲区及其他内容
+                lock (_hostList) {
+                    _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
+                }
+                device.StopCapture();
+                device.OnPacketArrival -= Device_OnPacketArrival;
+                device.Close();
+                ClearCaptures();
             }
-            device.StopCapture();
-            device.OnPacketArrival -= Device_OnPacketArrival;
-            device.Close();
-            ClearCaptures();
         }
 
         /// <summary>
