@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controller\MessagePipe.cs" />
+    <Compile Include="Controller\RegistedThreadName.cs" />
     <Compile Include="Controller\TaskHandler.cs" />
     <Compile Include="Model\Classes\PointerPacker.cs" />
     <Compile Include="View\ChooseDevice.cs">

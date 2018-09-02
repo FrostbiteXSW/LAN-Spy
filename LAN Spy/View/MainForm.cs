@@ -254,22 +254,37 @@ namespace LAN_Spy.View {
                 finally {
                     loading.Close();
                 }
-            });
+            }) {Name = RegistedThreadName.StartupModels.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
             loading.ShowDialog();
 
             // 等待结果
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
+            while ((MessagePipe.TopOutMessage.Key != Message.TaskOut 
+                    && MessagePipe.TopOutMessage.Key != Message.UserCancel)
+                   || (MessagePipe.TopOutMessage.Key == Message.TaskOut 
+                       && ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name)) 
+                Thread.Sleep(500);
 
-            if (MessagePipe.TopOutMessage.Key != Message.UserCancel)
-                return MessagePipe.GetNextOutMessage().Key == Message.TaskOut;
+            // 任务完成
+            if (MessagePipe.TopOutMessage.Key != Message.UserCancel) {
+                MessagePipe.GetNextOutMessage();
+                return true;
+            }
 
             // 用户取消
             MessagePipe.GetNextOutMessage();
-            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, null));
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
-            if (MessagePipe.GetNextOutMessage().Key != Message.TaskAborted)
-                throw new Exception("核心模块工作异常，请检查。");
+            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, task));
+            while (MessagePipe.TopOutMessage.Key != Message.TaskAborted
+                   || ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name) {
+                if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
+                    && ((Thread) MessagePipe.TopOutMessage.Value).Name == task.Name) {
+                    MessagePipe.GetNextOutMessage();
+                    MessageBox.Show("未能找到指定名称的工作线程。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                Thread.Sleep(500);
+            }
+            MessagePipe.GetNextOutMessage();
             return false;
         }
 
@@ -299,34 +314,37 @@ namespace LAN_Spy.View {
                 finally {
                     loading.Close();
                 }
-            });
+            }) {Name = RegistedThreadName.ScanForTarget.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
             loading.ShowDialog();
-            Thread.Sleep(1000);
 
             // 等待结果
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
+            while ((MessagePipe.TopOutMessage.Key != Message.TaskOut 
+                    && MessagePipe.TopOutMessage.Key != Message.UserCancel)
+                   || (MessagePipe.TopOutMessage.Key == Message.TaskOut 
+                       && ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name)) 
+                Thread.Sleep(500);
 
             // 用户取消
             if (MessagePipe.TopOutMessage.Key == Message.UserCancel) {
                 MessagePipe.GetNextOutMessage();
-                MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, null));
-                while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
-                if (MessagePipe.GetNextOutMessage().Key != Message.TaskAborted)
-                    throw new Exception("核心模块工作异常，请检查。");
+                MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, task));
+                while (MessagePipe.TopOutMessage.Key != Message.TaskAborted
+                       || ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name) {
+                    if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
+                        && ((Thread) MessagePipe.TopOutMessage.Value).Name == task.Name) {
+                        MessagePipe.GetNextOutMessage();
+                        MessageBox.Show("未能找到指定名称的工作线程。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    Thread.Sleep(500);
+                }
+                MessagePipe.GetNextOutMessage();
                 return;
             }
 
-            if (MessagePipe.GetNextOutMessage().Key != Message.TaskOut) {
-                MessageBox.Show("扫描过程出现异常，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Scanner.Reset();
-                Scanner.Reset();
-                Scanner.CurDevIndex = -1;
-                启动扫描模块ToolStripMenuItem.Text = "启动模块";
-                扫描主机ToolStripMenuItem.Enabled = false;
-                侦测主机ToolStripMenuItem.Enabled = false;
-                return;
-            }
+            // 扫描结束
+            MessagePipe.GetNextOutMessage();
 
             // 输出扫描结果
             lock (Scanner) {
@@ -372,23 +390,32 @@ namespace LAN_Spy.View {
                 finally {
                     loading.Close();
                 }
-            });
+            }) {Name = RegistedThreadName.SpyForTarget.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
             loading.ShowDialog();
-            Thread.Sleep(1000);
 
             // 等待结果
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
-
-            if (MessagePipe.TopOutMessage.Key != Message.UserCancel)
-                throw new Exception("核心模块工作异常，请检查。");
+            var waitTime = 0;
+            while (MessagePipe.TopOutMessage.Key != Message.UserCancel) {
+                Thread.Sleep(500);
+                if ((waitTime += 500) == 30000)
+                    throw new TimeoutException("等待消息队列传递消息超时。");
+            }
+            MessagePipe.GetNextOutMessage();
 
             // 用户取消
+            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, task));
+            while (MessagePipe.TopOutMessage.Key != Message.TaskAborted
+                   || ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name) {
+                if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
+                    && ((Thread) MessagePipe.TopOutMessage.Value).Name == task.Name) {
+                    MessagePipe.GetNextOutMessage();
+                    MessageBox.Show("未能找到指定名称的工作线程。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                Thread.Sleep(500);
+            }
             MessagePipe.GetNextOutMessage();
-            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, null));
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) Thread.Sleep(500);
-            if (MessagePipe.GetNextOutMessage().Key != Message.TaskAborted)
-                throw new Exception("核心模块工作异常，请检查。");
 
             // 输出侦测结果
             lock (Scanner) {

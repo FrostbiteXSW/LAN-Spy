@@ -32,6 +32,11 @@ namespace LAN_Spy.Controller {
         TaskAborted,
 
         /// <summary>
+        ///     未找到指定名称线程。
+        /// </summary>
+        TaskNotFound,
+
+        /// <summary>
         ///     用户请求取消操作。
         /// </summary>
         UserCancel

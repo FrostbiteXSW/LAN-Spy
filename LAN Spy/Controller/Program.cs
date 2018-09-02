@@ -73,8 +73,7 @@ namespace LAN_Spy.Controller {
                 finally {
                     loading.Close();
                 }
-            });
-
+            }) {Name = RegistedThreadName.ProgramInit.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
             loading.ShowDialog();
 
@@ -85,8 +84,11 @@ namespace LAN_Spy.Controller {
             if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
                 Environment.Exit(-1);
 
-            if (MessagePipe.GetNextOutMessage().Key != Message.TaskOut)
+            // 判断是否正确初始化
+            if (MessagePipe.TopOutMessage.Key != Message.TaskOut 
+                || ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name)
                 throw new Exception("核心模块初始化失败。");
+            MessagePipe.GetNextOutMessage();
 
             var models = new BasicClass[] {scanner, poisoner, watcher};
             Application.Run(new MainForm(ref models));

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace LAN_Spy.Controller {
@@ -8,93 +9,110 @@ namespace LAN_Spy.Controller {
     /// </summary>
     public static class TaskHandler {
         /// <summary>
-        ///     工作线程。
+        ///     工作线程队列。
         /// </summary>
-        private static Thread _workThread;
+        private static readonly List<Thread> WorkThreads = new List<Thread>();
+
+        /// <summary>
+        ///     消息接收线程。
+        /// </summary>
+        private static readonly Thread MessageReceiver = new Thread(work => {
+            try {
+                while (true) {
+                    // 接收下一个消息
+                    var message = MessagePipe.GetNextInMessage();
+
+                    // 根据消息类型进行处理
+                    switch (message.Key) {
+                        // 新任务到达
+                        case Message.TaskIn:
+                            var task = (Thread) message.Value;
+                            task.Start();
+                            WorkThreads.Add(task);
+                            break;
+
+                        // 取消任务
+                        case Message.TaskCancel:
+                            MessagePipe.GetNextInMessage();
+
+                            // 查找目标
+                            var target = WorkThreads.Find(item => item.Name == ((Thread) message.Value).Name);
+                            if (target is null) {
+                                MessagePipe.SendOutMessage(new KeyValuePair<Message, object>(Message.TaskNotFound, message.Value));
+                                break;
+                            }
+
+                            // 尝试中止任务
+                            WorkThreads.Remove(target);
+                            target.Abort();
+
+                            // 等待任务结束
+                            var waitTime = 0;
+                            while (target.IsAlive) {
+                                Thread.Sleep(500);
+                                if ((waitTime += 500) == 30000)
+                                    throw new TimeoutException("任务长时间未能中止。");
+                            }
+
+                            // 任务成功中止
+                            MessagePipe.SendOutMessage(new KeyValuePair<Message, object>(Message.TaskAborted, message.Value));
+                            break;
+
+                        // 无等待接收消息
+                        case Message.NoAvailableMessage:
+                            Thread.Sleep(1000);
+                            break;
+
+                        // 无效消息
+                        default:
+                            throw new Exception($"消息队列传出无效消息：{message.Key.ToString()}");
+                    }
+                }
+            }
+            catch (ThreadAbortException) { }
+        });
+
+        /// <summary>
+        ///     线程运行监视器。
+        /// </summary>
+        private static readonly Thread Inspector = new Thread(work => {
+            try {
+                while (true) {
+                    WorkThreads.ForEach(workThread => {
+                        if (!workThread.IsAlive)
+                            MessagePipe.SendOutMessage(new KeyValuePair<Message, object>(Message.TaskOut, workThread));
+                    });
+                    WorkThreads.RemoveAll(workThread => !workThread.IsAlive);
+                    Thread.Sleep(1000);
+                }
+            }
+            catch (ThreadAbortException) { }
+        });
 
         /// <summary> 
         ///     初始化 <see cref="TaskHandler"/> 的线程容器。
         /// </summary>
         public static void Init() {
             Stop();
-            _workThread = new Thread(work => {
-                Thread task = null;
-                var message = new KeyValuePair<Message, object>(Message.NoAvailableMessage, null);
-
-                try {
-                    while (true) {
-                        // 接收下一个消息
-                        message = MessagePipe.GetNextInMessage();
-
-                        // 根据消息类型进行处理
-                        switch (message.Key) {
-                            // 新任务到达
-                            case Message.TaskIn:
-                                task = (Thread) message.Value;
-                                task.Start();
-                                while (task.IsAlive) {
-                                    if (MessagePipe.TopInMessage.Key == Message.TaskCancel) {
-                                        // 尝试中止任务
-                                        MessagePipe.GetNextInMessage();
-                                        task.Abort();
-                                        var guard = task;
-                                        task = null;
-
-                                        // 等待任务结束
-                                        var waitTime = 0;
-                                        while (guard.IsAlive) {
-                                            Thread.Sleep(500);
-                                            waitTime += 500;
-                                            if (waitTime == 30000)
-                                                throw new TimeoutException("任务长时间未能中止。");
-                                        }
-
-                                        // 任务中止
-                                        MessagePipe.SendOutMessage(new KeyValuePair<Message, object>(Message.TaskAborted, message.Value));
-                                        break;
-                                    }
-                                    Thread.Sleep(500);
-                                }
-
-                                // 任务完成
-                                if (task == null) break;
-                                MessagePipe.SendOutMessage(new KeyValuePair<Message, object>(Message.TaskOut, message.Value));
-                                task = null;
-                                break;
-
-                            // 无等待接收消息
-                            case Message.NoAvailableMessage:
-                                Thread.Sleep(1000);
-                                break;
-                        }
-                    }
-                }
-                catch (ThreadAbortException) {
-                    if (!(task is null) && task.IsAlive) {
-                        task.Abort();
-                        var waitTime = 0;
-                        while (task.IsAlive) {
-                            Thread.Sleep(500);
-                            waitTime += 500;
-                            if (waitTime == 30000)
-                                throw new TimeoutException("任务长时间未能中止。");
-                        }
-                        MessagePipe.SendOutMessage(new KeyValuePair<Message, object>(Message.TaskAborted, message.Value));
-                    }
-                }
-            });
-            _workThread.Start();
+            MessageReceiver.Start();
+            Inspector.Start();
         }
 
         /// <summary>
         ///     终止 <see cref="TaskHandler"/> 的运行。
         /// </summary>
         public static void Stop() {
-            if (_workThread is null) return;
-            _workThread.Abort();
-            while (_workThread.IsAlive)
+            if (WorkThreads.Count == 0) return;
+            WorkThreads.ForEach(thread => {thread.Abort();});
+            MessageReceiver.Abort();
+            Inspector.Abort();
+            var waitTime = 0;
+            while (WorkThreads.Count(thread => thread.IsAlive) > 0 || MessageReceiver.IsAlive || Inspector.IsAlive) {
                 Thread.Sleep(500);
-            _workThread = null;
+                if ((waitTime += 500) == 30000)
+                    throw new TimeoutException("等待线程结束超时。");
+            }
+            WorkThreads.Clear();
         }
     }
 }
