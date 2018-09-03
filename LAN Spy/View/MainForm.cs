@@ -81,6 +81,9 @@ namespace LAN_Spy.View {
                 侦测主机ToolStripMenuItem.Enabled = true;
                 开始毒化ToolStripMenuItem.Enabled = true;
                 开始监视ToolStripMenuItem.Enabled = true;
+                添加到目标组1ToolStripMenuItem.Enabled = true;
+                添加到目标组2ToolStripMenuItem.Enabled = true;
+                断开此连接ToolStripMenuItem.Enabled = true;
             }
             else {
                 MessageBox.Show("一个或多个模块未能成功初始化，请单独启动模块。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -125,6 +128,13 @@ namespace LAN_Spy.View {
             侦测主机ToolStripMenuItem.Enabled = false;
             开始毒化ToolStripMenuItem.Enabled = false;
             开始监视ToolStripMenuItem.Enabled = false;
+            添加到目标组1ToolStripMenuItem.Enabled = false;
+            添加到目标组2ToolStripMenuItem.Enabled = false;
+            断开此连接ToolStripMenuItem.Enabled = false;
+            HostList.Rows.Clear();
+            Target1List.Rows.Clear();
+            Target2List.Rows.Clear();
+            ConnectionList.Rows.Clear();
         }
 
         /// <summary>
@@ -200,6 +210,7 @@ namespace LAN_Spy.View {
                 启动扫描模块ToolStripMenuItem.Text = "启动模块";
                 扫描主机ToolStripMenuItem.Enabled = false;
                 侦测主机ToolStripMenuItem.Enabled = false;
+                HostList.Rows.Clear();
 
                 // TODO:新增模块时请更新此处的代码
                 if (启动毒化模块ToolStripMenuItem.Text == "启动模块"
@@ -453,6 +464,8 @@ namespace LAN_Spy.View {
                     启动所有模块ToolStripMenuItem.Text = "重启所有模块";
                     启动毒化模块ToolStripMenuItem.Text = "停止模块";
                     开始毒化ToolStripMenuItem.Enabled = true;
+                    添加到目标组1ToolStripMenuItem.Enabled = true;
+                    添加到目标组2ToolStripMenuItem.Enabled = true;
                 }
             }
             else {
@@ -462,6 +475,10 @@ namespace LAN_Spy.View {
                 MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动毒化模块ToolStripMenuItem.Text = "启动模块";
                 开始毒化ToolStripMenuItem.Enabled = false;
+                添加到目标组1ToolStripMenuItem.Enabled = false;
+                添加到目标组2ToolStripMenuItem.Enabled = false;
+                Target1List.Rows.Clear();
+                Target2List.Rows.Clear();
 
                 // TODO:新增模块时请更新此处的代码
                 if (启动扫描模块ToolStripMenuItem.Text == "启动模块"
@@ -497,8 +514,8 @@ namespace LAN_Spy.View {
             foreach (DataGridViewRow row in gridView.Rows) {
                 if (!row.Selected) continue;
                 foreach (DataGridViewCell cell in row.Cells)
-                    str.Append($"{cell.Value} ");
-                str.Replace(" ", "\r\n", str.Length - 1, 1);
+                    str.Append($"{cell.Value}\t");
+                str.Replace("\t", "\r\n", str.Length - 1, 1);
             }
 
             Clipboard.SetDataObject(str.ToString().Substring(0, str.Length - 2), true);
@@ -510,7 +527,7 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void HostListMenuStrip_Opened(object sender, EventArgs e) {
-            var index = HostList.PointToClient(MousePosition).Y / HostList.Rows[0].Height - 1;
+            var index = (HostList.PointToClient(MousePosition).Y + HostList.VerticalScrollingOffset) / HostList.Rows[0].Height - 1;
             if (HostList.Rows[index].Selected) return;
             HostList.ClearSelection();
             HostList.Rows[index].Selected = true;
@@ -540,6 +557,7 @@ namespace LAN_Spy.View {
                 MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动监视模块ToolStripMenuItem.Text = "启动模块";
                 开始监视ToolStripMenuItem.Enabled = false;
+                ConnectionList.Rows.Clear();
 
                 // TODO:新增模块时请更新此处的代码
                 if (启动扫描模块ToolStripMenuItem.Text == "启动模块"
@@ -573,8 +591,18 @@ namespace LAN_Spy.View {
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
-        private void 添加到目标组1ToolStripMenuItem_Click(object sender, EventArgs e) {
-
+        private void 添加到目标组ToolStripMenuItem_Click(object sender, EventArgs e) {
+            foreach (DataGridViewRow row in HostList.Rows) {
+                if (!row.Selected) continue;
+                if (((ToolStripMenuItem) sender).Text[((ToolStripMenuItem) sender).Text.Length - 1].Equals('1')) {
+                    Target1List.Rows.Add(row.Cells["HostIP"].Value, row.Cells["HostMAC"].Value);
+                    Target1List.Rows[Target1List.Rows.Count - 1].ContextMenuStrip = TargetListMenuStrip;
+                }
+                else {
+                    Target2List.Rows.Add(row.Cells["HostIP"].Value, row.Cells["HostMAC"].Value);
+                    Target2List.Rows[Target2List.Rows.Count - 1].ContextMenuStrip = TargetListMenuStrip;
+                }
+            }
         }
     }
 }
