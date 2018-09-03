@@ -6,6 +6,8 @@ using SharpPcap.WinPcap;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -372,7 +374,16 @@ namespace LAN_Spy.View {
                     var temp = new StringBuilder(host.PhysicalAddress.ToString());
                     if (temp.Length == 12)
                         temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
-                    HostList.Rows.Add(host.IPAddress, temp);
+
+                    if (Scanner.GatewayAddresses.Contains(host.IPAddress)) {
+                        HostList.Rows.Add(host.IPAddress, temp, "网关地址");
+                        Poisoner.Gateway = host;
+                    }
+                    else if (Equals(host.IPAddress, Scanner.Ipv4Address))
+                        HostList.Rows.Add(host.IPAddress, temp, "当前设备地址");
+                    else
+                        HostList.Rows.Add(host.IPAddress, temp, "");
+
                     HostList.Rows[HostList.Rows.Count - 1].ContextMenuStrip = HostListMenuStrip;
                 }
             }
@@ -443,7 +454,16 @@ namespace LAN_Spy.View {
                     var temp = new StringBuilder(host.PhysicalAddress.ToString());
                     if (temp.Length == 12)
                         temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
-                    HostList.Rows.Add(host.IPAddress, temp);
+                    
+                    if (Scanner.GatewayAddresses.Contains(host.IPAddress)) {
+                        HostList.Rows.Add(host.IPAddress, temp, "网关地址");
+                        Poisoner.Gateway = host;
+                    }
+                    else if (Equals(host.IPAddress, Scanner.Ipv4Address))
+                        HostList.Rows.Add(host.IPAddress, temp, "当前设备地址");
+                    else
+                        HostList.Rows.Add(host.IPAddress, temp, "");
+
                     HostList.Rows[HostList.Rows.Count - 1].ContextMenuStrip = HostListMenuStrip;
                 }
             }
@@ -492,7 +512,7 @@ namespace LAN_Spy.View {
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
-        private void DataGridView复制ToolStripMenuItem_Click(object sender, EventArgs e) {
+        private void 复制DataGridViewToolStripMenuItem_Click(object sender, EventArgs e) {
             DataGridView gridView;
             
             // TODO:新增模块时请更新此处的代码
@@ -514,7 +534,8 @@ namespace LAN_Spy.View {
             foreach (DataGridViewRow row in gridView.Rows) {
                 if (!row.Selected) continue;
                 foreach (DataGridViewCell cell in row.Cells)
-                    str.Append($"{cell.Value}\t");
+                    if (cell.Value.ToString().Length != 0)
+                        str.Append($"{cell.Value}\t");
                 str.Replace("\t", "\r\n", str.Length - 1, 1);
             }
 
@@ -526,11 +547,31 @@ namespace LAN_Spy.View {
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
-        private void HostListMenuStrip_Opened(object sender, EventArgs e) {
-            var index = (HostList.PointToClient(MousePosition).Y + HostList.VerticalScrollingOffset) / HostList.Rows[0].Height - 1;
-            if (HostList.Rows[index].Selected) return;
-            HostList.ClearSelection();
-            HostList.Rows[index].Selected = true;
+        private void ContextMenuStrip_Opened(object sender, EventArgs e) {
+            var source = ((ContextMenuStrip) sender).SourceControl;
+            DataGridView list;
+
+            switch (source.Name) {
+                case "HostList":
+                    list = HostList;
+                    break;
+                case "Target1List":
+                    list = Target1List;
+                    break;
+                case "Target2List":
+                    list = Target2List;
+                    break;
+                case "ConnectionList":
+                    list = ConnectionList;
+                    break;
+                default:
+                    return;
+            }
+
+            var index = (list.PointToClient(MousePosition).Y + list.VerticalScrollingOffset) / list.Rows[0].Height - 1;
+            if (list.Rows[index].Selected) return;
+            list.ClearSelection();
+            list.Rows[index].Selected = true;
         }
         
         /// <summary>
@@ -587,7 +628,7 @@ namespace LAN_Spy.View {
         }
         
         /// <summary>
-        ///     菜单项“添加到目标组1”单击时的事件。
+        ///     菜单项“添加到目标组”单击时的事件。
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
@@ -602,6 +643,119 @@ namespace LAN_Spy.View {
                     Target2List.Rows.Add(row.Cells["HostIP"].Value, row.Cells["HostMAC"].Value);
                     Target2List.Rows[Target2List.Rows.Count - 1].ContextMenuStrip = TargetListMenuStrip;
                 }
+            }
+        }
+        
+        /// <summary>
+        ///     菜单项“从目标组移除”单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 从目标组移除ToolStripMenuItem_Click(object sender, EventArgs e) {
+            var list = Target1List.SelectedRows.Count != 0 ? Target1List : Target2List;
+            foreach (DataGridViewRow row in list.SelectedRows)
+                list.Rows.Remove(row);
+        }
+
+        /// <summary>
+        ///     毒化目标列表选择情况变化时触发的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void TargetList_SelectionChanged(object sender, EventArgs e) {
+            DataGridView curList, oldList;
+            if (((DataGridView) sender).Name == "Target1List") {
+                curList = Target1List;
+                oldList = Target2List;
+            }
+            else {
+                curList = Target2List;
+                oldList = Target1List;
+            }
+
+            if (oldList.SelectedRows.Count == 0) return;
+
+            var selection = curList.SelectedRows;
+            oldList.ClearSelection();
+            foreach (DataGridViewRow row in selection)
+                row.Selected = true;
+        }
+        
+        /// <summary>
+        ///     菜单项“开始毒化”单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 开始毒化ToolStripMenuItem_Click(object sender, EventArgs e) {
+            if (开始毒化ToolStripMenuItem.Text == "开始毒化") {
+                if (MessageBox.Show("注意：在重新启动毒化工作前，目标无法被更改，仍然启动？", "警告", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel)
+                    return;
+
+                if (Poisoner.Gateway is null && MessageBox.Show("未能找到默认网关，被毒化设备将不能接入外部网络，仍然继续？", "警告", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel)
+                    return;
+
+                // 创建载入界面
+                var loading = new Loading("正在毒化，请稍候");
+                var task = new Thread(poisoning => {
+                    try {
+                        Thread.Sleep(1000);
+                        lock (Poisoner) {
+                            Poisoner.Target1.Clear();
+                            Poisoner.Target2.Clear();
+
+                            foreach (DataGridViewRow target in Target1List.Rows)
+                                Poisoner.Target1.Add(new Host(IPAddress.Parse(target.Cells["Target1IP"].Value.ToString()),
+                                    PhysicalAddress.Parse(target.Cells["Target1MAC"].Value.ToString())));
+                            foreach (DataGridViewRow target in Target2List.Rows)
+                                Poisoner.Target2.Add(new Host(IPAddress.Parse(target.Cells["Target2IP"].Value.ToString()),
+                                    PhysicalAddress.Parse(target.Cells["Target2MAC"].Value.ToString())));
+
+                            Poisoner.StartPoisoning();
+                        }
+                    }
+                    catch (ThreadAbortException) {
+                        // 用户中止了操作
+                        Poisoner.StopPoisoning();
+                    }
+                    finally {
+                        loading.Close();
+                    }
+                }) {Name = RegistedThreadName.StartPoisoning.ToString()};
+                MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
+                loading.ShowDialog();
+
+                // 等待结果
+                while ((MessagePipe.TopOutMessage.Key != Message.TaskOut
+                        && MessagePipe.TopOutMessage.Key != Message.UserCancel)
+                       || (MessagePipe.TopOutMessage.Key == Message.TaskOut
+                           && ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name))
+                    Thread.Sleep(500);
+
+                // 用户取消
+                if (MessagePipe.TopOutMessage.Key == Message.UserCancel) {
+                    MessagePipe.GetNextOutMessage();
+                    MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, task));
+                    while (MessagePipe.TopOutMessage.Key != Message.TaskAborted
+                           || ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name) {
+                        if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
+                            && ((Thread) MessagePipe.TopOutMessage.Value).Name == task.Name) {
+                            MessagePipe.GetNextOutMessage();
+                            MessageBox.Show("未能找到指定名称的工作线程。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                        Thread.Sleep(500);
+                    }
+                    MessagePipe.GetNextOutMessage();
+                    return;
+                }
+
+                MessageBox.Show("毒化工作已启动。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                开始毒化ToolStripMenuItem.Text = "停止毒化";
+            }
+            else {
+                Poisoner.StopPoisoning();
+                MessageBox.Show("毒化工作已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                开始毒化ToolStripMenuItem.Text = "开始毒化";
             }
         }
     }

@@ -64,6 +64,9 @@ namespace LAN_Spy.Model {
             // 判断是否存在未停止的监听操作
             if (_device != null)
                 throw new InvalidOperationException("已有一项监听工作正在进行。");
+            
+            // 进入工作状态
+            IsStarted = true;
 
             // 打开设备
             _device = DeviceList[CurDevName];
@@ -81,9 +84,6 @@ namespace LAN_Spy.Model {
             // 创建超时检测线程
             _dropOutdatedLinksThread = new Thread(DropOutdatedLinksThread);
             _dropOutdatedLinksThread.Start();
-
-            // 进入工作状态
-            IsStarted = true;
         }
 
         /// <summary>

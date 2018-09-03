@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Threading;
 using LAN_Spy.Model.Classes;
 using PacketDotNet;
@@ -8,6 +9,7 @@ using PacketDotNet.Utils;
 using SharpPcap;
 
 namespace LAN_Spy.Model {
+    /// <inheritdoc />
     /// <summary>
     ///     ARP毒化器。
     /// </summary>
@@ -65,14 +67,16 @@ namespace LAN_Spy.Model {
             if (_device != null)
                 throw new InvalidOperationException("已有一项毒化工作正在进行。");
 
+            // 进入工作状态
+            IsStarted = true;
+
             // 深复制以缓存目标
             _target1.AddRange(Target1);
             _target2.AddRange(Target2);
 
             // 深复制以缓存网关
-            if (Gateway == null)
-                throw new NullReferenceException("未设置默认网关。");
-            _gateway = new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
+            _gateway = Gateway == null ? new Host(new IPAddress(new byte[] {0, 0, 0, 0}), new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0})) 
+                                       : new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
 
             // 缓存并打开当前设备
             _device = DeviceList[CurDevName];
@@ -99,9 +103,6 @@ namespace LAN_Spy.Model {
                 poisonThread.Start(target);
                 _poisonThreads.Add(poisonThread);
             }
-
-            // 进入工作状态
-            IsStarted = true;
         }
 
         /// <summary>
@@ -306,6 +307,8 @@ namespace LAN_Spy.Model {
 
             // 清理缓冲区
             _gateway = null;
+            _target1.Clear();
+            _target2.Clear();
             ClearCaptures();
 
             // 退出工作状态
