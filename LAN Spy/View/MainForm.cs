@@ -1,14 +1,14 @@
-﻿using System;
+﻿using LAN_Spy.Controller;
+using LAN_Spy.Model;
+using LAN_Spy.Model.Classes;
+using SharpPcap;
+using SharpPcap.WinPcap;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using LAN_Spy.Controller;
-using LAN_Spy.Model;
-using LAN_Spy.Model.Classes;
-using SharpPcap;
-using SharpPcap.WinPcap;
 using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View {
@@ -71,12 +71,16 @@ namespace LAN_Spy.View {
 
             // 启动模块
             if (StartupModels(Models)) {
-                if (Models.Count(item => item.CurDevIndex == -1) != 0) return;
+                if (Models.Count(item => item.CurDevName == "") != 0) return;
                 MessageBox.Show("所有模块均已成功设置。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动所有模块ToolStripMenuItem.Text = "重启所有模块";
+
+                // TODO:新增模块时请更新此处的代码
                 启动扫描模块ToolStripMenuItem.Text = 启动毒化模块ToolStripMenuItem.Text = 启动监视模块ToolStripMenuItem.Text = "停止模块";
                 扫描主机ToolStripMenuItem.Enabled = true;
                 侦测主机ToolStripMenuItem.Enabled = true;
+                开始毒化ToolStripMenuItem.Enabled = true;
+                开始监视ToolStripMenuItem.Enabled = true;
             }
             else {
                 MessageBox.Show("一个或多个模块未能成功初始化，请单独启动模块。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -114,9 +118,13 @@ namespace LAN_Spy.View {
             else
                 MessageBox.Show("所有模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
             启动所有模块ToolStripMenuItem.Text = "启动所有模块";
+            
+            // TODO:新增模块时请更新此处的代码
             启动扫描模块ToolStripMenuItem.Text = 启动毒化模块ToolStripMenuItem.Text = 启动监视模块ToolStripMenuItem.Text = "启动模块";
             扫描主机ToolStripMenuItem.Enabled = false;
             侦测主机ToolStripMenuItem.Enabled = false;
+            开始毒化ToolStripMenuItem.Enabled = false;
+            开始监视ToolStripMenuItem.Enabled = false;
         }
 
         /// <summary>
@@ -132,7 +140,7 @@ namespace LAN_Spy.View {
             }
             else {
                 Scanner.Reset();
-                Scanner.CurDevIndex = -1;
+                Scanner.CurDevName = "";
             }
 
             if (Poisoner is null) {
@@ -141,7 +149,7 @@ namespace LAN_Spy.View {
             else {
                 Poisoner.StopPoisoning();
                 Poisoner.Reset();
-                Poisoner.CurDevIndex = -1;
+                Poisoner.CurDevName = "";
             }
 
             if (Watcher is null) {
@@ -150,7 +158,7 @@ namespace LAN_Spy.View {
             else {
                 Watcher.StopWatching();
                 Watcher.Reset();
-                Watcher.CurDevIndex = -1;
+                Watcher.CurDevName = "";
             }
 
             return result;
@@ -177,7 +185,7 @@ namespace LAN_Spy.View {
             if (启动扫描模块ToolStripMenuItem.Text == "启动模块") {
                 if (!StartupModels(new[] {Scanner}))
                     MessageBox.Show("模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                else if (Scanner.CurDevIndex != -1) {
+                else if (Scanner.CurDevName != "") {
                     MessageBox.Show("模块已成功设置。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     启动所有模块ToolStripMenuItem.Text = "重启所有模块";
                     启动扫描模块ToolStripMenuItem.Text = "停止模块";
@@ -187,7 +195,7 @@ namespace LAN_Spy.View {
             }
             else {
                 Scanner.Reset();
-                Scanner.CurDevIndex = -1;
+                Scanner.CurDevName = "";
                 MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动扫描模块ToolStripMenuItem.Text = "启动模块";
                 扫描主机ToolStripMenuItem.Enabled = false;
@@ -212,14 +220,14 @@ namespace LAN_Spy.View {
                 return false;
 
             // 选择设备
-            var index = new PointerPacker(-1);
+            var index = new PointerPacker("");
             var chooseDevice = new ChooseDevice(ref index);
             while (true) {
                 chooseDevice.ShowDialog();
 
                 // 用户点击了取消，中止本次操作
-                var value = (int) index.Item;
-                if (value == -1) return true;
+                var value = (string) index.Item;
+                if (value.Length == 0) return true;
 
                 // 检查设备网络是否有效
                 var device = (WinPcapDevice) CaptureDeviceList.Instance[value];
@@ -242,13 +250,13 @@ namespace LAN_Spy.View {
                 try {
                     lock (modelsList) {
                         foreach (var model in modelsList)
-                            model.CurDevIndex = (int) index.Item;
+                            model.CurDevName = index.Item.ToString();
                     }
                 }
                 catch (ThreadAbortException) {
                     lock (modelsList) {
                         foreach (var model in modelsList)
-                            model.CurDevIndex = -1;
+                            model.CurDevName = "";
                     }
                 }
                 finally {
@@ -440,20 +448,20 @@ namespace LAN_Spy.View {
             if (启动毒化模块ToolStripMenuItem.Text == "启动模块") {
                 if (!StartupModels(new[] {Poisoner}))
                     MessageBox.Show("模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                else if (Poisoner.CurDevIndex != -1) {
+                else if (Poisoner.CurDevName != "") {
                     MessageBox.Show("模块已成功设置。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     启动所有模块ToolStripMenuItem.Text = "重启所有模块";
                     启动毒化模块ToolStripMenuItem.Text = "停止模块";
-                    扫描主机ToolStripMenuItem.Enabled = true;
-                    侦测主机ToolStripMenuItem.Enabled = true;
+                    开始毒化ToolStripMenuItem.Enabled = true;
                 }
             }
             else {
                 Poisoner.StopPoisoning();
                 Poisoner.Reset();
-                Poisoner.CurDevIndex = -1;
+                Poisoner.CurDevName = "";
                 MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动毒化模块ToolStripMenuItem.Text = "启动模块";
+                开始毒化ToolStripMenuItem.Enabled = false;
 
                 // TODO:新增模块时请更新此处的代码
                 if (启动扫描模块ToolStripMenuItem.Text == "启动模块"
@@ -467,9 +475,26 @@ namespace LAN_Spy.View {
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
-        private void 复制ToolStripMenuItem_Click(object sender, EventArgs e) {
+        private void DataGridView复制ToolStripMenuItem_Click(object sender, EventArgs e) {
+            DataGridView gridView;
+            
+            // TODO:新增模块时请更新此处的代码
+            switch (MainTabContainer.SelectedIndex) {
+                case 0:
+                    // 调用者为主机列表
+                    gridView = HostList;
+                    break;
+                case 2:
+                    // 调用者为连接列表
+                    gridView = ConnectionList;
+                    break;
+                default:
+                    return;
+            }
+
             var str = new StringBuilder();
-            foreach (DataGridViewRow row in HostList.Rows) {
+
+            foreach (DataGridViewRow row in gridView.Rows) {
                 if (!row.Selected) continue;
                 foreach (DataGridViewCell cell in row.Cells)
                     str.Append($"{cell.Value} ");
@@ -489,6 +514,67 @@ namespace LAN_Spy.View {
             if (HostList.Rows[index].Selected) return;
             HostList.ClearSelection();
             HostList.Rows[index].Selected = true;
+        }
+        
+        /// <summary>
+        ///     菜单项“启动模块”（监视）单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 启动监视模块ToolStripMenuItem_Click(object sender, EventArgs e) {
+            // 判断工作模式
+            if (启动监视模块ToolStripMenuItem.Text == "启动模块") {
+                if (!StartupModels(new[] {Watcher}))
+                    MessageBox.Show("模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                else if (Poisoner.CurDevName != "") {
+                    MessageBox.Show("模块已成功设置。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    启动所有模块ToolStripMenuItem.Text = "重启所有模块";
+                    启动监视模块ToolStripMenuItem.Text = "停止模块";
+                    开始监视ToolStripMenuItem.Enabled = true;
+                }
+            }
+            else {
+                Watcher.StopWatching();
+                Watcher.Reset();
+                Watcher.CurDevName = "";
+                MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                启动监视模块ToolStripMenuItem.Text = "启动模块";
+                开始监视ToolStripMenuItem.Enabled = false;
+
+                // TODO:新增模块时请更新此处的代码
+                if (启动扫描模块ToolStripMenuItem.Text == "启动模块"
+                    && 启动监视模块ToolStripMenuItem.Text == "启动模块")
+                    启动所有模块ToolStripMenuItem.Text = "启动所有模块";
+            }
+        }
+
+        /// <summary>
+        ///     开始毒化菜单项启用状态发生改变时触发事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 开始毒化ToolStripMenuItem_EnabledChanged(object sender, EventArgs e) {
+            if (!开始毒化ToolStripMenuItem.Enabled)
+                开始毒化ToolStripMenuItem.Text = "开始毒化";
+        }
+        
+        /// <summary>
+        ///     开始监视菜单项启用状态发生改变时触发事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 开始监视ToolStripMenuItem_EnabledChanged(object sender, EventArgs e) {
+            if (!开始监视ToolStripMenuItem.Enabled)
+                开始监视ToolStripMenuItem.Text = "开始监视";
+        }
+        
+        /// <summary>
+        ///     菜单项“添加到目标组1”单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 添加到目标组1ToolStripMenuItem_Click(object sender, EventArgs e) {
+
         }
     }
 }

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
+using SharpPcap.WinPcap;
 
 namespace LAN_Spy.View {
     public partial class ChooseDevice : Form {
@@ -12,6 +13,11 @@ namespace LAN_Spy.View {
         /// </summary>
         private readonly PointerPacker _index;
         
+        /// <summary>
+        ///     缓存设备的完整名称。
+        /// </summary>
+        private List<string> _devName = new List<string>();
+
         /// <summary>
         ///     设备列表鼠标悬停弹出窗口。
         /// </summary>
@@ -45,8 +51,9 @@ namespace LAN_Spy.View {
             CheckForIllegalCrossThreadCalls = false; 
             new Thread(getDeviceInfo => {
                 var collection = new List<string>();
-                foreach (var dev in CaptureDeviceList.Instance) { 
-                    collection.Add(dev.Description.Remove(dev.Description.LastIndexOf("'", StringComparison.Ordinal)).Substring(dev.Description.IndexOf("'", StringComparison.Ordinal) + 1));
+                foreach (var dev in CaptureDeviceList.Instance) {
+                    collection.Add(((WinPcapDevice) dev).Interface.FriendlyName);
+                    _devName.Add(dev.Name);
                     var buf = dev.ToString();
                     buf = buf.Replace("\n\n", "\n");
                     buf = buf.Replace("\n", "\r\n");
@@ -95,7 +102,7 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void CommitButton_Click(object sender, EventArgs e) {
-            _index.Item = DeviceList.SelectedIndex;
+            _index.Item = _devName[DeviceList.SelectedIndex];
             Close();
         }
 
@@ -105,7 +112,7 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void CancelButton_Click(object sender, EventArgs e) {
-            _index.Item = -1;
+            _index.Item = "";
             Close();
         }
 

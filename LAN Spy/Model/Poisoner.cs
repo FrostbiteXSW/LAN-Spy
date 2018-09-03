@@ -75,7 +75,7 @@ namespace LAN_Spy.Model {
             _gateway = new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
 
             // 缓存并打开当前设备
-            _device = DeviceList[CurDevIndex];
+            _device = DeviceList[CurDevName];
             _device.OnPacketArrival += Device_OnPacketArrival;
             _device.Open();
             _device.Filter = "arp or ip";

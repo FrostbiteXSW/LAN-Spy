@@ -47,7 +47,7 @@ namespace TestProject {
         /// </summary>
         [TestMethod]
         public void TestScanForTarget() {
-            Scanner scanner = new Scanner {CurDevIndex = 2};
+            Scanner scanner = new Scanner {CurDevName = "WLAN"};
             scanner.ScanForTarget();
             Trace.WriteLine("Total avaliable addresses: " + scanner.AddressCount);
             Trace.WriteLine("Total hosts: " + scanner.HostList.Count);
@@ -60,7 +60,7 @@ namespace TestProject {
         /// </summary>
         [TestMethod]
         public void TestSpyForTarget() {
-            Scanner scanner = new Scanner {CurDevIndex = 2};
+            Scanner scanner = new Scanner {CurDevName = "WLAN"};
             Thread thread = new Thread(scanner.SpyForTarget);
             thread.Start();
             Thread.Sleep(30 * 1000);

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Threading;
 using SharpPcap;
 using SharpPcap.WinPcap;
 
@@ -22,7 +24,7 @@ namespace LAN_Spy.Model.Classes {
         /// <summary>
         ///     当前使用的设备编号。
         /// </summary>
-        private int _curDevIndex = -1;
+        private string _curDevName = "";
 
         /// <summary>
         ///     当前选中设备的IPv4地址。
@@ -42,7 +44,7 @@ namespace LAN_Spy.Model.Classes {
         /// <summary>
         ///     当前选中设备的网关地址。
         /// </summary>
-        public IReadOnlyList<IPAddress> GatewayAddresses => ((WinPcapDevice) DeviceList[CurDevIndex]).Interface.GatewayAddresses.AsReadOnly();
+        public IReadOnlyList<IPAddress> GatewayAddresses => ((WinPcapDevice) DeviceList[CurDevName]).Interface.GatewayAddresses.AsReadOnly();
 
         /// <summary>
         ///     当前实例使用的 <see cref="CaptureDeviceList"/> 实例。
@@ -55,10 +57,18 @@ namespace LAN_Spy.Model.Classes {
         protected CaptureDeviceList DeviceList {
             get {
                 if (!(_deviceList is null)) return _deviceList;
-                // 在某些平台上进行测试时出现了同时调用返回WinPcap错误的情况，因此添加线程锁
-                lock (this) {
-                    _deviceList = CaptureDeviceList.New();
+
+                // 若设备列表实例被占用，则等待
+                var waitTime = 0;
+                while (_deviceList is null) {
+                    try { _deviceList = CaptureDeviceList.New(); }
+                    catch (PcapException) {
+                        Thread.Sleep(1000);
+                        if ((waitTime += 1000) == 30000) 
+                            throw new TimeoutException("等待SharpPcap初始化超时。");
+                    }
                 }
+
                 return _deviceList;
             }
         }
@@ -66,17 +76,15 @@ namespace LAN_Spy.Model.Classes {
         /// <summary>
         ///     获取或设置当前使用的设备编号。
         /// </summary>
-        public int CurDevIndex {
-            get {
-                if (_curDevIndex >= DeviceList.Count || _curDevIndex < -1)
-                    throw new IndexOutOfRangeException("无效的设备编号。");
-                return _curDevIndex;
-            }
+        public string CurDevName {
+            get => _curDevName;
             set {
-                if (value >= DeviceList.Count || value < -1)
-                    throw new IndexOutOfRangeException("无效的设备编号。");
-                _curDevIndex = value;
-                if (_curDevIndex != -1) GetNetInfo();
+                if (value.Length != 0 
+                    && DeviceList.Count(device => device.Name.Equals(value)) == 0)
+                    throw new IndexOutOfRangeException("无效的设备名称。");
+                _curDevName = value;
+                if (_curDevName == "") _deviceList = null;
+                else GetNetInfo();
             }
         }
 
@@ -132,7 +140,7 @@ namespace LAN_Spy.Model.Classes {
         /// <exception cref="FormatException">无效的子网掩码。</exception>
         private void GetNetInfo() {
             // 获取当前设备
-            var device = (WinPcapDevice) DeviceList[CurDevIndex];
+            var device = (WinPcapDevice) DeviceList[CurDevName];
 
             // 设备首选IPv4地址
             byte[] ipAddress = null;

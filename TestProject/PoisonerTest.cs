@@ -14,9 +14,9 @@ namespace TestProject {
         /// </summary>
         [TestMethod]
         public void TestStartPoisoning() {
-            var scanner = new Scanner {CurDevIndex = 2};
+            var scanner = new Scanner {CurDevName = "WLAN"};
             scanner.ScanForTarget();
-            var poisoner = new Poisoner {CurDevIndex = 2};
+            var poisoner = new Poisoner {CurDevName = "WLAN"};
             List<Host> target1 = new List<Host> {scanner.HostList[0]},
                 target2 = new List<Host>(scanner.HostList);
             target2.RemoveAt(0);

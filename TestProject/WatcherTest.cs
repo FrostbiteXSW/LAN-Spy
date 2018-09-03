@@ -11,7 +11,7 @@ namespace TestProject {
         /// </summary>
         [TestMethod]
         public void TestLocalAnalyze() {
-            var watcher = new Watcher {CurDevIndex = 2};
+            var watcher = new Watcher {CurDevName = "WLAN"};
             watcher.StartWatching();
             Thread.Sleep(30 * 1000);
             watcher.StopWatching();

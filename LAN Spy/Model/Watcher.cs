@@ -66,7 +66,7 @@ namespace LAN_Spy.Model {
                 throw new InvalidOperationException("已有一项监听工作正在进行。");
 
             // 打开设备
-            _device = DeviceList[CurDevIndex];
+            _device = DeviceList[CurDevName];
             _device.Open();
             _device.OnPacketArrival += Device_OnPacketArrival;
             _device.StartCapture();

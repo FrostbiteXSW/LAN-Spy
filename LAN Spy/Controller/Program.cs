@@ -26,11 +26,9 @@ namespace LAN_Spy.Controller {
             Application.SetCompatibleTextRenderingDefault(false);
 
             // 检测WinPcap库
-            try {
-                CaptureDeviceList.New();
-            }
+            try { CaptureDeviceList.New(); }
             catch (Exception) {
-                MessageBox.Show("本程序需要WinPcap支持，请确保已安装WinPcap库！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("本程序需要WinPcap支持，请确保WinPcap库正常工作！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -39,16 +37,13 @@ namespace LAN_Spy.Controller {
             Scanner scanner = null;
             Poisoner poisoner = null;
             Watcher watcher = null;
-            var loading = new Loading("设置模块中，请稍候");
+            var loading = new Loading("初始化中，请稍候");
             var task = new Thread(load => {
                 Thread.Sleep(1000);
                 try {
                     var scannerThread = new Thread(init => { scanner = new Scanner(); });
                     var poisonerThread = new Thread(init => { poisoner = new Poisoner(); });
-                    var watcherThread = new Thread(init => {
-                        scannerThread.Start();
-                        watcher = new Watcher();
-                    });
+                    var watcherThread = new Thread(init => { scannerThread.Start(); watcher = new Watcher(); });
 
                     watcherThread.Start();
                     poisonerThread.Start();
@@ -106,9 +101,11 @@ namespace LAN_Spy.Controller {
 
             // 打印当前可用设备列表
             var n = 0;
+            var devList = new List<KeyValuePair<int, string>>();
             Console.WriteLine("Available devices: ");
             foreach (var item in instance) {
                 var device = (WinPcapDevice) item;
+                devList.Add(new KeyValuePair<int, string>(n, device.Interface.FriendlyName));
                 Console.WriteLine($"{++n}. {device.Interface.FriendlyName}");
             }
 
@@ -117,7 +114,7 @@ namespace LAN_Spy.Controller {
             Console.Write("Select using device: ");
             var index = int.Parse(Console.ReadLine() ?? throw new FormatException("Not valid number.")) - 1;
             if (index >= n) throw new IndexOutOfRangeException("No such device.");
-            scanner.CurDevIndex = poisoner.CurDevIndex = index;
+            scanner.CurDevName = poisoner.CurDevName = devList.Find(item => item.Key == index).Value;
 
             // 输出地址数量并开始扫描
             Console.WriteLine();
@@ -198,7 +195,7 @@ namespace LAN_Spy.Controller {
             // 创建监视器线程并监视可能存在的连接
             Console.WriteLine();
             var watchThread = new Thread(watch => {
-                var watcher = new Watcher {CurDevIndex = index};
+                var watcher = new Watcher {CurDevName = devList.Find(item => item.Key == index).Value};
                 try {
                     watcher.StartWatching();
                     while (true) {

@@ -53,7 +53,7 @@ namespace LAN_Spy.Model {
         /// <exception cref="TimeoutException">等待线程结束超时。</exception>
         public void ScanForTarget() {
             // 获取当前设备
-            var device = DeviceList[CurDevIndex];
+            var device = DeviceList[CurDevName];
             
             // 创建分析线程
             const int analyzeThreadsCount = 4;
@@ -65,7 +65,6 @@ namespace LAN_Spy.Model {
             var sendThreads = new List<Thread>();
 
             try {
-
                 // 绑定抓包事件处理方法
                 device.OnPacketArrival += Device_OnPacketArrival;
 
@@ -155,7 +154,7 @@ namespace LAN_Spy.Model {
         /// <exception cref="TimeoutException">等待分析线程终止超时。</exception>
         public void SpyForTarget() {
             // 获取当前设备
-            var device = DeviceList[CurDevIndex];
+            var device = DeviceList[CurDevName];
 
             // 创建分析线程
             var analyzeThreads = new Thread[8];
@@ -219,7 +218,7 @@ namespace LAN_Spy.Model {
         private void ScanPacketSendThread(object obj) {
             try {
                 // 获取当前设备
-                var device = DeviceList[CurDevIndex];
+                var device = DeviceList[CurDevName];
 
                 // 获取地址列表
                 var ipAddresses = (List<IPAddress>) obj;
