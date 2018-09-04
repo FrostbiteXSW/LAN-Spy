@@ -11,6 +11,7 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using LAN_Spy.Controller.Classes;
 using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View {
@@ -66,14 +67,42 @@ namespace LAN_Spy.View {
         /// <param name="e">事件的参数。</param>
         private void 启动所有模块ToolStripMenuItem_Click(object sender, EventArgs e) {
             // 判断是否为重启
-            if (启动所有模块ToolStripMenuItem.Text == "重启所有模块" && !StopModels()) {
-                MessageBox.Show("一个或多个模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+            if (启动所有模块ToolStripMenuItem.Text == "重启所有模块") {
+                var result = false;
+
+                // 创建载入界面
+                var task = new Thread(stop => { result = StopModels(); }) {Name = RegistedThreadName.RestartStopAllModels.ToString()};
+                MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+                var loading = new Loading("正在停止，请稍候", task);
+                loading.ShowDialog();
+
+                // 等待结果
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (true) {
+                    if (MessagePipe.TopOutMessage.Value.Name == task.Name) {
+                        if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
+                            // 原则上不接受取消
+                            MessagePipe.GetNextOutMessage();
+                        else if (MessagePipe.TopOutMessage.Key == Message.TaskOut)
+                            break;
+                        else 
+                            throw new Exception($"无效的消息类型：{MessagePipe.TopOutMessage.Key}");
+                    }
+
+                    sleeper.ThreadSleep(500);
+                }
+            
+                // 模块已停止
+                MessagePipe.GetNextOutMessage();
+                if (!result) {
+                    MessageBox.Show("一个或多个模块未能成功停止，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
             }
 
             // 启动模块
             if (StartupModels(Models)) {
-                if (Models.Count(item => item.CurDevName == "") != 0) return;
+                if (Models.Any(item => item.CurDevName == "")) return;
                 MessageBox.Show("所有模块均已成功设置。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动所有模块ToolStripMenuItem.Text = "重启所有模块";
 
@@ -87,9 +116,8 @@ namespace LAN_Spy.View {
                 添加到目标组2ToolStripMenuItem.Enabled = true;
                 断开此连接ToolStripMenuItem.Enabled = true;
             }
-            else {
+            else 
                 MessageBox.Show("一个或多个模块未能成功初始化，请单独启动模块。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
         /// <summary>
@@ -108,8 +136,32 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void 退出ToolStripMenuItem_Click(object sender, EventArgs e) {
-            StopModels();
-            Close();
+            // 创建载入界面
+            var task = new Thread(stop => { StopModels(); }) {Name = RegistedThreadName.ExitStopAllModels.ToString()};
+            MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+            var loading = new Loading("正在停止，请稍候", task);
+            loading.ShowDialog();
+
+            // 等待结果
+            var sleeper = new WaitTimeoutChecker(30000, false);
+            while (true) {
+                if (MessagePipe.TopOutMessage.Value.Name == task.Name) {
+                    if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
+                        // 原则上不接受取消
+                        MessagePipe.GetNextOutMessage();
+                    else if (MessagePipe.TopOutMessage.Key == Message.TaskOut)
+                        break;
+                    else 
+                        throw new Exception($"无效的消息类型：{MessagePipe.TopOutMessage.Key}");
+                }
+
+                if(!sleeper.ThreadSleep(500))
+                    Environment.Exit(-1);
+            }
+            
+            // 模块已停止
+            MessagePipe.GetNextOutMessage();
+            Environment.Exit(0);
         }
 
         /// <summary>
@@ -118,8 +170,34 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void 停止所有模块ToolStripMenuItem_Click(object sender, EventArgs e) {
-            if (!StopModels())
-                MessageBox.Show("一个或多个模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            var result = false;
+
+            // 创建载入界面
+            var task = new Thread(stop => { result = StopModels(); }) {Name = RegistedThreadName.StopAllModels.ToString()};
+            MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+            var loading = new Loading("正在停止，请稍候", task);
+            loading.ShowDialog();
+
+            // 等待结果
+            var sleeper = new WaitTimeoutChecker(30000);
+            while (true) {
+                if (MessagePipe.TopOutMessage.Value.Name == task.Name) {
+                    if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
+                        // 原则上不接受取消
+                        MessagePipe.GetNextOutMessage();
+                    else if (MessagePipe.TopOutMessage.Key == Message.TaskOut)
+                        break;
+                    else 
+                        throw new Exception($"无效的消息类型：{MessagePipe.TopOutMessage.Key}");
+                }
+
+                sleeper.ThreadSleep(500);
+            }
+            
+            // 模块已停止
+            MessagePipe.GetNextOutMessage();
+            if (!result)
+                MessageBox.Show("一个或多个模块未能成功停止，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             else
                 MessageBox.Show("所有模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
             启动所有模块ToolStripMenuItem.Text = "启动所有模块";
@@ -206,8 +284,33 @@ namespace LAN_Spy.View {
                 }
             }
             else {
-                Scanner.Reset();
-                Scanner.CurDevName = "";
+                // 创建载入界面
+                var task = new Thread(stop => {
+                    Scanner.Reset();
+                    Scanner.CurDevName = "";
+                }) {Name = RegistedThreadName.StopScanner.ToString()};
+                MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+                var loading = new Loading("正在停止，请稍候", task);
+                loading.ShowDialog();
+
+                // 等待结果
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (true) {
+                    if (MessagePipe.TopOutMessage.Value.Name == task.Name) {
+                        if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
+                            // 原则上不接受取消
+                            MessagePipe.GetNextOutMessage();
+                        else if (MessagePipe.TopOutMessage.Key == Message.TaskOut)
+                            break;
+                        else 
+                            throw new Exception($"无效的消息类型：{MessagePipe.TopOutMessage.Key}");
+                    }
+
+                    sleeper.ThreadSleep(500);
+                }
+            
+                // 模块已停止
+                MessagePipe.GetNextOutMessage();
                 MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动扫描模块ToolStripMenuItem.Text = "启动模块";
                 扫描主机ToolStripMenuItem.Enabled = false;
@@ -252,61 +355,58 @@ namespace LAN_Spy.View {
                 }
 
                 if (isValid) break;
-                var result = MessageBox.Show("无法确定指定设备的IPv4网络环境，仍然继续？", "警告", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
-                if (result == DialogResult.OK) break;
+                var dialogResult = MessageBox.Show("无法确定指定设备的IPv4网络环境，仍然继续？", "警告", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                if (dialogResult == DialogResult.OK) break;
             }
 
             // 创建载入界面
-            var loading = new Loading("设置模块中，请稍候");
-            var task = new Thread(scan => {
-                Thread.Sleep(1000);
+            var task = new Thread(init => {
                 try {
-                    lock (modelsList) {
-                        foreach (var model in modelsList)
-                            model.CurDevName = index.Item.ToString();
-                    }
+                    foreach (var model in modelsList)
+                        model.CurDevName = index.Item.ToString();
                 }
                 catch (ThreadAbortException) {
-                    lock (modelsList) {
-                        foreach (var model in modelsList)
-                            model.CurDevName = "";
-                    }
-                }
-                finally {
-                    loading.Close();
+                    foreach (var model in modelsList)
+                        model.CurDevName = "";
                 }
             }) {Name = RegistedThreadName.StartupModels.ToString()};
-            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
+            MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+            var loading = new Loading("设置模块中，请稍候", task);
             loading.ShowDialog();
 
             // 等待结果
-            while ((MessagePipe.TopOutMessage.Key != Message.TaskOut 
-                    && MessagePipe.TopOutMessage.Key != Message.UserCancel)
-                   || (MessagePipe.TopOutMessage.Key == Message.TaskOut 
-                       && ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name)) 
-                Thread.Sleep(500);
+            var sleeper = new WaitTimeoutChecker(30000);
+            while (MessagePipe.TopOutMessage.Value.Name != task.Name)
+                sleeper.ThreadSleep(500);
+            var result = MessagePipe.GetNextOutMessage().Key;
+            
+            // 用户取消
+            if (result == Message.UserCancel) {
+                MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
+                sleeper = new WaitTimeoutChecker(30000);
+                while (MessagePipe.TopOutMessage.Value.Name != task.Name) 
+                    sleeper.ThreadSleep(500);
+
+                result = MessagePipe.GetNextOutMessage().Key;
+                switch (result) {
+                    case Message.TaskAborted:
+                        return false;
+                    case Message.TaskOut:
+                        if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
+                            && MessagePipe.TopOutMessage.Value.Name == task.Name)
+                            MessagePipe.GetNextOutMessage();
+                        break;
+                    case Message.TaskNotFound:
+                        MessageBox.Show("未能找到指定名称的工作线程。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return false;
+                    default:
+                        throw new Exception($"无效的消息类型：{result}");
+                }
+            }
 
             // 任务完成
-            if (MessagePipe.TopOutMessage.Key != Message.UserCancel) {
-                MessagePipe.GetNextOutMessage();
-                return true;
-            }
-
-            // 用户取消
             MessagePipe.GetNextOutMessage();
-            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, task));
-            while (MessagePipe.TopOutMessage.Key != Message.TaskAborted
-                   || ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name) {
-                if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
-                    && ((Thread) MessagePipe.TopOutMessage.Value).Name == task.Name) {
-                    MessagePipe.GetNextOutMessage();
-                    MessageBox.Show("未能找到指定名称的工作线程。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-                Thread.Sleep(500);
-            }
-            MessagePipe.GetNextOutMessage();
-            return false;
+            return true;
         }
 
         /// <summary>
@@ -319,73 +419,61 @@ namespace LAN_Spy.View {
             HostList.Rows.Clear();
 
             // 创建载入界面
-            var loading = new Loading("正在扫描，请稍候");
             var task = new Thread(scan => {
-                try {
-                    Thread.Sleep(1000);
-                    lock (Scanner) {
-                        Scanner.ScanForTarget();
-                    }
-                }
-                catch (ThreadAbortException) {
-                    lock (Scanner) {
-                        Scanner.Reset();
-                    }
-                }
-                finally {
-                    loading.Close();
-                }
+                try { Scanner.ScanForTarget(); }
+                catch (ThreadAbortException) { Scanner.Reset(); }
             }) {Name = RegistedThreadName.ScanForTarget.ToString()};
-            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
+            MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+            var loading = new Loading("正在扫描，请稍候", task);
             loading.ShowDialog();
 
             // 等待结果
-            while ((MessagePipe.TopOutMessage.Key != Message.TaskOut 
-                    && MessagePipe.TopOutMessage.Key != Message.UserCancel)
-                   || (MessagePipe.TopOutMessage.Key == Message.TaskOut 
-                       && ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name)) 
-                Thread.Sleep(500);
+            var sleeper = new WaitTimeoutChecker(30000);
+            while (MessagePipe.TopOutMessage.Value.Name != task.Name)
+                sleeper.ThreadSleep(500);
+            var result = MessagePipe.GetNextOutMessage().Key;
 
             // 用户取消
-            if (MessagePipe.TopOutMessage.Key == Message.UserCancel) {
-                MessagePipe.GetNextOutMessage();
-                MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, task));
-                while (MessagePipe.TopOutMessage.Key != Message.TaskAborted
-                       || ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name) {
-                    if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
-                        && ((Thread) MessagePipe.TopOutMessage.Value).Name == task.Name) {
-                        MessagePipe.GetNextOutMessage();
+            if (result == Message.UserCancel) {
+                MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
+                sleeper = new WaitTimeoutChecker(30000);
+                while (MessagePipe.TopOutMessage.Value.Name != task.Name) 
+                    sleeper.ThreadSleep(500);
+
+                result = MessagePipe.GetNextOutMessage().Key;
+                switch (result) {
+                    case Message.TaskAborted:
+                        return;
+                    case Message.TaskOut:
+                        if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
+                            && MessagePipe.TopOutMessage.Value.Name == task.Name)
+                            MessagePipe.GetNextOutMessage();
+                        break;
+                    case Message.TaskNotFound:
                         MessageBox.Show("未能找到指定名称的工作线程。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
-                    }
-                    Thread.Sleep(500);
+                    default:
+                        throw new Exception($"无效的消息类型：{result}");
                 }
-                MessagePipe.GetNextOutMessage();
-                return;
             }
-
-            // 扫描结束
-            MessagePipe.GetNextOutMessage();
-
+            
             // 输出扫描结果
-            lock (Scanner) {
-                foreach (var host in Scanner.HostList) {
-                    // 格式化MAC地址
-                    var temp = new StringBuilder(host.PhysicalAddress.ToString());
-                    if (temp.Length == 12)
-                        temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
+            foreach (var host in Scanner.HostList) {
+                // 格式化MAC地址
+                var temp = new StringBuilder(host.PhysicalAddress.ToString());
+                if (temp.Length == 12)
+                    temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
 
-                    if (Scanner.GatewayAddresses.Contains(host.IPAddress)) {
-                        HostList.Rows.Add(host.IPAddress, temp, "网关地址");
-                        Poisoner.Gateway = host;
-                    }
-                    else if (Equals(host.IPAddress, Scanner.Ipv4Address))
-                        HostList.Rows.Add(host.IPAddress, temp, "当前设备地址");
-                    else
-                        HostList.Rows.Add(host.IPAddress, temp, "");
-
-                    HostList.Rows[HostList.Rows.Count - 1].ContextMenuStrip = HostListMenuStrip;
+                if (Scanner.GatewayAddresses.Contains(host.IPAddress)) {
+                    HostList.Rows.Add(host.IPAddress, temp, "网关地址");
+                    Poisoner.Gateway = host;
                 }
+                else if (Equals(host.IPAddress, Scanner.Ipv4Address))
+                    HostList.Rows.Add(host.IPAddress, temp, "当前设备地址");
+                else
+                    HostList.Rows.Add(host.IPAddress, temp, "");
+
+                HostList.Rows[HostList.Rows.Count - 1].ContextMenuStrip = HostListMenuStrip;
             }
         }
 
@@ -408,64 +496,53 @@ namespace LAN_Spy.View {
             HostList.Rows.Clear();
 
             // 创建载入界面
-            var loading = new Loading("正在侦测，取消以停止");
-            var task = new Thread(scan => {
-                try {
-                    Thread.Sleep(1000);
-                    lock (Scanner) {
-                        Scanner.SpyForTarget();
-                    }
-                }
+            var task = new Thread(spy => {
+                try { Scanner.SpyForTarget(); }
                 catch (ThreadAbortException) { }
-                finally {
-                    loading.Close();
-                }
             }) {Name = RegistedThreadName.SpyForTarget.ToString()};
-            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
+            MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+            var loading = new Loading("正在侦测，取消以停止", task);
             loading.ShowDialog();
 
             // 等待结果
-            var waitTime = 0;
-            while (MessagePipe.TopOutMessage.Key != Message.UserCancel) {
-                Thread.Sleep(500);
-                if ((waitTime += 500) == 30000)
-                    throw new TimeoutException("等待消息队列传递消息超时。");
-            }
+            var sleeper = new WaitTimeoutChecker(30000);
+            while (MessagePipe.TopOutMessage.Key != Message.UserCancel
+                   || MessagePipe.TopOutMessage.Value.Name != task.Name)
+                sleeper.ThreadSleep(500);
             MessagePipe.GetNextOutMessage();
 
             // 用户取消
-            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, task));
+            MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
+            sleeper = new WaitTimeoutChecker(30000);
             while (MessagePipe.TopOutMessage.Key != Message.TaskAborted
-                   || ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name) {
+                   || MessagePipe.TopOutMessage.Value.Name != task.Name) {
                 if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
-                    && ((Thread) MessagePipe.TopOutMessage.Value).Name == task.Name) {
+                    && MessagePipe.TopOutMessage.Value.Name == task.Name) {
                     MessagePipe.GetNextOutMessage();
                     MessageBox.Show("未能找到指定名称的工作线程。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-                Thread.Sleep(500);
+                sleeper.ThreadSleep(500);
             }
             MessagePipe.GetNextOutMessage();
 
             // 输出侦测结果
-            lock (Scanner) {
-                foreach (var host in Scanner.HostList) {
-                    // 格式化MAC地址
-                    var temp = new StringBuilder(host.PhysicalAddress.ToString());
-                    if (temp.Length == 12)
-                        temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
+            foreach (var host in Scanner.HostList) {
+                // 格式化MAC地址
+                var temp = new StringBuilder(host.PhysicalAddress.ToString());
+                if (temp.Length == 12)
+                    temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
                     
-                    if (Scanner.GatewayAddresses.Contains(host.IPAddress)) {
-                        HostList.Rows.Add(host.IPAddress, temp, "网关地址");
-                        Poisoner.Gateway = host;
-                    }
-                    else if (Equals(host.IPAddress, Scanner.Ipv4Address))
-                        HostList.Rows.Add(host.IPAddress, temp, "当前设备地址");
-                    else
-                        HostList.Rows.Add(host.IPAddress, temp, "");
-
-                    HostList.Rows[HostList.Rows.Count - 1].ContextMenuStrip = HostListMenuStrip;
+                if (Scanner.GatewayAddresses.Contains(host.IPAddress)) {
+                    HostList.Rows.Add(host.IPAddress, temp, "网关地址");
+                    Poisoner.Gateway = host;
                 }
+                else if (Equals(host.IPAddress, Scanner.Ipv4Address))
+                    HostList.Rows.Add(host.IPAddress, temp, "当前设备地址");
+                else
+                    HostList.Rows.Add(host.IPAddress, temp, "");
+
+                HostList.Rows[HostList.Rows.Count - 1].ContextMenuStrip = HostListMenuStrip;
             }
         }
 
@@ -489,9 +566,34 @@ namespace LAN_Spy.View {
                 }
             }
             else {
-                Poisoner.StopPoisoning();
-                Poisoner.Reset();
-                Poisoner.CurDevName = "";
+                // 创建载入界面
+                var task = new Thread(stop => {
+                    Poisoner.StopPoisoning();
+                    Poisoner.Reset();
+                    Poisoner.CurDevName = "";
+                }) {Name = RegistedThreadName.StopPoisoner.ToString()};
+                MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+                var loading = new Loading("正在停止，请稍候", task);
+                loading.ShowDialog();
+
+                // 等待结果
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (true) {
+                    if (MessagePipe.TopOutMessage.Value.Name == task.Name) {
+                        if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
+                            // 原则上不接受取消
+                            MessagePipe.GetNextOutMessage();
+                        else if (MessagePipe.TopOutMessage.Key == Message.TaskOut)
+                            break;
+                        else 
+                            throw new Exception($"无效的消息类型：{MessagePipe.TopOutMessage.Key}");
+                    }
+
+                    sleeper.ThreadSleep(500);
+                }
+            
+                // 模块已停止
+                MessagePipe.GetNextOutMessage();
                 MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动毒化模块ToolStripMenuItem.Text = "启动模块";
                 开始毒化ToolStripMenuItem.Enabled = false;
@@ -507,41 +609,6 @@ namespace LAN_Spy.View {
             }
         }
         
-        /// <summary>
-        ///     菜单项“复制”单击时的事件。
-        /// </summary>
-        /// <param name="sender">触发事件的控件对象。</param>
-        /// <param name="e">事件的参数。</param>
-        private void 复制DataGridViewToolStripMenuItem_Click(object sender, EventArgs e) {
-            DataGridView gridView;
-            
-            // TODO:新增模块时请更新此处的代码
-            switch (MainTabContainer.SelectedIndex) {
-                case 0:
-                    // 调用者为主机列表
-                    gridView = HostList;
-                    break;
-                case 2:
-                    // 调用者为连接列表
-                    gridView = ConnectionList;
-                    break;
-                default:
-                    return;
-            }
-
-            var str = new StringBuilder();
-
-            foreach (DataGridViewRow row in gridView.Rows) {
-                if (!row.Selected) continue;
-                foreach (DataGridViewCell cell in row.Cells)
-                    if (cell.Value.ToString().Length != 0)
-                        str.Append($"{cell.Value}\t");
-                str.Replace("\t", "\r\n", str.Length - 1, 1);
-            }
-
-            Clipboard.SetDataObject(str.ToString().Substring(0, str.Length - 2), true);
-        }
-
         /// <summary>
         ///     右键菜单打开后触发的事件。
         /// </summary>
@@ -568,7 +635,7 @@ namespace LAN_Spy.View {
                     return;
             }
 
-            var index = (list.PointToClient(MousePosition).Y + list.VerticalScrollingOffset) / list.Rows[0].Height - 1;
+            var index = list.PointToClient(MousePosition).Y / list.ColumnHeadersHeight - 1 + list.FirstDisplayedScrollingRowIndex;
             if (list.Rows[index].Selected) return;
             list.ClearSelection();
             list.Rows[index].Selected = true;
@@ -584,7 +651,7 @@ namespace LAN_Spy.View {
             if (启动监视模块ToolStripMenuItem.Text == "启动模块") {
                 if (!StartupModels(new[] {Watcher}))
                     MessageBox.Show("模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                else if (Poisoner.CurDevName != "") {
+                else if (Watcher.CurDevName != "") {
                     MessageBox.Show("模块已成功设置。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     启动所有模块ToolStripMenuItem.Text = "重启所有模块";
                     启动监视模块ToolStripMenuItem.Text = "停止模块";
@@ -592,9 +659,34 @@ namespace LAN_Spy.View {
                 }
             }
             else {
-                Watcher.StopWatching();
-                Watcher.Reset();
-                Watcher.CurDevName = "";
+                // 创建载入界面
+                var task = new Thread(stop => {
+                    Watcher.StopWatching();
+                    Watcher.Reset();
+                    Watcher.CurDevName = "";
+                }) {Name = RegistedThreadName.StopWatcher.ToString()};
+                MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+                var loading = new Loading("正在停止，请稍候", task);
+                loading.ShowDialog();
+
+                // 等待结果
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (true) {
+                    if (MessagePipe.TopOutMessage.Value.Name == task.Name) {
+                        if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
+                            // 原则上不接受取消
+                            MessagePipe.GetNextOutMessage();
+                        else if (MessagePipe.TopOutMessage.Key == Message.TaskOut)
+                            break;
+                        else 
+                            throw new Exception($"无效的消息类型：{MessagePipe.TopOutMessage.Key}");
+                    }
+
+                    sleeper.ThreadSleep(500);
+                }
+            
+                // 模块已停止
+                MessagePipe.GetNextOutMessage();
                 MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动监视模块ToolStripMenuItem.Text = "启动模块";
                 开始监视ToolStripMenuItem.Enabled = false;
@@ -602,7 +694,7 @@ namespace LAN_Spy.View {
 
                 // TODO:新增模块时请更新此处的代码
                 if (启动扫描模块ToolStripMenuItem.Text == "启动模块"
-                    && 启动监视模块ToolStripMenuItem.Text == "启动模块")
+                    && 启动毒化模块ToolStripMenuItem.Text == "启动模块")
                     启动所有模块ToolStripMenuItem.Text = "启动所有模块";
             }
         }
@@ -636,10 +728,16 @@ namespace LAN_Spy.View {
             foreach (DataGridViewRow row in HostList.Rows) {
                 if (!row.Selected) continue;
                 if (((ToolStripMenuItem) sender).Text[((ToolStripMenuItem) sender).Text.Length - 1].Equals('1')) {
+                    if (Target1List.Rows.Cast<DataGridViewRow>().Any(item => item.Cells[0].Value == row.Cells["HostIP"].Value
+                                                                             && item.Cells[1].Value == row.Cells["HostMAC"].Value)) 
+                        continue;
                     Target1List.Rows.Add(row.Cells["HostIP"].Value, row.Cells["HostMAC"].Value);
                     Target1List.Rows[Target1List.Rows.Count - 1].ContextMenuStrip = TargetListMenuStrip;
                 }
                 else {
+                    if (Target2List.Rows.Cast<DataGridViewRow>().Any(item => item.Cells[0].Value == row.Cells["HostIP"].Value
+                                                                               && item.Cells[1].Value == row.Cells["HostMAC"].Value)) 
+                        continue;
                     Target2List.Rows.Add(row.Cells["HostIP"].Value, row.Cells["HostMAC"].Value);
                     Target2List.Rows[Target2List.Rows.Count - 1].ContextMenuStrip = TargetListMenuStrip;
                 }
@@ -695,68 +793,206 @@ namespace LAN_Spy.View {
                     return;
 
                 // 创建载入界面
-                var loading = new Loading("正在毒化，请稍候");
                 var task = new Thread(poisoning => {
                     try {
-                        Thread.Sleep(1000);
-                        lock (Poisoner) {
-                            Poisoner.Target1.Clear();
-                            Poisoner.Target2.Clear();
+                        Poisoner.Target1.Clear();
+                        Poisoner.Target2.Clear();
 
-                            foreach (DataGridViewRow target in Target1List.Rows)
-                                Poisoner.Target1.Add(new Host(IPAddress.Parse(target.Cells["Target1IP"].Value.ToString()),
-                                    PhysicalAddress.Parse(target.Cells["Target1MAC"].Value.ToString())));
-                            foreach (DataGridViewRow target in Target2List.Rows)
-                                Poisoner.Target2.Add(new Host(IPAddress.Parse(target.Cells["Target2IP"].Value.ToString()),
-                                    PhysicalAddress.Parse(target.Cells["Target2MAC"].Value.ToString())));
+                        foreach (DataGridViewRow target in Target1List.Rows)
+                            Poisoner.Target1.Add(new Host(IPAddress.Parse(target.Cells["Target1IP"].Value.ToString()),
+                                PhysicalAddress.Parse(target.Cells["Target1MAC"].Value.ToString())));
+                        foreach (DataGridViewRow target in Target2List.Rows)
+                            Poisoner.Target2.Add(new Host(IPAddress.Parse(target.Cells["Target2IP"].Value.ToString()),
+                                PhysicalAddress.Parse(target.Cells["Target2MAC"].Value.ToString())));
 
-                            Poisoner.StartPoisoning();
-                        }
+                        Poisoner.StartPoisoning();
                     }
                     catch (ThreadAbortException) {
                         // 用户中止了操作
                         Poisoner.StopPoisoning();
                     }
-                    finally {
-                        loading.Close();
-                    }
                 }) {Name = RegistedThreadName.StartPoisoning.ToString()};
-                MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
+                MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+                var loading = new Loading("正在毒化，请稍候", task);
                 loading.ShowDialog();
 
                 // 等待结果
-                while ((MessagePipe.TopOutMessage.Key != Message.TaskOut
-                        && MessagePipe.TopOutMessage.Key != Message.UserCancel)
-                       || (MessagePipe.TopOutMessage.Key == Message.TaskOut
-                           && ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name))
-                    Thread.Sleep(500);
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (MessagePipe.TopOutMessage.Value.Name != task.Name)
+                    sleeper.ThreadSleep(500);
+                var result = MessagePipe.GetNextOutMessage().Key;
 
                 // 用户取消
-                if (MessagePipe.TopOutMessage.Key == Message.UserCancel) {
-                    MessagePipe.GetNextOutMessage();
-                    MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskCancel, task));
-                    while (MessagePipe.TopOutMessage.Key != Message.TaskAborted
-                           || ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name) {
-                        if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
-                            && ((Thread) MessagePipe.TopOutMessage.Value).Name == task.Name) {
-                            MessagePipe.GetNextOutMessage();
+                if (result == Message.UserCancel) {
+                    MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
+                    sleeper = new WaitTimeoutChecker(30000);
+                    while (MessagePipe.TopOutMessage.Value.Name != task.Name) 
+                        sleeper.ThreadSleep(500);
+
+                    result = MessagePipe.GetNextOutMessage().Key;
+                    switch (result) {
+                        case Message.TaskAborted:
+                            return;
+                        case Message.TaskOut:
+                            if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
+                                && MessagePipe.TopOutMessage.Value.Name == task.Name)
+                                MessagePipe.GetNextOutMessage();
+                            break;
+                        case Message.TaskNotFound:
                             MessageBox.Show("未能找到指定名称的工作线程。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return;
-                        }
-                        Thread.Sleep(500);
+                        default:
+                            throw new Exception($"无效的消息类型：{result}");
                     }
-                    MessagePipe.GetNextOutMessage();
-                    return;
                 }
 
                 MessageBox.Show("毒化工作已启动。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 开始毒化ToolStripMenuItem.Text = "停止毒化";
             }
             else {
-                Poisoner.StopPoisoning();
+                // 创建载入界面
+                var task = new Thread(stop => { Poisoner.StopPoisoning(); }) {Name = RegistedThreadName.StopPoisoning.ToString()};
+                MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+                var loading = new Loading("正在停止，请稍候", task);
+                loading.ShowDialog();
+
+                // 等待结果
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (true) {
+                    if (MessagePipe.TopOutMessage.Value.Name == task.Name) {
+                        if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
+                            // 原则上不接受取消
+                            MessagePipe.GetNextOutMessage();
+                        else if (MessagePipe.TopOutMessage.Key == Message.TaskOut)
+                            break;
+                        else 
+                            throw new Exception($"无效的消息类型：{MessagePipe.TopOutMessage.Key}");
+                    }
+
+                    sleeper.ThreadSleep(500);
+                }
+            
+                // 模块已停止
+                MessagePipe.GetNextOutMessage();
                 MessageBox.Show("毒化工作已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 开始毒化ToolStripMenuItem.Text = "开始毒化";
             }
+        }
+        
+        /// <summary>
+        ///     菜单项“开始毒化”单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 开始监视ToolStripMenuItem_Click(object sender, EventArgs e) {
+            if (开始监视ToolStripMenuItem.Text == "开始监视") {
+                // 创建载入界面
+                var task = new Thread(watching => {
+                    try { Watcher.StartWatching(); }
+                    catch (ThreadAbortException) {
+                        // 用户中止了操作
+                        Watcher.StopWatching();
+                    }
+                }) {Name = RegistedThreadName.StartWatching.ToString()};
+                MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+                var loading = new Loading("正在启动监视，请稍候", task);
+                loading.ShowDialog();
+
+                // 等待结果
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (MessagePipe.TopOutMessage.Value.Name != task.Name)
+                    sleeper.ThreadSleep(500);
+                var result = MessagePipe.GetNextOutMessage().Key;
+
+                // 用户取消
+                if (result == Message.UserCancel) {
+                    MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
+                    sleeper = new WaitTimeoutChecker(30000);
+                    while (MessagePipe.TopOutMessage.Value.Name != task.Name) 
+                        sleeper.ThreadSleep(500);
+
+                    result = MessagePipe.GetNextOutMessage().Key;
+                    switch (result) {
+                        case Message.TaskAborted:
+                            return;
+                        case Message.TaskOut:
+                            if (MessagePipe.TopOutMessage.Key == Message.TaskNotFound
+                                && MessagePipe.TopOutMessage.Value.Name == task.Name)
+                                MessagePipe.GetNextOutMessage();
+                            break;
+                        case Message.TaskNotFound:
+                            MessageBox.Show("未能找到指定名称的工作线程。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        default:
+                            throw new Exception($"无效的消息类型：{result}");
+                    }
+                }
+                
+                MessageBox.Show("监视工作已启动。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ConnectionListUpdateTimer.Enabled = true;
+                开始监视ToolStripMenuItem.Text = "停止监视";
+            }
+            else {
+                // 创建载入界面
+                var task = new Thread(stop => { Watcher.StopWatching(); }) {Name = RegistedThreadName.StopWatching.ToString()};
+                MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+                var loading = new Loading("正在停止，请稍候", task);
+                loading.ShowDialog();
+
+                // 等待结果
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (true) {
+                    if (MessagePipe.TopOutMessage.Value.Name == task.Name) {
+                        if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
+                            // 原则上不接受取消
+                            MessagePipe.GetNextOutMessage();
+                        else if (MessagePipe.TopOutMessage.Key == Message.TaskOut)
+                            break;
+                        else 
+                            throw new Exception($"无效的消息类型：{MessagePipe.TopOutMessage.Key}");
+                    }
+
+                    sleeper.ThreadSleep(500);
+                }
+            
+                // 模块已停止
+                MessagePipe.GetNextOutMessage();
+                ConnectionListUpdateTimer.Enabled = false;
+                ConnectionList.Rows.Clear();
+                MessageBox.Show("监视工作已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                开始监视ToolStripMenuItem.Text = "开始监视";
+            }
+        }
+
+        /// <summary>
+        ///     连接列表更新周期到期时触发的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void ConnectionListUpdateTimer_Tick(object sender, EventArgs e) {
+            // 获取当前连接列表
+            var curConnection = ConnectionList.Rows.Cast<DataGridViewRow>().ToList();
+
+            foreach (var link in Watcher.TcpLinks) {
+                // 创建新连接并检查是否存在
+                var row = new DataGridViewRow();
+                row.Cells.Add(new DataGridViewTextBoxCell {Value = link.Src.ToString()});
+                row.Cells.Add(new DataGridViewTextBoxCell {Value = link.Dst.ToString()});
+                row.ContextMenuStrip = ConnectionListMenuStrip;
+                if (curConnection.Any(item => item.Cells["SrcAddress"].Value.Equals(row.Cells[0].Value)
+                                              && item.Cells["DstAddress"].Value.Equals(row.Cells[1].Value)))
+                    // 旧连接仍存活，从待移除列表删除
+                    curConnection.RemoveAll(item => item.Cells["SrcAddress"].Value.Equals(row.Cells[0].Value)
+                                                    && item.Cells["DstAddress"].Value.Equals(row.Cells[1].Value));
+                else
+                    // 添加新连接
+                    ConnectionList.Rows.Add(row);
+            }
+
+            // 移除不存活的连接
+            foreach (var item in curConnection)
+                ConnectionList.Rows.Remove(ConnectionList.Rows.Cast<DataGridViewRow>().First(target => target.Cells["SrcAddress"].Value.Equals(item.Cells[0].Value)
+                                                                                                       && target.Cells["DstAddress"].Value.Equals(item.Cells[1].Value)));
         }
     }
 }

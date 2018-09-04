@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Threading;
-using LAN_Spy.Model.Classes;
+﻿using LAN_Spy.Model.Classes;
 using PacketDotNet;
 using PacketDotNet.Utils;
 using SharpPcap;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Threading;
 
 namespace LAN_Spy.Model {
     /// <inheritdoc />
@@ -48,11 +49,6 @@ namespace LAN_Spy.Model {
         ///     毒化目标。
         /// </summary>
         public List<Host> Target1 = new List<Host>(), Target2 = new List<Host>();
-        
-        /// <summary>
-        ///     指示模块是否处在工作状态。
-        /// </summary>
-        public bool IsStarted { get; private set; }
 
         /// <summary>
         ///     根据设定的 <see cref="List{T}" /> 类型的目标列表进行ARP毒化中间人攻击，如果模块已在工作状态则不会有效果。
@@ -60,23 +56,16 @@ namespace LAN_Spy.Model {
         /// <exception cref="InvalidOperationException">已有一项毒化工作正在进行。</exception>
         /// <exception cref="NullReferenceException">未设置默认网关。</exception>
         public void StartPoisoning() {
-            // 判断是否为工作状态
-            if (IsStarted) return;
-
             // 判断是否有未停止的毒化工作
             if (_device != null)
                 throw new InvalidOperationException("已有一项毒化工作正在进行。");
-
-            // 进入工作状态
-            IsStarted = true;
 
             // 深复制以缓存目标
             _target1.AddRange(Target1);
             _target2.AddRange(Target2);
 
             // 深复制以缓存网关
-            _gateway = Gateway == null ? new Host(new IPAddress(new byte[] {0, 0, 0, 0}), new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0})) 
-                                       : new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
+            _gateway = Gateway == null ? new Host(new IPAddress(new byte[] {0, 0, 0, 0}), new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0})) : new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
 
             // 缓存并打开当前设备
             _device = DeviceList[CurDevName];
@@ -258,26 +247,15 @@ namespace LAN_Spy.Model {
         /// </summary>
         /// <exception cref="TimeoutException">等待线程结束超时。</exception>
         public void StopPoisoning() {
-            // 判断是否为工作状态
-            if (!IsStarted) return;
-
             // 向毒化线程发送终止信号
             foreach (var poisonThread in _poisonThreads)
                 if (poisonThread.IsAlive)
                     poisonThread.Abort();
 
             // 等待毒化线程终止
-            var waitTime = 60 * 1000;
-            while (waitTime >= 0) {
-                waitTime = -waitTime;
-                foreach (var poisonThread in _poisonThreads)
-                    if (poisonThread.IsAlive) {
-                        Thread.Sleep(100);
-                        if ((waitTime = -waitTime - 100) == 0)
-                            throw new TimeoutException("等待线程结束超时。");
-                        break;
-                    }
-            }
+            var sleeper = new WaitTimeoutChecker(30000);
+            while (_poisonThreads.Any(item => item.IsAlive))
+                sleeper.ThreadSleep(100);
             _poisonThreads.Clear();
 
             // 向包转发线程发送终止信号
@@ -286,33 +264,26 @@ namespace LAN_Spy.Model {
                     retransmissionThread.Abort();
 
             // 等待包转发线程终止
-            waitTime = 60 * 1000;
-            while (waitTime >= 0) {
-                waitTime = -waitTime;
-                foreach (var retransmissionThread in _retransmissionThreads)
-                    if (retransmissionThread.IsAlive) {
-                        Thread.Sleep(100);
-                        if ((waitTime = -waitTime - 100) == 0)
-                            throw new TimeoutException("等待线程结束超时。");
-                        break;
-                    }
-            }
+            sleeper = new WaitTimeoutChecker(30000);
+            while (_retransmissionThreads.Any(item => item.IsAlive))
+                sleeper.ThreadSleep(100);
+            _poisonThreads.Clear();
             _retransmissionThreads.Clear();
 
             // 关闭设备
-            _device.StopCapture();
-            _device.OnPacketArrival -= Device_OnPacketArrival;
-            _device.Close();
-            _device = null;
+            if (!(_device is null)) {
+                if (_device.Started)
+                    _device.StopCapture();
+                _device.OnPacketArrival -= Device_OnPacketArrival;
+                _device.Close();
+                _device = null;
+            }
 
             // 清理缓冲区
             _gateway = null;
             _target1.Clear();
             _target2.Clear();
             ClearCaptures();
-
-            // 退出工作状态
-            IsStarted = false;
         }
 
         /// <summary>

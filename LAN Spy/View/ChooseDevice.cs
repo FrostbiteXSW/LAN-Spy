@@ -16,7 +16,7 @@ namespace LAN_Spy.View {
         /// <summary>
         ///     缓存设备的完整名称。
         /// </summary>
-        private List<string> _devName = new List<string>();
+        private readonly List<string> _devName = new List<string>();
 
         /// <summary>
         ///     设备列表鼠标悬停弹出窗口。
@@ -90,7 +90,7 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void DeviceList_SelectedIndexChanged(object sender, EventArgs e) {
-            if (DeviceList.SelectedIndex >= 0 && DeviceList.SelectedIndex < CaptureDeviceList.Instance.Count)
+            if (DeviceList.SelectedIndex >= 0 && DeviceList.SelectedIndex < _devName.Count)
                 CommitButton.Enabled = true;
             else
                 CommitButton.Enabled = false;
@@ -122,8 +122,22 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void DeviceList_MouseDoubleClick(object sender, MouseEventArgs e) {
-            if (DeviceList.SelectedIndex >= 0 && DeviceList.SelectedIndex < CaptureDeviceList.Instance.Count)
+            if (DeviceList.SelectedIndex >= 0 && DeviceList.SelectedIndex < _devName.Count)
                 CommitButton_Click(sender, e);
+        }
+        
+        /// <summary>
+        ///     释放按键时触发的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void DeviceList_KeyUp(object sender, KeyEventArgs e) {
+            if (e.KeyCode != Keys.Enter 
+                || DeviceList.SelectedIndex < 0 
+                || DeviceList.SelectedIndex >= _devName.Count) 
+                return;
+            CommitButton_Click(sender, e);
+            e.Handled = true;
         }
     }
 }

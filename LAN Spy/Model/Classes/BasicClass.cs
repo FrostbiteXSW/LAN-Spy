@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using LAN_Spy.Controller.Classes;
 using SharpPcap;
 using SharpPcap.WinPcap;
 
@@ -59,15 +60,10 @@ namespace LAN_Spy.Model.Classes {
                 if (!(_deviceList is null)) return _deviceList;
 
                 // 若设备列表实例被占用，则等待
-                var waitTime = 0;
-                while (_deviceList is null) {
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (_deviceList is null) 
                     try { _deviceList = CaptureDeviceList.New(); }
-                    catch (PcapException) {
-                        Thread.Sleep(1000);
-                        if ((waitTime += 1000) == 30000) 
-                            throw new TimeoutException("等待SharpPcap初始化超时。");
-                    }
-                }
+                    catch (PcapException) { sleeper.ThreadSleep(500); }
 
                 return _deviceList;
             }
@@ -80,7 +76,7 @@ namespace LAN_Spy.Model.Classes {
             get => _curDevName;
             set {
                 if (value.Length != 0 
-                    && DeviceList.Count(device => device.Name.Equals(value)) == 0)
+                    && DeviceList.All(device => !device.Name.Equals(value)))
                     throw new IndexOutOfRangeException("无效的设备名称。");
                 _curDevName = value;
                 if (_curDevName == "") _deviceList = null;

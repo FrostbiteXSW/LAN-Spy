@@ -24,18 +24,18 @@
         /// </summary>
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle61 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle62 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle63 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle64 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle65 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle66 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle67 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle68 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle69 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle70 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle71 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle72 = new System.Windows.Forms.DataGridViewCellStyle();
             this.MainMenu = new System.Windows.Forms.MenuStrip();
             this.开始ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.启动所有模块ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -54,7 +54,6 @@
             this.开始监视ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.SplitLine = new System.Windows.Forms.Label();
             this.HostListMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.主机列表复制ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.添加到目标组1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.添加到目标组2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.PoisonerTab = new System.Windows.Forms.TabPage();
@@ -77,11 +76,10 @@
             this.SrcAddress = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.DstAddress = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.TargetListMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.毒化目标复制ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.从目标组移除ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ConnectionListMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.连接列表复制ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.断开此连接ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ConnectionListUpdateTimer = new System.Windows.Forms.Timer(this.components);
             this.MainMenu.SuspendLayout();
             this.HostListMenuStrip.SuspendLayout();
             this.PoisonerTab.SuspendLayout();
@@ -198,7 +196,7 @@
             // 启动毒化模块ToolStripMenuItem
             // 
             this.启动毒化模块ToolStripMenuItem.Name = "启动毒化模块ToolStripMenuItem";
-            this.启动毒化模块ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.启动毒化模块ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
             this.启动毒化模块ToolStripMenuItem.Text = "启动模块";
             this.启动毒化模块ToolStripMenuItem.Click += new System.EventHandler(this.启动毒化模块ToolStripMenuItem_Click);
             // 
@@ -206,7 +204,7 @@
             // 
             this.开始毒化ToolStripMenuItem.Enabled = false;
             this.开始毒化ToolStripMenuItem.Name = "开始毒化ToolStripMenuItem";
-            this.开始毒化ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.开始毒化ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
             this.开始毒化ToolStripMenuItem.Text = "开始毒化";
             this.开始毒化ToolStripMenuItem.Click += new System.EventHandler(this.开始毒化ToolStripMenuItem_Click);
             this.开始毒化ToolStripMenuItem.EnabledChanged += new System.EventHandler(this.开始毒化ToolStripMenuItem_EnabledChanged);
@@ -233,6 +231,7 @@
             this.开始监视ToolStripMenuItem.Name = "开始监视ToolStripMenuItem";
             this.开始监视ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
             this.开始监视ToolStripMenuItem.Text = "开始监视";
+            this.开始监视ToolStripMenuItem.Click += new System.EventHandler(this.开始监视ToolStripMenuItem_Click);
             this.开始监视ToolStripMenuItem.EnabledChanged += new System.EventHandler(this.开始监视ToolStripMenuItem_EnabledChanged);
             // 
             // SplitLine
@@ -248,19 +247,11 @@
             // 
             this.HostListMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.HostListMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.主机列表复制ToolStripMenuItem,
             this.添加到目标组1ToolStripMenuItem,
             this.添加到目标组2ToolStripMenuItem});
             this.HostListMenuStrip.Name = "HostListMenuStrip";
-            this.HostListMenuStrip.Size = new System.Drawing.Size(200, 88);
+            this.HostListMenuStrip.Size = new System.Drawing.Size(200, 60);
             this.HostListMenuStrip.Opened += new System.EventHandler(this.ContextMenuStrip_Opened);
-            // 
-            // 主机列表复制ToolStripMenuItem
-            // 
-            this.主机列表复制ToolStripMenuItem.Name = "主机列表复制ToolStripMenuItem";
-            this.主机列表复制ToolStripMenuItem.Size = new System.Drawing.Size(199, 28);
-            this.主机列表复制ToolStripMenuItem.Text = "复制选中项";
-            this.主机列表复制ToolStripMenuItem.Click += new System.EventHandler(this.复制DataGridViewToolStripMenuItem_Click);
             // 
             // 添加到目标组1ToolStripMenuItem
             // 
@@ -311,38 +302,38 @@
             this.Target2List.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.Target2List.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.Target2List.BackgroundColor = System.Drawing.SystemColors.ButtonHighlight;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.Target2List.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle61.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle61.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle61.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle61.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle61.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle61.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle61.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.Target2List.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle61;
             this.Target2List.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.Target2List.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Target2IP,
             this.Target2MAC});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.Target2List.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle62.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle62.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle62.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle62.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle62.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle62.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle62.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.Target2List.DefaultCellStyle = dataGridViewCellStyle62;
             this.Target2List.Location = new System.Drawing.Point(8, 29);
             this.Target2List.Margin = new System.Windows.Forms.Padding(4);
             this.Target2List.Name = "Target2List";
             this.Target2List.ReadOnly = true;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.Target2List.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle63.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle63.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle63.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle63.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle63.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle63.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle63.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.Target2List.RowHeadersDefaultCellStyle = dataGridViewCellStyle63;
             this.Target2List.RowHeadersVisible = false;
             this.Target2List.RowTemplate.Height = 23;
             this.Target2List.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -382,38 +373,38 @@
             this.Target1List.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.Target1List.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.Target1List.BackgroundColor = System.Drawing.SystemColors.ButtonHighlight;
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.Target1List.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle64.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle64.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle64.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle64.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle64.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle64.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle64.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.Target1List.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle64;
             this.Target1List.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.Target1List.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Target1IP,
             this.Target1MAC});
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.Target1List.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle65.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle65.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle65.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle65.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle65.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle65.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle65.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.Target1List.DefaultCellStyle = dataGridViewCellStyle65;
             this.Target1List.Location = new System.Drawing.Point(8, 29);
             this.Target1List.Margin = new System.Windows.Forms.Padding(4);
             this.Target1List.Name = "Target1List";
             this.Target1List.ReadOnly = true;
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.Target1List.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle66.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle66.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle66.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle66.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle66.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle66.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle66.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.Target1List.RowHeadersDefaultCellStyle = dataGridViewCellStyle66;
             this.Target1List.RowHeadersVisible = false;
             this.Target1List.RowTemplate.Height = 23;
             this.Target1List.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -453,39 +444,39 @@
             this.HostList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.HostList.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.HostList.BackgroundColor = System.Drawing.SystemColors.ButtonHighlight;
-            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle7.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.HostList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle67.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle67.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle67.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle67.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle67.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle67.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle67.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.HostList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle67;
             this.HostList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.HostList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.HostIP,
             this.HostMAC,
             this.Information});
-            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle8.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.HostList.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle68.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle68.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle68.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle68.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle68.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle68.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle68.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.HostList.DefaultCellStyle = dataGridViewCellStyle68;
             this.HostList.Location = new System.Drawing.Point(9, 9);
             this.HostList.Margin = new System.Windows.Forms.Padding(4);
             this.HostList.Name = "HostList";
             this.HostList.ReadOnly = true;
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle9.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.HostList.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle69.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle69.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle69.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle69.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle69.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle69.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle69.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.HostList.RowHeadersDefaultCellStyle = dataGridViewCellStyle69;
             this.HostList.RowHeadersVisible = false;
             this.HostList.RowTemplate.Height = 23;
             this.HostList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -542,38 +533,38 @@
             this.ConnectionList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.ConnectionList.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.ConnectionList.BackgroundColor = System.Drawing.SystemColors.ButtonHighlight;
-            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle10.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle10.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle10.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle10.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle10.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle10.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.ConnectionList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle10;
+            dataGridViewCellStyle70.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle70.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle70.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle70.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle70.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle70.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle70.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.ConnectionList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle70;
             this.ConnectionList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.ConnectionList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.SrcAddress,
             this.DstAddress});
-            dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle11.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle11.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle11.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle11.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle11.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle11.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.ConnectionList.DefaultCellStyle = dataGridViewCellStyle11;
+            dataGridViewCellStyle71.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle71.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle71.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle71.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle71.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle71.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle71.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.ConnectionList.DefaultCellStyle = dataGridViewCellStyle71;
             this.ConnectionList.Location = new System.Drawing.Point(9, 9);
             this.ConnectionList.Margin = new System.Windows.Forms.Padding(4);
             this.ConnectionList.Name = "ConnectionList";
             this.ConnectionList.ReadOnly = true;
-            dataGridViewCellStyle12.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle12.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle12.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle12.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle12.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle12.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle12.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.ConnectionList.RowHeadersDefaultCellStyle = dataGridViewCellStyle12;
+            dataGridViewCellStyle72.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle72.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle72.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle72.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle72.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle72.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle72.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.ConnectionList.RowHeadersDefaultCellStyle = dataGridViewCellStyle72;
             this.ConnectionList.RowHeadersVisible = false;
             this.ConnectionList.RowTemplate.Height = 23;
             this.ConnectionList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -596,17 +587,10 @@
             // 
             this.TargetListMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.TargetListMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.毒化目标复制ToolStripMenuItem,
             this.从目标组移除ToolStripMenuItem});
             this.TargetListMenuStrip.Name = "TargetListMenuStrip";
-            this.TargetListMenuStrip.Size = new System.Drawing.Size(189, 60);
+            this.TargetListMenuStrip.Size = new System.Drawing.Size(189, 32);
             this.TargetListMenuStrip.Opened += new System.EventHandler(this.ContextMenuStrip_Opened);
-            // 
-            // 毒化目标复制ToolStripMenuItem
-            // 
-            this.毒化目标复制ToolStripMenuItem.Name = "毒化目标复制ToolStripMenuItem";
-            this.毒化目标复制ToolStripMenuItem.Size = new System.Drawing.Size(188, 28);
-            this.毒化目标复制ToolStripMenuItem.Text = "复制选中项";
             // 
             // 从目标组移除ToolStripMenuItem
             // 
@@ -619,18 +603,10 @@
             // 
             this.ConnectionListMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.ConnectionListMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.连接列表复制ToolStripMenuItem,
             this.断开此连接ToolStripMenuItem});
             this.ConnectionListMenuStrip.Name = "ConnectionListMenuStrip";
-            this.ConnectionListMenuStrip.Size = new System.Drawing.Size(171, 60);
+            this.ConnectionListMenuStrip.Size = new System.Drawing.Size(171, 32);
             this.ConnectionListMenuStrip.Opened += new System.EventHandler(this.ContextMenuStrip_Opened);
-            // 
-            // 连接列表复制ToolStripMenuItem
-            // 
-            this.连接列表复制ToolStripMenuItem.Name = "连接列表复制ToolStripMenuItem";
-            this.连接列表复制ToolStripMenuItem.Size = new System.Drawing.Size(170, 28);
-            this.连接列表复制ToolStripMenuItem.Text = "复制选中项";
-            this.连接列表复制ToolStripMenuItem.Click += new System.EventHandler(this.复制DataGridViewToolStripMenuItem_Click);
             // 
             // 断开此连接ToolStripMenuItem
             // 
@@ -638,10 +614,14 @@
             this.断开此连接ToolStripMenuItem.Size = new System.Drawing.Size(170, 28);
             this.断开此连接ToolStripMenuItem.Text = "断开此连接";
             // 
+            // ConnectionListUpdateTimer
+            // 
+            this.ConnectionListUpdateTimer.Interval = 1000;
+            this.ConnectionListUpdateTimer.Tick += new System.EventHandler(this.ConnectionListUpdateTimer_Tick);
+            // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.ClientSize = new System.Drawing.Size(876, 542);
             this.Controls.Add(this.MainTabContainer);
             this.Controls.Add(this.SplitLine);
@@ -694,7 +674,6 @@
         private System.Windows.Forms.ToolStripMenuItem 启动毒化模块ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 启动监视模块ToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip HostListMenuStrip;
-        private System.Windows.Forms.ToolStripMenuItem 主机列表复制ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 添加到目标组1ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 添加到目标组2ToolStripMenuItem;
         private System.Windows.Forms.TabPage PoisonerTab;
@@ -706,10 +685,8 @@
         private System.Windows.Forms.GroupBox Target1ListContainer;
         private System.Windows.Forms.DataGridView ConnectionList;
         private System.Windows.Forms.ContextMenuStrip TargetListMenuStrip;
-        private System.Windows.Forms.ToolStripMenuItem 毒化目标复制ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 从目标组移除ToolStripMenuItem;
         private System.Windows.Forms.ContextMenuStrip ConnectionListMenuStrip;
-        private System.Windows.Forms.ToolStripMenuItem 连接列表复制ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 断开此连接ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 开始毒化ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 开始监视ToolStripMenuItem;
@@ -724,5 +701,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn HostIP;
         private System.Windows.Forms.DataGridViewTextBoxColumn HostMAC;
         private System.Windows.Forms.DataGridViewTextBoxColumn Information;
+        private System.Windows.Forms.Timer ConnectionListUpdateTimer;
     }
 }

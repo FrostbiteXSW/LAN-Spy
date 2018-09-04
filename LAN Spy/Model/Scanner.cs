@@ -1,14 +1,14 @@
-﻿using System;
+﻿using LAN_Spy.Model.Classes;
+using PacketDotNet;
+using PacketDotNet.Utils;
+using SharpPcap;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
-using LAN_Spy.Model.Classes;
-using PacketDotNet;
-using PacketDotNet.Utils;
-using SharpPcap;
 
 namespace LAN_Spy.Model {
     /// <summary>
@@ -111,17 +111,9 @@ namespace LAN_Spy.Model {
                 sendThreads.Add(lastsendThread);
 
                 // 等待数据包发送完成
-                var waitTime = (int) (60 * 1000 * Math.Log(AddressCount, 254));
-                while (waitTime >= 0) {
-                    waitTime = -waitTime;
-                    foreach (var sendThread in sendThreads)
-                        if (sendThread.IsAlive) {
-                            Thread.Sleep(100);
-                            if ((waitTime = -waitTime - 100) <= 0)
-                                throw new TimeoutException("等待线程结束超时。");
-                            break;
-                        }
-                }
+                var sleeper = new WaitTimeoutChecker((int) (60 * 1000 * Math.Log(AddressCount, 254)));
+                while (sendThreads.Any(item => item.IsAlive))
+                    sleeper.ThreadSleep(500);
 
                 // 等待接收目标机反馈消息
                 Thread.Sleep((int) (8 * 1000 * Math.Log(AddressCount, 254)));
@@ -175,10 +167,8 @@ namespace LAN_Spy.Model {
                 }
 
                 // 如果分析线程异常终止，则结束监听
-                while (true) {
-                    if (analyzeThreads.Any(analyzeThread => !analyzeThread.IsAlive)) break;
+                while (analyzeThreads.All(analyzeThread => analyzeThread.IsAlive))
                     Thread.Sleep(800);
-                }
             }
             catch (ThreadAbortException) {
                 // 终止分析线程
@@ -192,13 +182,9 @@ namespace LAN_Spy.Model {
                         analyzeThread.Abort();
 
                 // 等待分析线程终止
-                var waitTime = 30 * 1000;
-                while (true) {
-                    if (analyzeThreads.All(analyzeThread => !analyzeThread.IsAlive)) break;
-                    Thread.Sleep(500);
-                    if ((waitTime -= 500) == 0)
-                        throw new TimeoutException("等待分析线程终止超时。");
-                }
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (analyzeThreads.Any(analyzeThread => analyzeThread.IsAlive))
+                    sleeper.ThreadSleep(500);
 
                 // 清理缓冲区及其他内容
                 lock (_hostList) {

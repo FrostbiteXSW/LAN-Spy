@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using LAN_Spy.Controller.Classes;
 
 namespace LAN_Spy.Controller {
     internal static class Program {
@@ -37,9 +38,7 @@ namespace LAN_Spy.Controller {
             Scanner scanner = null;
             Poisoner poisoner = null;
             Watcher watcher = null;
-            var loading = new Loading("初始化中，请稍候");
             var task = new Thread(load => {
-                Thread.Sleep(1000);
                 try {
                     var scannerThread = new Thread(init => { scanner = new Scanner(); });
                     var poisonerThread = new Thread(init => { poisoner = new Poisoner(); });
@@ -59,30 +58,21 @@ namespace LAN_Spy.Controller {
                                     将启动线程工作的一部分分摊给子线程
                     ----------------------------------------------------------------*/
 
+                    var sleeper = new WaitTimeoutChecker(30000);
                     while (scannerThread.IsAlive || poisonerThread.IsAlive || watcherThread.IsAlive)
-                        Thread.Sleep(500);
+                        sleeper.ThreadSleep(500);
                 }
-                catch (ThreadAbortException) {
-                    Environment.Exit(-1);
-                }
-                finally {
-                    loading.Close();
-                }
+                catch (ThreadAbortException) { Environment.Exit(-1); }
             }) {Name = RegistedThreadName.ProgramInit.ToString()};
-            MessagePipe.SendInMessage(new KeyValuePair<Message, object>(Message.TaskIn, task));
+            MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
+            var loading = new Loading("初始化中，请稍候", task);
             loading.ShowDialog();
-
-            // 等待结果
-            while (MessagePipe.TopOutMessage.Key == Message.NoAvailableMessage) { Thread.Sleep(500); }
             
             // 用户取消
             if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
                 Environment.Exit(-1);
 
-            // 判断是否正确初始化
-            if (MessagePipe.TopOutMessage.Key != Message.TaskOut 
-                || ((Thread) MessagePipe.TopOutMessage.Value).Name != task.Name)
-                throw new Exception("核心模块初始化失败。");
+            // 初始化完成（由loading判断得到）
             MessagePipe.GetNextOutMessage();
 
             var models = new BasicClass[] {scanner, poisoner, watcher};

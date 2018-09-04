@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace LAN_Spy.Controller {
     /// <summary>
@@ -49,17 +50,17 @@ namespace LAN_Spy.Controller {
         /// <summary>
         ///     传入 <see cref="TaskHandler"/> 的消息队列。
         /// </summary>
-        private static readonly Queue<KeyValuePair<Message, object>> InMessages = new Queue<KeyValuePair<Message, object>>();
+        private static readonly Queue<KeyValuePair<Message, Thread>> InMessages = new Queue<KeyValuePair<Message, Thread>>();
         
         /// <summary>
         ///     从 <see cref="TaskHandler"/> 传出的消息队列。
         /// </summary>
-        private static readonly Queue<KeyValuePair<Message, object>> OutMessages = new Queue<KeyValuePair<Message, object>>();
-        
+        private static readonly Queue<KeyValuePair<Message, Thread>> OutMessages = new Queue<KeyValuePair<Message, Thread>>();
+
         /// <summary>
         ///     获取一个有关无消息的消息参数对新实例。
         /// </summary>
-        private static KeyValuePair<Message, object> NoAvailableMessagePair => new KeyValuePair<Message, object>(Message.NoAvailableMessage, null);
+        private static KeyValuePair<Message, Thread> NoAvailableMessagePair => new KeyValuePair<Message, Thread>(Message.NoAvailableMessage, new Thread(empty => { }) {Name = ""});
 
         /// <summary>
         ///     获取待接收传入消息数量。
@@ -74,7 +75,7 @@ namespace LAN_Spy.Controller {
         /// <summary>
         ///     检查传入消息队列顶端的内容。
         /// </summary>
-        public static KeyValuePair<Message, object> TopInMessage {
+        public static KeyValuePair<Message, Thread> TopInMessage {
             get {
                 if (InCount == 0) return NoAvailableMessagePair;
                 lock (InMessages) { return InMessages.Peek(); }
@@ -84,7 +85,7 @@ namespace LAN_Spy.Controller {
         /// <summary>
         ///     检查传出消息队列顶端的内容。
         /// </summary>
-        public static KeyValuePair<Message, object> TopOutMessage {
+        public static KeyValuePair<Message, Thread> TopOutMessage {
             get { 
                 if (OutCount == 0) return NoAvailableMessagePair;
                 lock (OutMessages) { return OutMessages.Peek(); }
@@ -95,7 +96,7 @@ namespace LAN_Spy.Controller {
         ///     获取下一个传入消息及其参数。
         /// </summary>
         /// <returns>返回消息参数对。</returns>
-        public static KeyValuePair<Message, object> GetNextInMessage() {
+        public static KeyValuePair<Message, Thread> GetNextInMessage() {
             // 检查是否有消息传入
             if (InCount == 0)
                 return NoAvailableMessagePair;
@@ -108,7 +109,7 @@ namespace LAN_Spy.Controller {
         ///     发送新的传入消息及其参数。
         /// </summary>
         /// <param name="inMessage">传入消息参数对。</param>
-        public static void SendInMessage(KeyValuePair<Message, object> inMessage) {
+        public static void SendInMessage(KeyValuePair<Message, Thread> inMessage) {
             // 检查消息有效性
             if ((int) inMessage.Key < 100 || (int) inMessage.Key > 199)
                 throw new Exception("无效的消息。");
@@ -120,7 +121,7 @@ namespace LAN_Spy.Controller {
         ///     获取下一个传出消息及其参数。
         /// </summary>
         /// <returns>返回消息参数对。</returns>
-        public static KeyValuePair<Message, object> GetNextOutMessage() {
+        public static KeyValuePair<Message, Thread> GetNextOutMessage() {
             // 检查是否有消息传出
             if (OutCount == 0) 
                 return NoAvailableMessagePair;
@@ -133,7 +134,7 @@ namespace LAN_Spy.Controller {
         ///     发送新的传出消息及其参数。
         /// </summary>
         /// <param name="outMessage">传出消息参数对。</param>
-        public static void SendOutMessage(KeyValuePair<Message, object> outMessage) {
+        public static void SendOutMessage(KeyValuePair<Message, Thread> outMessage) {
             // 检查消息有效性
             if ((int) outMessage.Key < 200 || (int) outMessage.Key > 299)
                 throw new Exception("无效的消息。");

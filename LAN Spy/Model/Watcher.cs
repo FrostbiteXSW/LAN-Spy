@@ -4,6 +4,7 @@ using PacketDotNet.Utils;
 using SharpPcap;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 
@@ -31,11 +32,6 @@ namespace LAN_Spy.Model {
         ///     过期连接丢弃线程句柄。
         /// </summary>
         private Thread _dropOutdatedLinksThread;
-        
-        /// <summary>
-        ///     指示模块是否处在工作状态。
-        /// </summary>
-        public bool IsStarted { get; private set; }
 
         /// <summary>
         ///     获取监测到的Tcp连接列表。
@@ -58,15 +54,9 @@ namespace LAN_Spy.Model {
         /// </summary>
         /// <exception cref="InvalidOperationException">已有一项监听工作正在进行。</exception>
         public void StartWatching() {
-            // 判断是否为工作状态
-            if (IsStarted) return;
-
             // 判断是否存在未停止的监听操作
             if (_device != null)
                 throw new InvalidOperationException("已有一项监听工作正在进行。");
-            
-            // 进入工作状态
-            IsStarted = true;
 
             // 打开设备
             _device = DeviceList[CurDevName];
@@ -172,54 +162,39 @@ namespace LAN_Spy.Model {
         /// </summary>
         /// <exception cref="TimeoutException">等待线程结束超时。</exception>
         public void StopWatching() {
-            // 判断是否为工作状态
-            if (!IsStarted) return;
-
             // 向监听线程发送终止信号
             foreach (var watchThread in _watchThreads)
                 if (watchThread.IsAlive)
                     watchThread.Abort();
 
             // 等待监听线程终止
-            var waitTime = 60 * 1000;
-            while (waitTime >= 0) {
-                waitTime = -waitTime;
-                foreach (var watchThread in _watchThreads)
-                    if (watchThread.IsAlive) {
-                        Thread.Sleep(100);
-                        if ((waitTime = -waitTime - 100) == 0)
-                            throw new TimeoutException("等待线程结束超时。");
-                        break;
-                    }
-            }
+            var sleeper = new WaitTimeoutChecker(30000);
+            while (_watchThreads.Any(item => item.IsAlive))
+                sleeper.ThreadSleep(100);
             _watchThreads.Clear();
 
             // 向过期连接丢弃线程发送终止信号
-            if (_dropOutdatedLinksThread.IsAlive)
+            if (!(_dropOutdatedLinksThread is null) && _dropOutdatedLinksThread.IsAlive) {
                 _dropOutdatedLinksThread.Abort();
 
-            // 等待过期连接丢弃线程终止
-            waitTime = 60 * 1000;
-            while (true) {
-                if (!_dropOutdatedLinksThread.IsAlive) break;
-                Thread.Sleep(100);
-                waitTime -= 100;
-                if (waitTime == 0)
-                    throw new TimeoutException("等待线程结束超时。");
+                // 等待过期连接丢弃线程终止
+                sleeper = new WaitTimeoutChecker(30000);
+                while (_dropOutdatedLinksThread.IsAlive)
+                    sleeper.ThreadSleep(100);
+                _dropOutdatedLinksThread = null;
             }
-            _dropOutdatedLinksThread = null;
 
             // 关闭设备
-            _device.StopCapture();
-            _device.OnPacketArrival -= Device_OnPacketArrival;
-            _device.Close();
-            _device = null;
+            if (!(_device is null)) {
+                if (_device.Started)
+                    _device.StopCapture();
+                _device.OnPacketArrival -= Device_OnPacketArrival;
+                _device.Close();
+                _device = null;
+            }
 
             // 清理缓冲区
             ClearCaptures();
-
-            // 退出工作状态
-            IsStarted = false;
         }
 
         /// <summary>
