@@ -1,16 +1,16 @@
 ﻿//#define TEST_CONSOLE
 
-using LAN_Spy.Model;
-using LAN_Spy.Model.Classes;
-using LAN_Spy.View;
-using SharpPcap;
-using SharpPcap.WinPcap;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using LAN_Spy.Controller.Classes;
+using LAN_Spy.Model;
+using LAN_Spy.Model.Classes;
+using LAN_Spy.View;
+using SharpPcap;
+using SharpPcap.WinPcap;
 
 namespace LAN_Spy.Controller {
     internal static class Program {
@@ -27,7 +27,9 @@ namespace LAN_Spy.Controller {
             Application.SetCompatibleTextRenderingDefault(false);
 
             // 检测WinPcap库
-            try { CaptureDeviceList.New(); }
+            try {
+                CaptureDeviceList.New();
+            }
             catch (Exception) {
                 MessageBox.Show("本程序需要WinPcap支持，请确保WinPcap库正常工作！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -42,7 +44,10 @@ namespace LAN_Spy.Controller {
                 try {
                     var scannerThread = new Thread(init => { scanner = new Scanner(); });
                     var poisonerThread = new Thread(init => { poisoner = new Poisoner(); });
-                    var watcherThread = new Thread(init => { scannerThread.Start(); watcher = new Watcher(); });
+                    var watcherThread = new Thread(init => {
+                        scannerThread.Start();
+                        watcher = new Watcher();
+                    });
 
                     watcherThread.Start();
                     poisonerThread.Start();
@@ -62,18 +67,20 @@ namespace LAN_Spy.Controller {
                     while (scannerThread.IsAlive || poisonerThread.IsAlive || watcherThread.IsAlive)
                         sleeper.ThreadSleep(500);
                 }
-                catch (ThreadAbortException) { Environment.Exit(-1); }
+                catch (ThreadAbortException) {
+                    Environment.Exit(-1);
+                }
             }) {Name = RegistedThreadName.ProgramInit.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
             var loading = new Loading("初始化中，请稍候", task);
             loading.ShowDialog();
-            
+
             // 用户取消
-            if (MessagePipe.TopOutMessage.Key == Message.UserCancel)
+            if (MessagePipe.GetNextOutMessage(task) == Message.UserCancel)
                 Environment.Exit(-1);
 
             // 初始化完成（由loading判断得到）
-            MessagePipe.GetNextOutMessage();
+            MessagePipe.ClearAllMessage(task);
 
             var models = new BasicClass[] {scanner, poisoner, watcher};
             Application.Run(new MainForm(ref models));
@@ -137,7 +144,7 @@ namespace LAN_Spy.Controller {
                 else
                     Console.WriteLine();
             }
-               
+
             // 选择目标
             Console.WriteLine();
             Console.Write("Select target1: ");

@@ -1,14 +1,19 @@
-﻿using LAN_Spy.Model;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SharpPcap;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using LAN_Spy.Model;
 using LAN_Spy.Model.Classes;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SharpPcap;
 
 namespace TestProject {
     [TestClass]
     public class PoisonerTest {
+        /// <summary>
+        ///     适用于 <see cref="TestTwoCapture" /> 测试。
+        /// </summary>
+        private uint _ip, _arp;
+
         /// <summary>
         ///     测试 <see cref="Poisoner" /> 的 StartPoisoning 方法。
         /// </summary>
@@ -59,7 +64,7 @@ namespace TestProject {
                     device.OnPacketArrival -= Device_OnPacketArrival2;
                     device.StopCapture();
                     device.Close();
-                } 
+                }
                 catch {
                     arpex = true;
                 }
@@ -82,18 +87,16 @@ namespace TestProject {
              * 用于多个线程使用不同过滤器同时抓包的场合。
              */
         }
+
         /// <summary>
-        ///     适用于 <see cref="TestTwoCapture"/> 测试。
-        /// </summary>
-        private uint _ip, _arp;
-        /// <summary>
-        ///     适用于 <see cref="TestTwoCapture"/> 测试。
+        ///     适用于 <see cref="TestTwoCapture" /> 测试。
         /// </summary>
         private void Device_OnPacketArrival1(object sender, CaptureEventArgs e) {
             _ip++;
         }
+
         /// <summary>
-        ///     适用于 <see cref="TestTwoCapture"/> 测试。
+        ///     适用于 <see cref="TestTwoCapture" /> 测试。
         /// </summary>
         private void Device_OnPacketArrival2(object sender, CaptureEventArgs e) {
             _arp++;

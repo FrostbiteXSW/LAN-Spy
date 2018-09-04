@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using LAN_Spy.View;
 
 namespace LAN_Spy.Controller {
     /// <summary>
@@ -11,9 +13,9 @@ namespace LAN_Spy.Controller {
         ///     当前消息队列中无待接收的消息。
         /// </summary>
         NoAvailableMessage = 0,
-        
+
         /// <summary>
-        ///     有新任务传递给 <see cref="TaskHandler"/> 处理。
+        ///     有新任务传递给 <see cref="TaskHandler" /> 处理。
         /// </summary>
         TaskIn = 100,
 
@@ -23,7 +25,7 @@ namespace LAN_Spy.Controller {
         TaskCancel,
 
         /// <summary>
-        ///     <see cref="TaskHandler"/> 已处理完的任务等待接收。
+        ///     <see cref="TaskHandler" /> 已处理完的任务等待接收。
         /// </summary>
         TaskOut = 200,
 
@@ -44,65 +46,32 @@ namespace LAN_Spy.Controller {
     }
 
     /// <summary>
-    ///     用以传递消息给 <see cref="TaskHandler"/> 以及从 <see cref="TaskHandler"/> 接收消息的管道载体。
+    ///     用以传递消息给 <see cref="TaskHandler" /> 以及从 <see cref="TaskHandler" /> 接收消息的管道载体。
     /// </summary>
     public static class MessagePipe {
         /// <summary>
-        ///     传入 <see cref="TaskHandler"/> 的消息队列。
+        ///     传入 <see cref="TaskHandler" /> 的消息队列。
         /// </summary>
-        private static readonly Queue<KeyValuePair<Message, Thread>> InMessages = new Queue<KeyValuePair<Message, Thread>>();
-        
-        /// <summary>
-        ///     从 <see cref="TaskHandler"/> 传出的消息队列。
-        /// </summary>
-        private static readonly Queue<KeyValuePair<Message, Thread>> OutMessages = new Queue<KeyValuePair<Message, Thread>>();
+        private static readonly List<KeyValuePair<Message, Thread>> InMessages = new List<KeyValuePair<Message, Thread>>();
 
         /// <summary>
-        ///     获取一个有关无消息的消息参数对新实例。
+        ///     从 <see cref="TaskHandler" /> 传出的消息队列。
         /// </summary>
-        private static KeyValuePair<Message, Thread> NoAvailableMessagePair => new KeyValuePair<Message, Thread>(Message.NoAvailableMessage, new Thread(empty => { }) {Name = ""});
-
-        /// <summary>
-        ///     获取待接收传入消息数量。
-        /// </summary>
-        public static int InCount { get { lock (InMessages) { return InMessages.Count; }}}
-
-        /// <summary>
-        ///     获取待接收传出消息数量。
-        /// </summary>
-        public static int OutCount { get { lock (OutMessages) { return OutMessages.Count; }}}
-
-        /// <summary>
-        ///     检查传入消息队列顶端的内容。
-        /// </summary>
-        public static KeyValuePair<Message, Thread> TopInMessage {
-            get {
-                if (InCount == 0) return NoAvailableMessagePair;
-                lock (InMessages) { return InMessages.Peek(); }
-            }
-        }
-
-        /// <summary>
-        ///     检查传出消息队列顶端的内容。
-        /// </summary>
-        public static KeyValuePair<Message, Thread> TopOutMessage {
-            get { 
-                if (OutCount == 0) return NoAvailableMessagePair;
-                lock (OutMessages) { return OutMessages.Peek(); }
-            }
-        }
+        private static readonly List<KeyValuePair<Message, Thread>> OutMessages = new List<KeyValuePair<Message, Thread>>();
 
         /// <summary>
         ///     获取下一个传入消息及其参数。
         /// </summary>
         /// <returns>返回消息参数对。</returns>
         public static KeyValuePair<Message, Thread> GetNextInMessage() {
-            // 检查是否有消息传入
-            if (InCount == 0)
-                return NoAvailableMessagePair;
-            
             // 获取传入消息
-            lock (InMessages) { return InMessages.Dequeue(); }
+            lock (InMessages) {
+                if (InMessages.Count == 0)
+                    return new KeyValuePair<Message, Thread>(Message.NoAvailableMessage, new Thread(empty => { }) {Name = ""});
+                var msg = InMessages[0];
+                InMessages.RemoveAt(0);
+                return msg;
+            }
         }
 
         /// <summary>
@@ -114,20 +83,27 @@ namespace LAN_Spy.Controller {
             if ((int) inMessage.Key < 100 || (int) inMessage.Key > 199)
                 throw new Exception("无效的消息。");
 
-            lock (InMessages) { InMessages.Enqueue(inMessage); }
+            lock (InMessages) {
+                InMessages.Add(inMessage);
+            }
         }
-        
-        /// <summary>
-        ///     获取下一个传出消息及其参数。
-        /// </summary>
-        /// <returns>返回消息参数对。</returns>
-        public static KeyValuePair<Message, Thread> GetNextOutMessage() {
-            // 检查是否有消息传出
-            if (OutCount == 0) 
-                return NoAvailableMessagePair;
 
-            // 获取传出消息
-            lock (OutMessages) { return OutMessages.Dequeue(); }
+        /// <summary>
+        ///     获取对应任务的下一个传出消息。
+        /// </summary>
+        /// <param name="task">查询的任务。</param>
+        /// <returns>返回最早的消息。</returns>
+        public static Message GetNextOutMessage(Thread task) {
+            lock (OutMessages) {
+                // 检查是否有消息传出
+                if (OutMessages.All(item => item.Value.Name != task.Name))
+                    return Message.NoAvailableMessage;
+
+                // 获取传出消息
+                var msg = OutMessages.First(item => item.Value.Name == task.Name);
+                OutMessages.Remove(msg);
+                return msg.Key;
+            }
         }
 
         /// <summary>
@@ -139,7 +115,39 @@ namespace LAN_Spy.Controller {
             if ((int) outMessage.Key < 200 || (int) outMessage.Key > 299)
                 throw new Exception("无效的消息。");
 
-            lock (OutMessages) { OutMessages.Enqueue(outMessage); }
+            lock (OutMessages) {
+                OutMessages.Add(outMessage);
+            }
+        }
+
+        /// <summary>
+        ///     清除所有与某一任务有关的消息。
+        /// </summary>
+        /// <param name="task">需要清除的任务。</param>
+        public static void ClearAllMessage(Thread task) {
+            lock (InMessages) {
+                InMessages.RemoveAll(item => item.Value.Name == task.Name);
+            }
+            lock (OutMessages) {
+                OutMessages.RemoveAll(item => item.Value.Name == task.Name);
+            }
+        }
+
+        /// <summary>
+        ///     供载入窗口检查任务是否完成，此方法不会从列表中移除消息。
+        /// </summary>
+        /// <param name="loading">调用方法的载入窗口。</param>
+        /// <param name="task">查询的任务。</param>
+        /// <returns>返回最早的消息。</returns>
+        public static Message GetNextOutMessage(this Loading loading, Thread task) {
+            // 检查调用者有效性
+            if (loading is null)
+                throw new NullReferenceException("方法的调用者不能为空。");
+
+            lock (OutMessages) {
+                // 检查是否有消息传出
+                return OutMessages.All(item => item.Value.Name != task.Name) ? Message.NoAvailableMessage : OutMessages.First(item => item.Value.Name == task.Name).Key;
+            }
         }
     }
 }

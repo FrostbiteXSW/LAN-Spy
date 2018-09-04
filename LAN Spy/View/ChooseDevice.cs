@@ -1,32 +1,32 @@
-﻿using LAN_Spy.Model.Classes;
-using SharpPcap;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
+using LAN_Spy.Model.Classes;
+using SharpPcap;
 using SharpPcap.WinPcap;
 
 namespace LAN_Spy.View {
     public partial class ChooseDevice : Form {
         /// <summary>
-        ///     回传设备选项的 <see cref="PointerPacker"/> 句柄。
+        ///     设备列表描述信息，用于鼠标悬停弹出窗口中显示。
         /// </summary>
-        private readonly PointerPacker _index;
-        
+        private readonly List<string> _deviceListInfo = new List<string>();
+
+        /// <summary>
+        ///     设备列表鼠标悬停弹出窗口。
+        /// </summary>
+        private readonly ToolTip _deviceListTooltip = new ToolTip();
+
         /// <summary>
         ///     缓存设备的完整名称。
         /// </summary>
         private readonly List<string> _devName = new List<string>();
 
         /// <summary>
-        ///     设备列表鼠标悬停弹出窗口。
+        ///     回传设备选项的 <see cref="PointerPacker" /> 句柄。
         /// </summary>
-        private readonly ToolTip _deviceListTooltip = new ToolTip();
-        
-        /// <summary>
-        ///     设备列表描述信息，用于鼠标悬停弹出窗口中显示。
-        /// </summary>
-        private readonly List<string> _deviceListInfo = new List<string>();
+        private readonly PointerPacker _index;
 
         /// <summary>
         ///     鼠标最后一次悬停的项的索引号，用于防止反复更新鼠标悬停弹出窗口。
@@ -41,14 +41,14 @@ namespace LAN_Spy.View {
         public ChooseDevice(ref PointerPacker index) {
             InitializeComponent();
             _index = index;
-            
+
             // 设置鼠标悬停弹出窗口参数
             _deviceListTooltip.AutoPopDelay = 5000;
             _deviceListTooltip.InitialDelay = 1000;
             _deviceListTooltip.ReshowDelay = 500;
 
             // 获取设备信息
-            CheckForIllegalCrossThreadCalls = false; 
+            CheckForIllegalCrossThreadCalls = false;
             new Thread(getDeviceInfo => {
                 var collection = new List<string>();
                 foreach (var dev in CaptureDeviceList.Instance) {
@@ -64,12 +64,12 @@ namespace LAN_Spy.View {
                         DeviceList.Items.Add(str);
                     DeviceList.Enabled = true;
                 }
-                CheckForIllegalCrossThreadCalls = true; 
+                CheckForIllegalCrossThreadCalls = true;
             }).Start();
         }
-        
+
         /// <summary>
-        ///     设备列表鼠标移动事件，显示 <see cref="ToolTip"/> 弹出窗口。
+        ///     设备列表鼠标移动事件，显示 <see cref="ToolTip" /> 弹出窗口。
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
@@ -125,16 +125,16 @@ namespace LAN_Spy.View {
             if (DeviceList.SelectedIndex >= 0 && DeviceList.SelectedIndex < _devName.Count)
                 CommitButton_Click(sender, e);
         }
-        
+
         /// <summary>
         ///     释放按键时触发的事件。
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void DeviceList_KeyUp(object sender, KeyEventArgs e) {
-            if (e.KeyCode != Keys.Enter 
-                || DeviceList.SelectedIndex < 0 
-                || DeviceList.SelectedIndex >= _devName.Count) 
+            if (e.KeyCode != Keys.Enter
+                || DeviceList.SelectedIndex < 0
+                || DeviceList.SelectedIndex >= _devName.Count)
                 return;
             CommitButton_Click(sender, e);
             e.Handled = true;

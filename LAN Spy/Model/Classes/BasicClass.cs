@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Threading;
-using LAN_Spy.Controller.Classes;
 using SharpPcap;
 using SharpPcap.WinPcap;
 
@@ -28,6 +26,11 @@ namespace LAN_Spy.Model.Classes {
         private string _curDevName = "";
 
         /// <summary>
+        ///     当前实例使用的 <see cref="CaptureDeviceList" /> 实例。
+        /// </summary>
+        private CaptureDeviceList _deviceList;
+
+        /// <summary>
         ///     当前选中设备的IPv4地址。
         /// </summary>
         private IPAddress _ipv4Address = new IPAddress(new byte[] {0, 0, 0, 0});
@@ -48,11 +51,6 @@ namespace LAN_Spy.Model.Classes {
         public IReadOnlyList<IPAddress> GatewayAddresses => ((WinPcapDevice) DeviceList[CurDevName]).Interface.GatewayAddresses.AsReadOnly();
 
         /// <summary>
-        ///     当前实例使用的 <see cref="CaptureDeviceList"/> 实例。
-        /// </summary>
-        private CaptureDeviceList _deviceList;
-
-        /// <summary>
         ///     获取可用网络设备列表，在模块中进行抓包发包作业时请使用此对象。
         /// </summary>
         protected CaptureDeviceList DeviceList {
@@ -61,9 +59,13 @@ namespace LAN_Spy.Model.Classes {
 
                 // 若设备列表实例被占用，则等待
                 var sleeper = new WaitTimeoutChecker(30000);
-                while (_deviceList is null) 
-                    try { _deviceList = CaptureDeviceList.New(); }
-                    catch (PcapException) { sleeper.ThreadSleep(500); }
+                while (_deviceList is null)
+                    try {
+                        _deviceList = CaptureDeviceList.New();
+                    }
+                    catch (PcapException) {
+                        sleeper.ThreadSleep(500);
+                    }
 
                 return _deviceList;
             }
@@ -75,7 +77,7 @@ namespace LAN_Spy.Model.Classes {
         public string CurDevName {
             get => _curDevName;
             set {
-                if (value.Length != 0 
+                if (value.Length != 0
                     && DeviceList.All(device => !device.Name.Equals(value)))
                     throw new IndexOutOfRangeException("无效的设备名称。");
                 _curDevName = value;

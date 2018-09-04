@@ -1,12 +1,12 @@
-﻿using LAN_Spy.Model.Classes;
-using PacketDotNet;
-using PacketDotNet.Utils;
-using SharpPcap;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using LAN_Spy.Model.Classes;
+using PacketDotNet;
+using PacketDotNet.Utils;
+using SharpPcap;
 
 namespace LAN_Spy.Model {
     /// <summary>
@@ -42,9 +42,9 @@ namespace LAN_Spy.Model {
                 lock (_tcpLinks) {
                     tcpLinksCopy.AddRange(_tcpLinks);
                 }
-                tcpLinksCopy.Sort((a, b) => 
+                tcpLinksCopy.Sort((a, b) =>
                     string.CompareOrdinal(a.Src.ToString() + " " + a.Dst.ToString(),
-                    b.Src.ToString() + " " + b.Dst.ToString()));
+                        b.Src.ToString() + " " + b.Dst.ToString()));
                 return tcpLinksCopy.AsReadOnly();
             }
         }

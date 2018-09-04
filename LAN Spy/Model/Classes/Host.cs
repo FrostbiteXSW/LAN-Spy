@@ -13,12 +13,7 @@ namespace LAN_Spy.Model.Classes {
         public IPAddress IPAddress;
 
         /// <summary>
-        ///     获取主机的物理地址。
-        /// </summary>
-        public PhysicalAddress PhysicalAddress { get; }
-
-        /// <summary>
-        ///     初始化 <see cref="Host"/> 类的实例。
+        ///     初始化 <see cref="Host" /> 类的实例。
         /// </summary>
         /// <param name="ipAddress">IP地址。</param>
         /// <param name="physicalAddress">物理地址。</param>
@@ -26,5 +21,10 @@ namespace LAN_Spy.Model.Classes {
             IPAddress = ipAddress;
             PhysicalAddress = physicalAddress;
         }
+
+        /// <summary>
+        ///     获取主机的物理地址。
+        /// </summary>
+        public PhysicalAddress PhysicalAddress { get; }
     }
 }

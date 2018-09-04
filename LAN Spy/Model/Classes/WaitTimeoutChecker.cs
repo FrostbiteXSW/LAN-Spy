@@ -7,17 +7,17 @@ namespace LAN_Spy.Model.Classes {
     /// </summary>
     public class WaitTimeoutChecker {
         /// <summary>
+        ///     指示是否在超时后抛出异常。
+        /// </summary>
+        private readonly bool _useException = true;
+
+        /// <summary>
         ///     等待时间。
         /// </summary>
         private int _time;
 
         /// <summary>
-        ///     指示是否在超时后抛出异常。
-        /// </summary>
-        private readonly bool _useException = true;
-        
-        /// <summary>
-        ///     初始化 <see cref="WaitTimeoutChecker"/> 类的实例。
+        ///     初始化 <see cref="WaitTimeoutChecker" /> 类的实例。
         /// </summary>
         /// <param name="time">超时时间。</param>
         public WaitTimeoutChecker(int time) {
@@ -25,10 +25,10 @@ namespace LAN_Spy.Model.Classes {
         }
 
         /// <summary>
-        ///     初始化 <see cref="WaitTimeoutChecker"/> 类的实例。
+        ///     初始化 <see cref="WaitTimeoutChecker" /> 类的实例。
         /// </summary>
         /// <param name="time">超时时间。</param>
-        /// <param name="useException">指示是否在超时后抛出 <see cref="TimeoutException"/> 异常，默认抛出。</param>
+        /// <param name="useException">指示是否在超时后抛出 <see cref="TimeoutException" /> 异常，默认抛出。</param>
         public WaitTimeoutChecker(int time, bool useException) {
             _time = time;
             _useException = useException;
@@ -44,11 +44,7 @@ namespace LAN_Spy.Model.Classes {
             if (_time <= 0) return false;
             Thread.Sleep(Math.Min(time, _time));
             if ((_time -= time) <= 0 && _useException)
-                throw new TimeoutException("等待已超时。"
-#if DEBUG
-            + $"Key: {Controller.MessagePipe.TopOutMessage.Key}, Value: {Controller.MessagePipe.TopOutMessage.Value}"
-#endif
-                );
+                throw new TimeoutException("等待已超时。");
             return _time > 0;
         }
     }

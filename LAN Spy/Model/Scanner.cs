@@ -1,14 +1,14 @@
-﻿using LAN_Spy.Model.Classes;
-using PacketDotNet;
-using PacketDotNet.Utils;
-using SharpPcap;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
+using LAN_Spy.Model.Classes;
+using PacketDotNet;
+using PacketDotNet.Utils;
+using SharpPcap;
 
 namespace LAN_Spy.Model {
     /// <summary>
@@ -54,7 +54,7 @@ namespace LAN_Spy.Model {
         public void ScanForTarget() {
             // 获取当前设备
             var device = DeviceList[CurDevName];
-            
+
             // 创建分析线程
             const int analyzeThreadsCount = 4;
             var analyzeThreads = new Thread[analyzeThreadsCount];

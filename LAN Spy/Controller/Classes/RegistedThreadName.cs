@@ -1,6 +1,6 @@
 ﻿namespace LAN_Spy.Controller.Classes {
     /// <summary>
-    ///     注册的无重复线程名称，为 <see cref="TaskHandler"/> 内区分线程的唯一标志，必须设置在线程的 Name 属性上。
+    ///     注册的无重复线程名称，为 <see cref="TaskHandler" /> 内区分线程的唯一标志，必须设置在线程的 Name 属性上。
     /// </summary>
     public enum RegistedThreadName {
         /// <summary>
@@ -27,7 +27,7 @@
         ///     在 MainForm.cs 的 开始毒化ToolStripMenuItem_Click 方法内，用以启动毒化工作。
         /// </summary>
         StartPoisoning,
-        
+
         /// <summary>
         ///     在 MainForm.cs 的 开始监视ToolStripMenuItem_Click 方法内，用以启动监视工作。
         /// </summary>
@@ -38,37 +38,37 @@
         /// </summary>
         StopAllModels,
 
-        /// <summary>     
+        /// <summary>
         ///     在 MainForm.cs 的 退出ToolStripMenuItem_Click 方法内，用以停止所有模块。
         /// </summary>
         ExitStopAllModels,
-        
-        /// <summary>     
+
+        /// <summary>
         ///     在 MainForm.cs 的 启动所有模块ToolStripMenuItem_Click 方法内，用以停止所有模块。
         /// </summary>
         RestartStopAllModels,
 
-        /// <summary>     
+        /// <summary>
         ///     在 MainForm.cs 的 启动扫描模块ToolStripMenuItem_Click 方法内，用以停止扫描模块。
         /// </summary>
         StopScanner,
 
-        /// <summary>     
+        /// <summary>
         ///     在 MainForm.cs 的 启动毒化模块ToolStripMenuItem_Click 方法内，用以停止毒化模块。
         /// </summary>
         StopPoisoner,
-        
-        /// <summary>     
+
+        /// <summary>
         ///     在 MainForm.cs 的 启动监视模块ToolStripMenuItem_Click 方法内，用以停止监视模块。
         /// </summary>
         StopWatcher,
 
-        /// <summary>     
+        /// <summary>
         ///     在 MainForm.cs 的 开始毒化ToolStripMenuItem_Click 方法内，用以停止毒化工作。
         /// </summary>
         StopPoisoning,
-        
-        /// <summary>     
+
+        /// <summary>
         ///     在 MainForm.cs 的 开始监视ToolStripMenuItem_Click 方法内，用以停止监视工作。
         /// </summary>
         StopWatching

@@ -8,15 +8,15 @@ using Message = LAN_Spy.Controller.Message;
 namespace LAN_Spy.View {
     public partial class Loading : Form {
         /// <summary>
+        ///     载入窗口对应的后台载入工作。
+        /// </summary>
+        private readonly Thread _task;
+
+        /// <summary>
         ///     载入提示信息末尾的点的数量。
         /// </summary>
         private int _dotCount;
 
-        /// <summary>
-        ///     载入窗口对应的后台载入工作。
-        /// </summary>
-        private readonly Thread _task;
-        
         /// <inheritdoc />
         /// <summary>
         ///     初始化 <see cref="Loading" /> 窗口。
@@ -28,18 +28,21 @@ namespace LAN_Spy.View {
             CheckForIllegalCrossThreadCalls = false;
             LoadingInfoLabel.Text = message;
             _task = task;
+
+            // 所有停止（包含Stop）工作原则上不接受取消
+            if (_task.Name != null && _task.Name.Contains("Stop"))
+                CancelButton.Enabled = false;
         }
-        
+
         /// <summary>
         ///     取消按钮单击事件。
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
-        /// <exception cref=""></exception>
         private void CancelButton_Click(object sender, EventArgs e) {
-            if (!(MessagePipe.TopOutMessage.Value is null) 
-                && MessagePipe.TopOutMessage.Value.Name == _task.Name)
+            if (this.GetNextOutMessage(_task) != Message.NoAvailableMessage) {
                 Close();
+            }
             else {
                 MessagePipe.SendOutMessage(new KeyValuePair<Message, Thread>(Message.UserCancel, _task));
                 Close();
@@ -52,17 +55,19 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void TickTimer_Tick(object sender, EventArgs e) {
-            if (!(MessagePipe.TopOutMessage.Value is null) 
-                && MessagePipe.TopOutMessage.Value.Name == _task.Name)
+            if (this.GetNextOutMessage(_task) != Message.NoAvailableMessage) {
                 Close();
-
-            if (++_dotCount == 4) {
-                _dotCount = 0;
-                LoadingInfoLabel.Text = LoadingInfoLabel.Text.TrimEnd('.');
             }
-            else
-                LoadingInfoLabel.Text += '.';
-            LoadingInfoLabel.Left = (Width - LoadingInfoLabel.Width) / 2;
+            else {
+                if (++_dotCount == 4) {
+                    _dotCount = 0;
+                    LoadingInfoLabel.Text = LoadingInfoLabel.Text.TrimEnd('.');
+                }
+                else {
+                    LoadingInfoLabel.Text += '.';
+                }
+                LoadingInfoLabel.Left = (Width - LoadingInfoLabel.Width) / 2;
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using LAN_Spy.Model.Classes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using LAN_Spy.Model.Classes;
 
 namespace LAN_Spy.Controller {
     /// <summary>
@@ -27,7 +27,7 @@ namespace LAN_Spy.Controller {
                     switch (message.Key) {
                         // 新任务到达
                         case Message.TaskIn:
-                            var task = (Thread) message.Value;
+                            var task = message.Value;
                             task.Start();
                             lock (WorkThreads) {
                                 WorkThreads.Add(task);
@@ -41,7 +41,7 @@ namespace LAN_Spy.Controller {
                             // 查找目标
                             Thread target;
                             lock (WorkThreads) {
-                                target = WorkThreads.Find(item => item.Name == ((Thread) message.Value).Name);
+                                target = WorkThreads.Find(item => item.Name == message.Value.Name);
                             }
                             if (target is null) {
                                 MessagePipe.SendOutMessage(new KeyValuePair<Message, Thread>(Message.TaskNotFound, message.Value));
@@ -96,8 +96,8 @@ namespace LAN_Spy.Controller {
             catch (ThreadAbortException) { }
         });
 
-        /// <summary> 
-        ///     初始化 <see cref="TaskHandler"/> 的线程容器。
+        /// <summary>
+        ///     初始化 <see cref="TaskHandler" /> 的线程容器。
         /// </summary>
         public static void Init() {
             Stop();
@@ -106,13 +106,15 @@ namespace LAN_Spy.Controller {
         }
 
         /// <summary>
-        ///     终止 <see cref="TaskHandler"/> 的运行。
+        ///     终止 <see cref="TaskHandler" /> 的运行。
         /// </summary>
         public static void Stop() {
             if (MessageReceiver.IsAlive) MessageReceiver.Abort();
             if (Inspector.IsAlive) Inspector.Abort();
             if (WorkThreads.Count == 0) return;
-            WorkThreads.ForEach(thread => {if (thread.IsAlive) thread.Abort();});
+            WorkThreads.ForEach(thread => {
+                if (thread.IsAlive) thread.Abort();
+            });
             var sleeper = new WaitTimeoutChecker(30000);
             while (WorkThreads.Any(thread => thread.IsAlive) || MessageReceiver.IsAlive || Inspector.IsAlive)
                 sleeper.ThreadSleep(500);
