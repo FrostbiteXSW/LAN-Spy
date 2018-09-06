@@ -68,11 +68,7 @@ namespace LAN_Spy.Model {
             _gateway = Gateway == null ? new Host(new IPAddress(new byte[] {0, 0, 0, 0}), new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0})) : new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
 
             // 缓存并打开当前设备
-            _device = DeviceList[CurDevName];
-            _device.OnPacketArrival += Device_OnPacketArrival;
-            _device.Open();
-            _device.Filter = "arp or ip";
-            _device.StartCapture();
+            _device = StartCapture("arp or ip");
 
             // 创建包转发线程
             for (var i = 0; i < 32; i++) {
@@ -272,10 +268,7 @@ namespace LAN_Spy.Model {
 
             // 关闭设备
             if (!(_device is null)) {
-                if (_device.Started)
-                    _device.StopCapture();
-                _device.OnPacketArrival -= Device_OnPacketArrival;
-                _device.Close();
+                StopCapture(_device);
                 _device = null;
             }
 

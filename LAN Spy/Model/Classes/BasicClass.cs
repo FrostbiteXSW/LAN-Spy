@@ -121,11 +121,50 @@ namespace LAN_Spy.Model.Classes {
         public IPAddress BroadcastAddress => new IPAddress(_broadcastAddress.GetAddressBytes());
 
         /// <summary>
+        ///     根据当前设置的设备名称对设备进行设置并开始抓包。
+        /// </summary>
+        /// <returns>被设置的设备句柄。</returns>
+        protected ICaptureDevice StartCapture() {
+            var device = DeviceList[CurDevName];
+            device.Open();
+            device.OnPacketArrival += Device_OnPacketArrival;
+            device.StartCapture();
+            return device;
+        }
+
+        /// <summary>
+        ///     根据当前设置的设备名称对设备进行设置并开始抓包。
+        /// </summary>
+        /// <param name="filter">为设备设置过滤器。</param>
+        /// <returns>被设置的设备句柄。</returns>
+        protected ICaptureDevice StartCapture(string filter) {
+            var device = DeviceList[CurDevName];
+            device.Open();
+            device.Filter = filter;
+            device.OnPacketArrival += Device_OnPacketArrival;
+            device.StartCapture();
+            return device;
+        }
+        
+        /// <summary>
+        ///     对指定设备进行设置并停止抓包。
+        /// </summary>
+        /// <param name="device">被设置的设备句柄。</param>
+        protected void StopCapture(ICaptureDevice device) {
+            if (device.Started)
+                device.StopCapture();
+            if (!(device.Filter is null))
+                device.Filter = null;
+            device.OnPacketArrival -= Device_OnPacketArrival;
+            device.Close();
+        }
+
+        /// <summary>
         ///     通用抓包事件处理方法。
         /// </summary>
         /// <param name="sender">事件发送者。</param>
         /// <param name="e">事件参数。</param>
-        protected void Device_OnPacketArrival(object sender, CaptureEventArgs e) {
+        private void Device_OnPacketArrival(object sender, CaptureEventArgs e) {
             lock (_rawCaptures) {
                 _rawCaptures.Enqueue(e.Packet);
             }

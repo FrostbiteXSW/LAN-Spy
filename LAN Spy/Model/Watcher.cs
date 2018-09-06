@@ -64,10 +64,7 @@ namespace LAN_Spy.Model {
                 throw new InvalidOperationException("已有一项监听工作正在进行。");
 
             // 打开设备
-            _device = DeviceList[CurDevName];
-            _device.Open();
-            _device.OnPacketArrival += Device_OnPacketArrival;
-            _device.StartCapture();
+            _device = StartCapture();
 
             // 创建监听线程
             for (var i = 0; i < 8; i++) {
@@ -237,10 +234,7 @@ namespace LAN_Spy.Model {
 
             // 关闭设备
             if (!(_device is null)) {
-                if (_device.Started)
-                    _device.StopCapture();
-                _device.OnPacketArrival -= Device_OnPacketArrival;
-                _device.Close();
+                StopCapture(_device);
                 _device = null;
             }
 

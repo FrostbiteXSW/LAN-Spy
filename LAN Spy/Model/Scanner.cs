@@ -65,15 +65,8 @@ namespace LAN_Spy.Model {
             var sendThreads = new List<Thread>();
 
             try {
-                // 绑定抓包事件处理方法
-                device.OnPacketArrival += Device_OnPacketArrival;
-
-                // 打开设备并开始扫描
-                device.Open();
-
                 // arp头起始位置向后偏移6字节后，取2字节内容即为arp包类型
-                device.Filter = "arp [6:2] = 2";
-                device.StartCapture();
+                device = StartCapture("arp [6:2] = 2");
 
                 // 启动分析线程
                 for (var i = 0; i < analyzeThreadsCount; i++)
@@ -133,9 +126,7 @@ namespace LAN_Spy.Model {
                 lock (_hostList) {
                     _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
                 }
-                device.StopCapture();
-                device.OnPacketArrival -= Device_OnPacketArrival;
-                device.Close();
+                StopCapture(device);
                 ClearCaptures();
             }
         }
@@ -152,13 +143,8 @@ namespace LAN_Spy.Model {
             var analyzeThreads = new Thread[8];
 
             try {
-                // 绑定抓包事件处理方法
-                device.OnPacketArrival += Device_OnPacketArrival;
-
-                // 打开设备并开始扫描
-                device.Open();
-                device.Filter = "arp";
-                device.StartCapture();
+                // 开始扫描
+                device = StartCapture("arp");
 
                 // 初始化分析线程
                 for (var i = 0; i < 8; i++) {
@@ -190,9 +176,7 @@ namespace LAN_Spy.Model {
                 lock (_hostList) {
                     _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
                 }
-                device.StopCapture();
-                device.OnPacketArrival -= Device_OnPacketArrival;
-                device.Close();
+                StopCapture(device);
                 ClearCaptures();
             }
         }
