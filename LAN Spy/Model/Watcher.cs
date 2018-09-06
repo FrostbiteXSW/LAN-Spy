@@ -19,6 +19,11 @@ namespace LAN_Spy.Model {
         private readonly List<TcpLink> _tcpLinks = new List<TcpLink>();
 
         /// <summary>
+        ///     监测到的可能存在，仍等待进一步确认的Tcp连接列表，键值表示监测到的次数。
+        /// </summary>
+        private readonly List<KeyValuePair<TcpLink, int>> _possibleTcpLinks = new List<KeyValuePair<TcpLink, int>>();
+
+        /// <summary>
         ///     监视线程句柄。
         /// </summary>
         private readonly List<Thread> _watchThreads = new List<Thread>();
@@ -119,14 +124,50 @@ namespace LAN_Spy.Model {
                             dstAddress = ipv4.SourceAddress;
                         }
 
-                        // 保存TCP连接信息
-                        lock (_tcpLinks) {
-                            // 查找连接信息
-                            var tcpLink = _tcpLinks.Find(item => Equals(item.Src, srcAddress) && Equals(item.Dst, dstAddress));
-                            if (tcpLink == null)
-                                _tcpLinks.Add(new TcpLink(srcAddress, dstAddress));
-                            else
-                                tcpLink.UpdateTime();
+                        // 保存或更新可能的TCP连接信息
+                        lock (_possibleTcpLinks) {
+                            if (_possibleTcpLinks.All(item => !Equals(item.Key.Src, srcAddress) || !Equals(item.Key.Dst, dstAddress))) {
+                                // 此连接不存在于可能的TCP连接列表中
+                                lock (_tcpLinks) {
+                                    // 查找连接信息
+                                    var tcpLink = _tcpLinks.Find(item => Equals(item.Src, srcAddress) && Equals(item.Dst, dstAddress));
+                                    if (tcpLink is null) {
+                                        // 此连接也不存在于TCP连接列表中
+                                        if (!tcp.Fin && !tcp.Rst)
+                                            // 增加新连接到列表中
+                                            _possibleTcpLinks.Add(new KeyValuePair<TcpLink, int>(new TcpLink(srcAddress, dstAddress), 1));
+                                    }
+                                    else {
+                                        // 此连接存在于TCP连接列表中
+                                        if (!tcp.Fin && !tcp.Rst)
+                                            // 连接仍然存活，更新最后发现时间
+                                            tcpLink.UpdateTime();
+                                        else 
+                                            // 检测到Fin或Rst标志且Ack标志激活，则此连接的终止已被接受，移除连接
+                                            _tcpLinks.Remove(tcpLink);
+                                    }
+                                }
+                            }
+                            else {
+                                // 此连接存在于可能的TCP连接列表中
+                                var tcpLink = _possibleTcpLinks.Find(item => Equals(item.Key.Src, srcAddress) && Equals(item.Key.Dst, dstAddress));
+                                
+                                // 暂时移除此连接，如果连接仍然存活则之后再更新连接信息并重新加入
+                                _possibleTcpLinks.Remove(tcpLink);
+                                
+                                // 检测到Fin或Rst标志且Ack标志激活，则此连接的终止已被接受，永久移除此连接
+                                if (tcp.Fin || tcp.Rst) continue;
+
+                                // 连接仍然存活，更新最后发现时间及发现次数
+                                if (tcpLink.Value == 2)
+                                    // 已经监测到此连接两次，可以确定连接存在
+                                    _tcpLinks.Add(tcpLink.Key);
+                                else {
+                                    // 连接可信度仍然不高，继续监测
+                                    tcpLink = new KeyValuePair<TcpLink, int>(tcpLink.Key, tcpLink.Value + 1);
+                                    _possibleTcpLinks.Add(tcpLink);
+                                }
+                            }
                         }
                     }
                     else {
@@ -144,12 +185,22 @@ namespace LAN_Spy.Model {
         private void DropOutdatedLinksThread() {
             try {
                 while (true) {
-                    Thread.Sleep(120 * 1000);
+                    Thread.Sleep(15 * 1000);
+                    // 清理TCP连接列表
                     lock (_tcpLinks) {
                         for (var i = 0; i < _tcpLinks.Count; i++) {
                             var timeSpan = DateTime.Now - _tcpLinks[i].Time;
-                            if (timeSpan.TotalSeconds >= 300)
+                            if (timeSpan.TotalSeconds >= 30)
                                 _tcpLinks.RemoveAt(i);
+                        }
+                    }
+
+                    // 清理可能的TCP连接列表
+                    lock (_possibleTcpLinks) {
+                        for (var i = 0; i < _possibleTcpLinks.Count; i++) {
+                            var timeSpan = DateTime.Now - _possibleTcpLinks[i].Key.Time;
+                            if (timeSpan.TotalSeconds >= 30)
+                                _possibleTcpLinks.RemoveAt(i);
                         }
                     }
                 }

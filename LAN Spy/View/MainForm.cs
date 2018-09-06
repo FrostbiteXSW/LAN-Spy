@@ -205,6 +205,7 @@ namespace LAN_Spy.View {
             HostList.Rows.Clear();
             Target1List.Rows.Clear();
             Target2List.Rows.Clear();
+            ConnectionListUpdateTimer.Stop();
             ConnectionList.Rows.Clear();
         }
 
@@ -617,6 +618,8 @@ namespace LAN_Spy.View {
                     break;
                 case "ConnectionList":
                     list = ConnectionList;
+                    // 菜单打开时暂时停止更新列表
+                    ConnectionListUpdateTimer.Stop();
                     break;
                 default:
                     return;
@@ -907,7 +910,7 @@ namespace LAN_Spy.View {
 
                 MessagePipe.ClearAllMessage(task);
                 MessageBox.Show("监视工作已启动。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                ConnectionListUpdateTimer.Enabled = true;
+                ConnectionListUpdateTimer.Start();
                 开始监视ToolStripMenuItem.Text = "停止监视";
             }
             else {
@@ -932,7 +935,7 @@ namespace LAN_Spy.View {
 
                 // 模块已停止
                 MessagePipe.ClearAllMessage(task);
-                ConnectionListUpdateTimer.Enabled = false;
+                ConnectionListUpdateTimer.Stop();
                 ConnectionList.Rows.Clear();
                 MessageBox.Show("监视工作已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 开始监视ToolStripMenuItem.Text = "开始监视";
@@ -968,6 +971,15 @@ namespace LAN_Spy.View {
             foreach (var item in curConnection)
                 ConnectionList.Rows.Remove(ConnectionList.Rows.Cast<DataGridViewRow>().First(target => target.Cells["SrcAddress"].Value.Equals(item.Cells[0].Value)
                                                                                                        && target.Cells["DstAddress"].Value.Equals(item.Cells[1].Value)));
+        }
+
+        /// <summary>
+        ///     连接列表右键菜单关闭时触发的事件，重新开始更新列表。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void ConnectionListMenuStrip_Closed(object sender, ToolStripDropDownClosedEventArgs e) {
+            ConnectionListUpdateTimer.Start();
         }
     }
 }
