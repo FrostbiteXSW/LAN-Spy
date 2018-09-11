@@ -12,6 +12,21 @@
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -100,6 +115,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="bin\Release\LAN Spy.exe.config" />
     <None Include="packages.config" />
     <None Include="Properties\app.manifest" />
   </ItemGroup>
@@ -113,6 +129,122 @@
     <EmbeddedResource Include="View\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="bin\Release\LAN Spy.exe" />
+    <Content Include="bin\Release\LAN Spy.pdb" />
+    <Content Include="bin\Release\log4net.dll" />
+    <Content Include="bin\Release\log4net.xml" />
+    <Content Include="bin\Release\Microsoft.Win32.Primitives.dll" />
+    <Content Include="bin\Release\netstandard.dll" />
+    <Content Include="bin\Release\PacketDotNet.dll" />
+    <Content Include="bin\Release\SharpPcap.dll" />
+    <Content Include="bin\Release\System.AppContext.dll" />
+    <Content Include="bin\Release\System.Collections.Concurrent.dll" />
+    <Content Include="bin\Release\System.Collections.dll" />
+    <Content Include="bin\Release\System.Collections.NonGeneric.dll" />
+    <Content Include="bin\Release\System.Collections.Specialized.dll" />
+    <Content Include="bin\Release\System.ComponentModel.dll" />
+    <Content Include="bin\Release\System.ComponentModel.EventBasedAsync.dll" />
+    <Content Include="bin\Release\System.ComponentModel.Primitives.dll" />
+    <Content Include="bin\Release\System.ComponentModel.TypeConverter.dll" />
+    <Content Include="bin\Release\System.Console.dll" />
+    <Content Include="bin\Release\System.Data.Common.dll" />
+    <Content Include="bin\Release\System.Diagnostics.Contracts.dll" />
+    <Content Include="bin\Release\System.Diagnostics.Debug.dll" />
+    <Content Include="bin\Release\System.Diagnostics.FileVersionInfo.dll" />
+    <Content Include="bin\Release\System.Diagnostics.Process.dll" />
+    <Content Include="bin\Release\System.Diagnostics.StackTrace.dll" />
+    <Content Include="bin\Release\System.Diagnostics.TextWriterTraceListener.dll" />
+    <Content Include="bin\Release\System.Diagnostics.Tools.dll" />
+    <Content Include="bin\Release\System.Diagnostics.TraceSource.dll" />
+    <Content Include="bin\Release\System.Diagnostics.Tracing.dll" />
+    <Content Include="bin\Release\System.Drawing.Primitives.dll" />
+    <Content Include="bin\Release\System.Dynamic.Runtime.dll" />
+    <Content Include="bin\Release\System.Globalization.Calendars.dll" />
+    <Content Include="bin\Release\System.Globalization.dll" />
+    <Content Include="bin\Release\System.Globalization.Extensions.dll" />
+    <Content Include="bin\Release\System.IO.Compression.dll" />
+    <Content Include="bin\Release\System.IO.Compression.ZipFile.dll" />
+    <Content Include="bin\Release\System.IO.dll" />
+    <Content Include="bin\Release\System.IO.FileSystem.dll" />
+    <Content Include="bin\Release\System.IO.FileSystem.DriveInfo.dll" />
+    <Content Include="bin\Release\System.IO.FileSystem.Primitives.dll" />
+    <Content Include="bin\Release\System.IO.FileSystem.Watcher.dll" />
+    <Content Include="bin\Release\System.IO.IsolatedStorage.dll" />
+    <Content Include="bin\Release\System.IO.MemoryMappedFiles.dll" />
+    <Content Include="bin\Release\System.IO.Pipes.dll" />
+    <Content Include="bin\Release\System.IO.UnmanagedMemoryStream.dll" />
+    <Content Include="bin\Release\System.Linq.dll" />
+    <Content Include="bin\Release\System.Linq.Expressions.dll" />
+    <Content Include="bin\Release\System.Linq.Parallel.dll" />
+    <Content Include="bin\Release\System.Linq.Queryable.dll" />
+    <Content Include="bin\Release\System.Net.Http.dll" />
+    <Content Include="bin\Release\System.Net.NameResolution.dll" />
+    <Content Include="bin\Release\System.Net.NetworkInformation.dll" />
+    <Content Include="bin\Release\System.Net.Ping.dll" />
+    <Content Include="bin\Release\System.Net.Primitives.dll" />
+    <Content Include="bin\Release\System.Net.Requests.dll" />
+    <Content Include="bin\Release\System.Net.Security.dll" />
+    <Content Include="bin\Release\System.Net.Sockets.dll" />
+    <Content Include="bin\Release\System.Net.WebHeaderCollection.dll" />
+    <Content Include="bin\Release\System.Net.WebSockets.Client.dll" />
+    <Content Include="bin\Release\System.Net.WebSockets.dll" />
+    <Content Include="bin\Release\System.ObjectModel.dll" />
+    <Content Include="bin\Release\System.Reflection.dll" />
+    <Content Include="bin\Release\System.Reflection.Extensions.dll" />
+    <Content Include="bin\Release\System.Reflection.Primitives.dll" />
+    <Content Include="bin\Release\System.Resources.Reader.dll" />
+    <Content Include="bin\Release\System.Resources.ResourceManager.dll" />
+    <Content Include="bin\Release\System.Resources.Writer.dll" />
+    <Content Include="bin\Release\System.Runtime.CompilerServices.VisualC.dll" />
+    <Content Include="bin\Release\System.Runtime.dll" />
+    <Content Include="bin\Release\System.Runtime.Extensions.dll" />
+    <Content Include="bin\Release\System.Runtime.Handles.dll" />
+    <Content Include="bin\Release\System.Runtime.InteropServices.dll" />
+    <Content Include="bin\Release\System.Runtime.InteropServices.RuntimeInformation.dll" />
+    <Content Include="bin\Release\System.Runtime.Numerics.dll" />
+    <Content Include="bin\Release\System.Runtime.Serialization.Formatters.dll" />
+    <Content Include="bin\Release\System.Runtime.Serialization.Json.dll" />
+    <Content Include="bin\Release\System.Runtime.Serialization.Primitives.dll" />
+    <Content Include="bin\Release\System.Runtime.Serialization.Xml.dll" />
+    <Content Include="bin\Release\System.Security.Claims.dll" />
+    <Content Include="bin\Release\System.Security.Cryptography.Algorithms.dll" />
+    <Content Include="bin\Release\System.Security.Cryptography.Csp.dll" />
+    <Content Include="bin\Release\System.Security.Cryptography.Encoding.dll" />
+    <Content Include="bin\Release\System.Security.Cryptography.Primitives.dll" />
+    <Content Include="bin\Release\System.Security.Cryptography.X509Certificates.dll" />
+    <Content Include="bin\Release\System.Security.Principal.dll" />
+    <Content Include="bin\Release\System.Security.SecureString.dll" />
+    <Content Include="bin\Release\System.Text.Encoding.dll" />
+    <Content Include="bin\Release\System.Text.Encoding.Extensions.dll" />
+    <Content Include="bin\Release\System.Text.RegularExpressions.dll" />
+    <Content Include="bin\Release\System.Threading.dll" />
+    <Content Include="bin\Release\System.Threading.Overlapped.dll" />
+    <Content Include="bin\Release\System.Threading.Tasks.dll" />
+    <Content Include="bin\Release\System.Threading.Tasks.Parallel.dll" />
+    <Content Include="bin\Release\System.Threading.Thread.dll" />
+    <Content Include="bin\Release\System.Threading.ThreadPool.dll" />
+    <Content Include="bin\Release\System.Threading.Timer.dll" />
+    <Content Include="bin\Release\System.ValueTuple.dll" />
+    <Content Include="bin\Release\System.Xml.ReaderWriter.dll" />
+    <Content Include="bin\Release\System.Xml.XDocument.dll" />
+    <Content Include="bin\Release\System.Xml.XmlDocument.dll" />
+    <Content Include="bin\Release\System.Xml.XmlSerializer.dll" />
+    <Content Include="bin\Release\System.Xml.XPath.dll" />
+    <Content Include="bin\Release\System.Xml.XPath.XDocument.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.2 %28x86 和 x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
