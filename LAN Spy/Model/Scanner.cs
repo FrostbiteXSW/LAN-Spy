@@ -231,13 +231,12 @@ namespace LAN_Spy.Model {
                         var ether = new EthernetPacket(new ByteArraySegment(packet.Data));
                         var arp = (ARPPacket) ether.PayloadPacket;
                         lock (_hostList) {
-                            var host = _hostList.Find(item => item.PhysicalAddress.ToString().Equals(arp.SenderHardwareAddress.ToString()));
-                            if (host == null)
+                            if (_hostList.All(item => !item.PhysicalAddress.ToString().Equals(arp.SenderHardwareAddress.ToString())))
                                 // 添加新的主机记录
                                 _hostList.Add(new Host(arp.SenderProtocolAddress, arp.SenderHardwareAddress));
                             else
                                 // 更新已有主机记录
-                                host.IPAddress = arp.SenderProtocolAddress;
+                                _hostList.Find(item => item.PhysicalAddress.ToString().Equals(arp.SenderHardwareAddress.ToString())).IPAddress = arp.SenderProtocolAddress;
                         }
                     }
                     else {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using PacketDotNet;
 
 namespace LAN_Spy.Model.Classes {
     /// <summary>
@@ -26,6 +27,11 @@ namespace LAN_Spy.Model.Classes {
         ///     连接的终点，
         /// </summary>
         public IPAddress Dst { get; }
+
+        /// <summary>
+        ///     最后一次检测到连接的数据包，此项由用户手动设置，供连接分析使用。
+        /// </summary>
+        public EthernetPacket LastPacket { get; set; }
 
         /// <summary>
         ///     最后检测到连接的时间，并非确切的连接开始时间，而是侦测到连接时的本地时间。

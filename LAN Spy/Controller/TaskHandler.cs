@@ -39,13 +39,13 @@ namespace LAN_Spy.Controller {
                             MessagePipe.GetNextInMessage();
 
                             // 查找目标
+                            if (WorkThreads.All(item => item.Name != message.Value.Name)) {
+                                MessagePipe.SendOutMessage(new KeyValuePair<Message, Thread>(Message.TaskNotFound, message.Value));
+                                break;
+                            }
                             Thread target;
                             lock (WorkThreads) {
                                 target = WorkThreads.Find(item => item.Name == message.Value.Name);
-                            }
-                            if (target is null) {
-                                MessagePipe.SendOutMessage(new KeyValuePair<Message, Thread>(Message.TaskNotFound, message.Value));
-                                break;
                             }
 
                             // 尝试中止任务

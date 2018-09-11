@@ -9,6 +9,7 @@ using PacketDotNet.Utils;
 using SharpPcap;
 
 namespace LAN_Spy.Model {
+    /// <inheritdoc />
     /// <summary>
     ///     网路流量监视器。
     /// </summary>
@@ -47,9 +48,10 @@ namespace LAN_Spy.Model {
                 lock (_tcpLinks) {
                     tcpLinksCopy.AddRange(_tcpLinks);
                 }
-                tcpLinksCopy.Sort((a, b) =>
-                    string.CompareOrdinal(a.Src.ToString() + " " + a.Dst.ToString(),
-                        b.Src.ToString() + " " + b.Dst.ToString()));
+                tcpLinksCopy.Sort((a, b) => {
+                    var result = string.CompareOrdinal(a.Src.ToString(), b.Src.ToString());
+                    return result != 0 ? result : string.CompareOrdinal(a.Dst.ToString(), b.Dst.ToString());
+                });
                 return tcpLinksCopy.AsReadOnly();
             }
         }
@@ -127,8 +129,7 @@ namespace LAN_Spy.Model {
                                 // 此连接不存在于可能的TCP连接列表中
                                 lock (_tcpLinks) {
                                     // 查找连接信息
-                                    var tcpLink = _tcpLinks.Find(item => Equals(item.Src, srcAddress) && Equals(item.Dst, dstAddress));
-                                    if (tcpLink is null) {
+                                    if (_tcpLinks.All(item => !item.Src.Equals(srcAddress) || !item.Dst.Equals(dstAddress))) {
                                         // 此连接也不存在于TCP连接列表中
                                         if (!tcp.Fin && !tcp.Rst)
                                             // 增加新连接到列表中
@@ -136,9 +137,12 @@ namespace LAN_Spy.Model {
                                     }
                                     else {
                                         // 此连接存在于TCP连接列表中
-                                        if (!tcp.Fin && !tcp.Rst)
-                                            // 连接仍然存活，更新最后发现时间
+                                        var tcpLink = _tcpLinks.Find(item => Equals(item.Src, srcAddress) && Equals(item.Dst, dstAddress));
+                                        if (!tcp.Fin && !tcp.Rst) {
+                                            // 连接仍然存活，更新状态
                                             tcpLink.UpdateTime();
+                                            tcpLink.LastPacket = ether;
+                                        }
                                         else 
                                             // 检测到Fin或Rst标志且Ack标志激活，则此连接的终止已被接受，移除连接
                                             _tcpLinks.Remove(tcpLink);
@@ -156,9 +160,13 @@ namespace LAN_Spy.Model {
                                 if (tcp.Fin || tcp.Rst) continue;
 
                                 // 连接仍然存活，更新最后发现时间及发现次数
-                                if (tcpLink.Value == 2)
-                                    // 已经监测到此连接两次，可以确定连接存在
-                                    _tcpLinks.Add(tcpLink.Key);
+                                if (tcpLink.Value == 2) {
+                                    lock (_tcpLinks) {
+                                        // 已经监测到此连接两次，可以确定连接存在
+                                        _tcpLinks.Add(tcpLink.Key);
+                                        _tcpLinks[_tcpLinks.Count - 1].LastPacket = ether;
+                                    }
+                                }
                                 else {
                                     // 连接可信度仍然不高，继续监测
                                     tcpLink = new KeyValuePair<TcpLink, int>(tcpLink.Key, tcpLink.Value + 1);
@@ -167,10 +175,9 @@ namespace LAN_Spy.Model {
                             }
                         }
                     }
-                    else {
+                    else
                         // 队列尚未获得数据，挂起等待
                         Thread.Sleep(100);
-                    }
                 }
             }
             catch (ThreadAbortException) { }
@@ -231,6 +238,14 @@ namespace LAN_Spy.Model {
                     sleeper.ThreadSleep(100);
                 _dropOutdatedLinksThread = null;
             }
+            
+            // 清理空间
+            lock (_tcpLinks) {
+                _tcpLinks.Clear();
+            }
+            lock (_possibleTcpLinks) {
+                _possibleTcpLinks.Clear();
+            }
 
             // 关闭设备
             if (!(_device is null)) {
@@ -250,6 +265,28 @@ namespace LAN_Spy.Model {
                 _tcpLinks.Clear();
             }
             ClearCaptures();
+        }
+
+        /// <summary>
+        ///     尝试通过向客户端发送RST标志重置某一组互联网上的连接。
+        /// </summary>
+        /// <param name="src">连接的起点，应为客户端地址。</param>
+        /// <param name="dst">连接的终点，应为服务端地址。</param>
+        /// <returns>成功发送包返回true，失败返回false。</returns>
+        public bool KillConnection(IPAddress src, IPAddress dst) {
+            EthernetPacket ether;
+
+            lock (_tcpLinks) {
+                // 寻找指定目标
+                if (_tcpLinks.All(item => !item.Src.Equals(src) || !item.Dst.Equals(dst))) return false;
+                ether = new EthernetPacket(_tcpLinks.Find(item => item.Src.Equals(src) && item.Dst.Equals(dst)).LastPacket.BytesHighPerformance);
+            }
+            
+            // 解析包数据
+            var ipv4 = (IPv4Packet) ether.PayloadPacket;
+            var tcp = (TcpPacket) ipv4.PayloadPacket;
+
+            return true;
         }
     }
 }
