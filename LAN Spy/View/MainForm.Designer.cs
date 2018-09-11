@@ -52,6 +52,7 @@
             this.监视ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.启动监视模块ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.开始监视ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.过滤本机流量ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.SplitLine = new System.Windows.Forms.Label();
             this.HostListMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.添加到目标组1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -213,7 +214,8 @@
             // 
             this.监视ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.启动监视模块ToolStripMenuItem,
-            this.开始监视ToolStripMenuItem});
+            this.开始监视ToolStripMenuItem,
+            this.过滤本机流量ToolStripMenuItem});
             this.监视ToolStripMenuItem.Name = "监视ToolStripMenuItem";
             this.监视ToolStripMenuItem.Size = new System.Drawing.Size(58, 28);
             this.监视ToolStripMenuItem.Text = "监视";
@@ -221,7 +223,7 @@
             // 启动监视模块ToolStripMenuItem
             // 
             this.启动监视模块ToolStripMenuItem.Name = "启动监视模块ToolStripMenuItem";
-            this.启动监视模块ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
+            this.启动监视模块ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
             this.启动监视模块ToolStripMenuItem.Text = "启动模块";
             this.启动监视模块ToolStripMenuItem.Click += new System.EventHandler(this.启动监视模块ToolStripMenuItem_Click);
             // 
@@ -229,10 +231,18 @@
             // 
             this.开始监视ToolStripMenuItem.Enabled = false;
             this.开始监视ToolStripMenuItem.Name = "开始监视ToolStripMenuItem";
-            this.开始监视ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
+            this.开始监视ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
             this.开始监视ToolStripMenuItem.Text = "开始监视";
             this.开始监视ToolStripMenuItem.Click += new System.EventHandler(this.开始监视ToolStripMenuItem_Click);
             this.开始监视ToolStripMenuItem.EnabledChanged += new System.EventHandler(this.开始监视ToolStripMenuItem_EnabledChanged);
+            // 
+            // 过滤本机流量ToolStripMenuItem
+            // 
+            this.过滤本机流量ToolStripMenuItem.CheckOnClick = true;
+            this.过滤本机流量ToolStripMenuItem.Name = "过滤本机流量ToolStripMenuItem";
+            this.过滤本机流量ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.过滤本机流量ToolStripMenuItem.Text = "过滤本机流量";
+            this.过滤本机流量ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.过滤本机流量ToolStripMenuItem_CheckedChanged);
             // 
             // SplitLine
             // 
@@ -570,6 +580,10 @@
             this.ConnectionList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.ConnectionList.Size = new System.Drawing.Size(846, 448);
             this.ConnectionList.TabIndex = 3;
+            this.ConnectionList.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ConnectionList_KeyEvent);
+            this.ConnectionList.KeyUp += new System.Windows.Forms.KeyEventHandler(this.ConnectionList_KeyEvent);
+            this.ConnectionList.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ConnectionList_MouseEvent);
+            this.ConnectionList.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ConnectionList_MouseEvent);
             // 
             // SrcAddress
             // 
@@ -605,15 +619,16 @@
             this.ConnectionListMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.断开此连接ToolStripMenuItem});
             this.ConnectionListMenuStrip.Name = "ConnectionListMenuStrip";
-            this.ConnectionListMenuStrip.Size = new System.Drawing.Size(241, 65);
+            this.ConnectionListMenuStrip.Size = new System.Drawing.Size(171, 32);
             this.ConnectionListMenuStrip.Closed += new System.Windows.Forms.ToolStripDropDownClosedEventHandler(this.ConnectionListMenuStrip_Closed);
             this.ConnectionListMenuStrip.Opened += new System.EventHandler(this.ContextMenuStrip_Opened);
             // 
             // 断开此连接ToolStripMenuItem
             // 
             this.断开此连接ToolStripMenuItem.Name = "断开此连接ToolStripMenuItem";
-            this.断开此连接ToolStripMenuItem.Size = new System.Drawing.Size(240, 28);
+            this.断开此连接ToolStripMenuItem.Size = new System.Drawing.Size(170, 28);
             this.断开此连接ToolStripMenuItem.Text = "断开此连接";
+            this.断开此连接ToolStripMenuItem.Click += new System.EventHandler(this.断开此连接ToolStripMenuItem_Click);
             // 
             // ConnectionListUpdateTimer
             // 
@@ -703,5 +718,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn HostMAC;
         private System.Windows.Forms.DataGridViewTextBoxColumn Information;
         private System.Windows.Forms.Timer ConnectionListUpdateTimer;
+        private System.Windows.Forms.ToolStripMenuItem 过滤本机流量ToolStripMenuItem;
     }
 }

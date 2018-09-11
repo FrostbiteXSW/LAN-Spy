@@ -10,23 +10,37 @@ namespace LAN_Spy.Model.Classes {
         /// <summary>
         ///     初始化 <see cref="TcpLink" /> 类的实例。
         /// </summary>
-        /// <param name="src">连接的起点，推荐以当前子网的主机作为起点。</param>
-        /// <param name="dst">连接的终点，推荐以非当前子网的主机作为终点。</param>
-        public TcpLink(IPAddress src, IPAddress dst) {
-            Src = src;
-            Dst = dst;
+        /// <param name="srcAddress">连接的起点，推荐以当前子网的主机作为起点。</param>
+        /// <param name="srcPort">连接起点的端口。</param>
+        /// <param name="dstAddress">连接的终点，推荐以非当前子网的主机作为终点。</param>
+        /// <param name="dstPort">连接终点的端口。</param>
+        public TcpLink(IPAddress srcAddress, ushort srcPort, IPAddress dstAddress, ushort dstPort) {
+            SrcAddress = srcAddress;
+            DstAddress = dstAddress;
+            SrcPort = srcPort;
+            DstPort = dstPort;
             UpdateTime();
         }
 
         /// <summary>
         ///     连接的起点。
         /// </summary>
-        public IPAddress Src { get; }
+        public IPAddress SrcAddress { get; }
 
         /// <summary>
         ///     连接的终点，
         /// </summary>
-        public IPAddress Dst { get; }
+        public IPAddress DstAddress { get; }
+        
+        /// <summary>
+        ///     连接起点的端口。
+        /// </summary>
+        public ushort SrcPort { get; }
+
+        /// <summary>
+        ///     连接终点的端口，
+        /// </summary>
+        public ushort DstPort { get; }
 
         /// <summary>
         ///     最后一次检测到连接的数据包，此项由用户手动设置，供连接分析使用。

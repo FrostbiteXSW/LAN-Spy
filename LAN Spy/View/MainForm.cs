@@ -1,4 +1,10 @@
-﻿using System;
+﻿using LAN_Spy.Controller;
+using LAN_Spy.Controller.Classes;
+using LAN_Spy.Model;
+using LAN_Spy.Model.Classes;
+using SharpPcap;
+using SharpPcap.WinPcap;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -6,12 +12,6 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using LAN_Spy.Controller;
-using LAN_Spy.Controller.Classes;
-using LAN_Spy.Model;
-using LAN_Spy.Model.Classes;
-using SharpPcap;
-using SharpPcap.WinPcap;
 using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View {
@@ -620,6 +620,9 @@ namespace LAN_Spy.View {
                     list = ConnectionList;
                     // 菜单打开时暂时停止更新列表
                     ConnectionListUpdateTimer.Stop();
+                    var sleeper = new WaitTimeoutChecker(30000);
+                    while (ConnectionListUpdateTimer.Enabled)
+                        sleeper.ThreadSleep(100);
                     break;
                 default:
                     return;
@@ -717,14 +720,14 @@ namespace LAN_Spy.View {
                 if (!row.Selected) continue;
                 if (((ToolStripMenuItem) sender).Text[((ToolStripMenuItem) sender).Text.Length - 1].Equals('1')) {
                     if (Target1List.Rows.Cast<DataGridViewRow>().Any(item => item.Cells[0].Value == row.Cells["HostIP"].Value
-                                                                             && item.Cells[1].Value == row.Cells["HostMAC"].Value))
+                                                                          && item.Cells[1].Value == row.Cells["HostMAC"].Value))
                         continue;
                     Target1List.Rows.Add(row.Cells["HostIP"].Value, row.Cells["HostMAC"].Value);
                     Target1List.Rows[Target1List.Rows.Count - 1].ContextMenuStrip = TargetListMenuStrip;
                 }
                 else {
                     if (Target2List.Rows.Cast<DataGridViewRow>().Any(item => item.Cells[0].Value == row.Cells["HostIP"].Value
-                                                                             && item.Cells[1].Value == row.Cells["HostMAC"].Value))
+                                                                          && item.Cells[1].Value == row.Cells["HostMAC"].Value))
                         continue;
                     Target2List.Rows.Add(row.Cells["HostIP"].Value, row.Cells["HostMAC"].Value);
                     Target2List.Rows[Target2List.Rows.Count - 1].ContextMenuStrip = TargetListMenuStrip;
@@ -936,6 +939,9 @@ namespace LAN_Spy.View {
                 // 模块已停止
                 MessagePipe.ClearAllMessage(task);
                 ConnectionListUpdateTimer.Stop();
+                sleeper = new WaitTimeoutChecker(30000);
+                while (ConnectionListUpdateTimer.Enabled)
+                    sleeper.ThreadSleep(100);
                 ConnectionList.Rows.Clear();
                 MessageBox.Show("监视工作已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 开始监视ToolStripMenuItem.Text = "开始监视";
@@ -952,16 +958,22 @@ namespace LAN_Spy.View {
             var curConnection = ConnectionList.Rows.Cast<DataGridViewRow>().ToList();
 
             foreach (var link in Watcher.TcpLinks) {
+                // 检查是否过滤本机流量
+                if (过滤本机流量ToolStripMenuItem.Checked 
+                    && (link.SrcAddress.Equals(Watcher.Ipv4Address) 
+                        || link.DstAddress.Equals(Watcher.Ipv4Address)))
+                    continue;
+
                 // 创建新连接并检查是否存在
                 var row = new DataGridViewRow();
-                row.Cells.Add(new DataGridViewTextBoxCell {Value = link.Src.ToString()});
-                row.Cells.Add(new DataGridViewTextBoxCell {Value = link.Dst.ToString()});
+                row.Cells.Add(new DataGridViewTextBoxCell {Value = $"{link.SrcAddress}:{link.SrcPort}"});
+                row.Cells.Add(new DataGridViewTextBoxCell {Value = $"{link.DstAddress}:{link.DstPort}"});
                 row.ContextMenuStrip = ConnectionListMenuStrip;
                 if (curConnection.Any(item => item.Cells["SrcAddress"].Value.Equals(row.Cells[0].Value)
-                                              && item.Cells["DstAddress"].Value.Equals(row.Cells[1].Value)))
+                                           && item.Cells["DstAddress"].Value.Equals(row.Cells[1].Value)))
                     // 旧连接仍存活，从待移除列表删除
                     curConnection.RemoveAll(item => item.Cells["SrcAddress"].Value.Equals(row.Cells[0].Value)
-                                                    && item.Cells["DstAddress"].Value.Equals(row.Cells[1].Value));
+                                                 && item.Cells["DstAddress"].Value.Equals(row.Cells[1].Value));
                 else
                     // 添加新连接
                     ConnectionList.Rows.Add(row);
@@ -970,7 +982,7 @@ namespace LAN_Spy.View {
             // 移除不存活的连接
             foreach (var item in curConnection)
                 ConnectionList.Rows.Remove(ConnectionList.Rows.Cast<DataGridViewRow>().First(target => target.Cells["SrcAddress"].Value.Equals(item.Cells[0].Value)
-                                                                                                       && target.Cells["DstAddress"].Value.Equals(item.Cells[1].Value)));
+                                                                                                    && target.Cells["DstAddress"].Value.Equals(item.Cells[1].Value)));
         }
 
         /// <summary>
@@ -979,6 +991,76 @@ namespace LAN_Spy.View {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void ConnectionListMenuStrip_Closed(object sender, ToolStripDropDownClosedEventArgs e) {
+            ConnectionListUpdateTimer.Start();
+        }
+        
+        /// <summary>
+        ///     菜单项“断开此连接”单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 断开此连接ToolStripMenuItem_Click(object sender, EventArgs e) {
+            if (!ConnectionList.SelectedRows.Cast<DataGridViewRow>()
+                .Aggregate(true, (current, row) => !(!current || !Watcher.KillConnection(IPAddress.Parse(row.Cells["SrcAddress"].Value.ToString().Substring(0, row.Cells["SrcAddress"].Value.ToString().LastIndexOf(':'))),
+                                                                                         ushort.Parse(row.Cells["SrcAddress"].Value.ToString().Substring(row.Cells["SrcAddress"].Value.ToString().LastIndexOf(':') + 1)),
+                                                                                         IPAddress.Parse(row.Cells["DstAddress"].Value.ToString().Substring(0, row.Cells["DstAddress"].Value.ToString().LastIndexOf(':'))),
+                                                                                         ushort.Parse(row.Cells["DstAddress"].Value.ToString().Substring(row.Cells["DstAddress"].Value.ToString().LastIndexOf(':') + 1))))))
+                MessageBox.Show("一个或多个数据包发送失败。", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+        
+        /// <summary>
+        ///     连接列表键盘按键事件响应方法，暂停列表更新。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void ConnectionList_KeyEvent(object sender, KeyEventArgs e) {
+            if (ConnectionListUpdateTimer.Enabled) {
+                ConnectionListUpdateTimer.Stop();
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (ConnectionListUpdateTimer.Enabled)
+                    sleeper.ThreadSleep(100);
+            }
+            else ConnectionListUpdateTimer.Start();
+        }
+        
+        /// <summary>
+        ///     连接列表鼠标按键事件响应方法，暂停列表更新。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void ConnectionList_MouseEvent(object sender, MouseEventArgs e) {
+            if (ConnectionListUpdateTimer.Enabled) {
+                ConnectionListUpdateTimer.Stop();
+                var sleeper = new WaitTimeoutChecker(30000);
+                while (ConnectionListUpdateTimer.Enabled)
+                    sleeper.ThreadSleep(100);
+            }
+            else ConnectionListUpdateTimer.Start();
+        }
+        
+        /// <summary>
+        ///     菜单项“过滤本机流量”勾选状态改变时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 过滤本机流量ToolStripMenuItem_CheckedChanged(object sender, EventArgs e) {
+            // 检查监视器是否在工作
+            if (开始监视ToolStripMenuItem.Text.Equals("开始监视"))
+                return;
+
+            // 暂停列表更新
+            ConnectionListUpdateTimer.Stop();
+            var sleeper = new WaitTimeoutChecker(30000);
+            while (ConnectionListUpdateTimer.Enabled)
+                sleeper.ThreadSleep(100);
+
+            // 去除已有本机流量数据
+            var removeRows = ConnectionList.Rows.Cast<DataGridViewRow>().Where(row => IPAddress.Parse(row.Cells["SrcAddress"].Value.ToString().Substring(0, row.Cells["SrcAddress"].Value.ToString().LastIndexOf(':'))).Equals(Watcher.Ipv4Address) 
+                                                                                   || IPAddress.Parse(row.Cells["DstAddress"].Value.ToString().Substring(0, row.Cells["DstAddress"].Value.ToString().LastIndexOf(':'))).Equals(Watcher.Ipv4Address)).ToList();
+            foreach (var row in removeRows)
+                ConnectionList.Rows.Remove(row);
+
+            // 恢复列表更新
             ConnectionListUpdateTimer.Start();
         }
     }

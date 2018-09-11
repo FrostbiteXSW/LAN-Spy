@@ -16,7 +16,7 @@ namespace TestProject {
             Thread.Sleep(30 * 1000);
             watcher.StopWatching();
             foreach (var tcpLink in watcher.TcpLinks)
-                Trace.WriteLine(tcpLink.Src + " --> " + tcpLink.Dst);
+                Trace.WriteLine(tcpLink.SrcAddress + " --> " + tcpLink.DstAddress);
             watcher.Reset();
         }
     }

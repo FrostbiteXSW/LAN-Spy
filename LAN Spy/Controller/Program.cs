@@ -200,7 +200,7 @@ namespace LAN_Spy.Controller {
                         Console.WriteLine($"Current time: {DateTime.Now.ToLongTimeString()}");
                         var c = 0;
                         foreach (var tcpLink in watcher.TcpLinks)
-                            Console.WriteLine($"{++c}. {tcpLink.Src} -> {tcpLink.Dst}");
+                            Console.WriteLine($"{++c}. {tcpLink.SrcAddress} -> {tcpLink.DstAddress}");
                         Console.WriteLine();
                     }
                 }
