@@ -95,6 +95,25 @@ namespace LAN_Spy.View {
                     MessageBox.Show("一个或多个模块未能成功停止，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+
+                // TODO:新增模块时请更新此处的代码
+                启动所有模块ToolStripMenuItem.Text = "启动所有模块";
+                启动扫描模块ToolStripMenuItem.Text = 启动毒化模块ToolStripMenuItem.Text = 启动监视模块ToolStripMenuItem.Text = "启动模块";
+                扫描主机ToolStripMenuItem.Enabled = false;
+                侦测主机ToolStripMenuItem.Enabled = false;
+                开始毒化ToolStripMenuItem.Enabled = false;
+                开始监视ToolStripMenuItem.Enabled = false;
+                添加到目标组1ToolStripMenuItem.Enabled = false;
+                添加到目标组2ToolStripMenuItem.Enabled = false;
+                断开此连接ToolStripMenuItem.Enabled = false;
+                HostList.Rows.Clear();
+                Target1List.Rows.Clear();
+                Target2List.Rows.Clear();
+                ConnectionListUpdateTimer.Stop();
+                sleeper = new WaitTimeoutChecker(30000);
+                while (ConnectionListUpdateTimer.Enabled)
+                    sleeper.ThreadSleep(100);
+                ConnectionList.Rows.Clear();
             }
 
             // 启动模块
@@ -113,9 +132,8 @@ namespace LAN_Spy.View {
                 添加到目标组2ToolStripMenuItem.Enabled = true;
                 断开此连接ToolStripMenuItem.Enabled = true;
             }
-            else {
+            else
                 MessageBox.Show("一个或多个模块未能成功初始化，请单独启动模块。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
         /// <summary>
@@ -191,9 +209,9 @@ namespace LAN_Spy.View {
                 MessageBox.Show("一个或多个模块未能成功停止，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             else
                 MessageBox.Show("所有模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            启动所有模块ToolStripMenuItem.Text = "启动所有模块";
 
             // TODO:新增模块时请更新此处的代码
+            启动所有模块ToolStripMenuItem.Text = "启动所有模块";
             启动扫描模块ToolStripMenuItem.Text = 启动毒化模块ToolStripMenuItem.Text = 启动监视模块ToolStripMenuItem.Text = "启动模块";
             扫描主机ToolStripMenuItem.Enabled = false;
             侦测主机ToolStripMenuItem.Enabled = false;
@@ -206,6 +224,9 @@ namespace LAN_Spy.View {
             Target1List.Rows.Clear();
             Target2List.Rows.Clear();
             ConnectionListUpdateTimer.Stop();
+            sleeper = new WaitTimeoutChecker(30000);
+            while (ConnectionListUpdateTimer.Enabled)
+                sleeper.ThreadSleep(100);
             ConnectionList.Rows.Clear();
         }
 
@@ -681,6 +702,10 @@ namespace LAN_Spy.View {
                 MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 启动监视模块ToolStripMenuItem.Text = "启动模块";
                 开始监视ToolStripMenuItem.Enabled = false;
+                ConnectionListUpdateTimer.Stop();
+                sleeper = new WaitTimeoutChecker(30000);
+                while (ConnectionListUpdateTimer.Enabled)
+                    sleeper.ThreadSleep(100);
                 ConnectionList.Rows.Clear();
 
                 // TODO:新增模块时请更新此处的代码
