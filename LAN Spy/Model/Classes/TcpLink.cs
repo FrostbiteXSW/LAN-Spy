@@ -31,7 +31,7 @@ namespace LAN_Spy.Model.Classes {
         ///     连接的终点，
         /// </summary>
         public IPAddress DstAddress { get; }
-        
+
         /// <summary>
         ///     连接起点的端口。
         /// </summary>

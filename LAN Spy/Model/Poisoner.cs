@@ -171,19 +171,19 @@ namespace LAN_Spy.Model {
 
                             // 检查数据包源和目的是否在目标列表中
                             Host src = _target1.Any(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) ?
-                                       _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) :
-                                       _target2.Any(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) ?
-                                       _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) :
-                                       null,      
+                                    _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) :
+                                    _target2.Any(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) ?
+                                        _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) :
+                                        null,
                                 dest = _target1.Any(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) ?
-                                       _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) :
-                                       _target2.Any(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) ?
-                                       _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) :
-                                       null;
+                                    _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) :
+                                    _target2.Any(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) ?
+                                        _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) :
+                                        null;
 
                             // 两组间发送的数据包
                             if ((_target1.Contains(src) && _target2.Contains(dest) ||
-                                _target2.Contains(src) && _target1.Contains(dest)) && !(dest is null))
+                                 _target2.Contains(src) && _target1.Contains(dest)) && !(dest is null))
                                 ether.DestinationHwAddress = dest.PhysicalAddress;
                             // 组1或组2发送到外网的数据包
                             else if ((_target1.Contains(src) || _target2.Contains(src)) && dest is null)
@@ -205,11 +205,11 @@ namespace LAN_Spy.Model {
 
                             // 仅处理ARP请求包
                             if (arp.Operation != ARPOperation.Request) continue;
-                            
+
                             // 非两组间发送的数据包，跳过
-                            if ((_target1.All(item => !item.IPAddress.ToString().Equals(arp.SenderProtocolAddress.ToString())) 
-                                 || _target2.All(item => !item.IPAddress.ToString().Equals(arp.TargetProtocolAddress.ToString()))) 
-                                && (_target2.All(item => !item.IPAddress.ToString().Equals(arp.SenderProtocolAddress.ToString())) 
+                            if ((_target1.All(item => !item.IPAddress.ToString().Equals(arp.SenderProtocolAddress.ToString()))
+                                 || _target2.All(item => !item.IPAddress.ToString().Equals(arp.TargetProtocolAddress.ToString())))
+                                && (_target2.All(item => !item.IPAddress.ToString().Equals(arp.SenderProtocolAddress.ToString()))
                                     || _target1.All(item => !item.IPAddress.ToString().Equals(arp.TargetProtocolAddress.ToString()))))
                                 continue;
 

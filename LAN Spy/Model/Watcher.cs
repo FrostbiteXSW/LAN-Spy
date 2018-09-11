@@ -15,14 +15,14 @@ namespace LAN_Spy.Model {
     /// </summary>
     public class Watcher : BasicClass {
         /// <summary>
-        ///     监测到的Tcp连接列表。
-        /// </summary>
-        private readonly List<TcpLink> _tcpLinks = new List<TcpLink>();
-
-        /// <summary>
         ///     监测到的可能存在，仍等待进一步确认的Tcp连接列表，键值表示监测到的次数。
         /// </summary>
         private readonly List<KeyValuePair<TcpLink, int>> _possibleTcpLinks = new List<KeyValuePair<TcpLink, int>>();
+
+        /// <summary>
+        ///     监测到的Tcp连接列表。
+        /// </summary>
+        private readonly List<TcpLink> _tcpLinks = new List<TcpLink>();
 
         /// <summary>
         ///     监视线程句柄。
@@ -60,7 +60,7 @@ namespace LAN_Spy.Model {
                     // 比较目标地址
                     result = string.CompareOrdinal(a.DstAddress.ToString(), b.DstAddress.ToString());
                     if (result != 0) return result;
-                    
+
                     // 比较目标端口
                     if (a.DstPort > b.DstPort) return 1;
                     if (a.DstPort < b.DstPort) return -1;
@@ -148,13 +148,13 @@ namespace LAN_Spy.Model {
 
                         // 保存或更新可能的TCP连接信息
                         lock (_possibleTcpLinks) {
-                            if (_possibleTcpLinks.All(item => !(item.Key.SrcAddress.Equals(srcAddress) && item.Key.SrcPort == srcPort) 
-                                                           || !(item.Key.DstAddress.Equals(dstAddress) && item.Key.DstPort == dstPort))) {
+                            if (_possibleTcpLinks.All(item => !(item.Key.SrcAddress.Equals(srcAddress) && item.Key.SrcPort == srcPort)
+                                                              || !(item.Key.DstAddress.Equals(dstAddress) && item.Key.DstPort == dstPort))) {
                                 // 此连接不存在于可能的TCP连接列表中
                                 lock (_tcpLinks) {
                                     // 查找连接信息
-                                    if (_tcpLinks.All(item => !(item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort) 
-                                                           || !(item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort))) {
+                                    if (_tcpLinks.All(item => !(item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort)
+                                                              || !(item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort))) {
                                         // 此连接也不存在于TCP连接列表中
                                         if (!tcp.Fin && !tcp.Rst)
                                             // 增加新连接到列表中
@@ -162,27 +162,29 @@ namespace LAN_Spy.Model {
                                     }
                                     else {
                                         // 此连接存在于TCP连接列表中
-                                        var tcpLink = _tcpLinks.Find(item => item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort 
-                                                                          && item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort);
+                                        var tcpLink = _tcpLinks.Find(item => item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort
+                                                                                                                && item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort);
                                         if (!tcp.Fin && !tcp.Rst) {
                                             // 连接仍然存活，更新状态
                                             tcpLink.UpdateTime();
                                             tcpLink.LastPacket = ether;
                                         }
-                                        else 
+                                        else
                                             // 检测到Fin或Rst标志且Ack标志激活，则此连接的终止已被接受，移除连接
+                                        {
                                             _tcpLinks.Remove(tcpLink);
+                                        }
                                     }
                                 }
                             }
                             else {
                                 // 此连接存在于可能的TCP连接列表中
-                                var tcpLink = _possibleTcpLinks.Find(item => item.Key.SrcAddress.Equals(srcAddress) && item.Key.SrcPort == srcPort 
-                                                                          && item.Key.DstAddress.Equals(dstAddress) && item.Key.DstPort == dstPort);
+                                var tcpLink = _possibleTcpLinks.Find(item => item.Key.SrcAddress.Equals(srcAddress) && item.Key.SrcPort == srcPort
+                                                                                                                    && item.Key.DstAddress.Equals(dstAddress) && item.Key.DstPort == dstPort);
 
                                 // 暂时移除此连接，如果连接仍然存活则之后再更新连接信息并重新加入
                                 _possibleTcpLinks.Remove(tcpLink);
-                                
+
                                 // 检测到Fin或Rst标志且Ack标志激活，则此连接的终止已被接受，永久移除此连接
                                 if (tcp.Fin || tcp.Rst) continue;
 
@@ -205,7 +207,9 @@ namespace LAN_Spy.Model {
                     }
                     else
                         // 队列尚未获得数据，挂起等待
+                    {
                         Thread.Sleep(100);
+                    }
                 }
             }
             catch (ThreadAbortException) { }
@@ -266,7 +270,7 @@ namespace LAN_Spy.Model {
                     sleeper.ThreadSleep(100);
                 _dropOutdatedLinksThread = null;
             }
-            
+
             // 清理空间
             lock (_tcpLinks) {
                 _tcpLinks.Clear();
@@ -305,17 +309,17 @@ namespace LAN_Spy.Model {
         /// <returns>成功发送包返回true，失败返回false。</returns>
         public bool KillConnection(IPAddress srcAddress, ushort srcPort, IPAddress dstAddress, ushort dstPort) {
             EthernetPacket ether;
-            
+
             // 寻找指定目标
             lock (_tcpLinks) {
-                if (_tcpLinks.All(item => !(item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort) 
-                                       || !(item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort))) 
+                if (_tcpLinks.All(item => !(item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort)
+                                          || !(item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort)))
                     return false;
-                ether = new EthernetPacket(_tcpLinks.Find(item => item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort 
-                                                               && item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort)
-                                          .LastPacket.BytesHighPerformance);
+                ether = new EthernetPacket(_tcpLinks.Find(item => item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort
+                                                                                                     && item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort)
+                    .LastPacket.BytesHighPerformance);
             }
-            
+
             // 解析包数据
             var ipv4 = (IPv4Packet) ether.PayloadPacket;
             var tcp = (TcpPacket) ipv4.PayloadPacket;
@@ -326,7 +330,7 @@ namespace LAN_Spy.Model {
                 Ack = true,
                 SequenceNumber = (uint) (tcp.SequenceNumber + (tcp.PayloadPacket?.TotalPacketLength ?? 0)),
                 AcknowledgmentNumber = tcp.AcknowledgmentNumber,
-                WindowSize = tcp.WindowSize 
+                WindowSize = tcp.WindowSize
             };
             payload.UpdateCalculatedValues();
 

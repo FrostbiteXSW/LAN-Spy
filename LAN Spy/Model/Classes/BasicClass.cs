@@ -145,7 +145,7 @@ namespace LAN_Spy.Model.Classes {
             device.StartCapture();
             return device;
         }
-        
+
         /// <summary>
         ///     对指定设备进行设置并停止抓包。
         /// </summary>
