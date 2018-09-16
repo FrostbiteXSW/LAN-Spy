@@ -81,6 +81,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\Classes\HashTable.cs" />
     <Compile Include="Model\Classes\WaitTimeoutChecker.cs" />
     <Compile Include="Controller\MessagePipe.cs" />
     <Compile Include="Controller\Classes\RegistedThreadName.cs" />
