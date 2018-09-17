@@ -473,14 +473,14 @@ namespace LAN_Spy.View {
                     temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
 
                 if (Scanner.GatewayAddresses.Contains(host.IPAddress)) {
-                    HostList.Rows.Add(host.IPAddress, temp, "网关地址");
+                    HostList.Rows.Add(host.IPAddress.ToString(), temp.ToString(), "网关地址");
                     Poisoner.Gateway = host;
                 }
                 else if (Equals(host.IPAddress, Scanner.Ipv4Address)) {
-                    HostList.Rows.Add(host.IPAddress, temp, "当前设备地址");
+                    HostList.Rows.Add(host.IPAddress.ToString(), temp.ToString(), "当前设备地址");
                 }
                 else {
-                    HostList.Rows.Add(host.IPAddress, temp, "");
+                    HostList.Rows.Add(host.IPAddress.ToString(), temp.ToString(), "");
                 }
 
                 HostList.Rows[HostList.Rows.Count - 1].ContextMenuStrip = HostListMenuStrip;
@@ -543,14 +543,14 @@ namespace LAN_Spy.View {
                     temp = temp.Insert(2, '-').Insert(5, '-').Insert(8, '-').Insert(11, '-').Insert(14, '-');
 
                 if (Scanner.GatewayAddresses.Contains(host.IPAddress)) {
-                    HostList.Rows.Add(host.IPAddress, temp, "网关地址");
+                    HostList.Rows.Add(host.IPAddress.ToString(), temp.ToString(), "网关地址");
                     Poisoner.Gateway = host;
                 }
                 else if (Equals(host.IPAddress, Scanner.Ipv4Address)) {
-                    HostList.Rows.Add(host.IPAddress, temp, "当前设备地址");
+                    HostList.Rows.Add(host.IPAddress.ToString(), temp.ToString(), "当前设备地址");
                 }
                 else {
-                    HostList.Rows.Add(host.IPAddress, temp, "");
+                    HostList.Rows.Add(host.IPAddress.ToString(), temp.ToString(), "");
                 }
 
                 HostList.Rows[HostList.Rows.Count - 1].ContextMenuStrip = HostListMenuStrip;
@@ -744,17 +744,19 @@ namespace LAN_Spy.View {
             foreach (DataGridViewRow row in HostList.Rows) {
                 if (!row.Selected) continue;
                 if (((ToolStripMenuItem) sender).Text[((ToolStripMenuItem) sender).Text.Length - 1].Equals('1')) {
-                    if (Target1List.Rows.Cast<DataGridViewRow>().Any(item => item.Cells[0].Value == row.Cells["HostIP"].Value
-                                                                             && item.Cells[1].Value == row.Cells["HostMAC"].Value))
+                    if (Target1List.Rows.Cast<DataGridViewRow>()
+                        .Any(item => item.Cells[0].Value.ToString().Equals(row.Cells["HostIP"].Value.ToString())
+                                     && item.Cells[1].Value.ToString().Equals(row.Cells["HostMAC"].Value.ToString())))
                         continue;
-                    Target1List.Rows.Add(row.Cells["HostIP"].Value, row.Cells["HostMAC"].Value);
+                    Target1List.Rows.Add(row.Cells["HostIP"].Value.ToString(), row.Cells["HostMAC"].Value.ToString());
                     Target1List.Rows[Target1List.Rows.Count - 1].ContextMenuStrip = TargetListMenuStrip;
                 }
                 else {
-                    if (Target2List.Rows.Cast<DataGridViewRow>().Any(item => item.Cells[0].Value == row.Cells["HostIP"].Value
-                                                                             && item.Cells[1].Value == row.Cells["HostMAC"].Value))
+                    if (Target2List.Rows.Cast<DataGridViewRow>()
+                        .Any(item => item.Cells[0].Value.ToString().Equals(row.Cells["HostIP"].Value.ToString())
+                                     && item.Cells[1].Value.ToString().Equals(row.Cells["HostMAC"].Value.ToString())))
                         continue;
-                    Target2List.Rows.Add(row.Cells["HostIP"].Value, row.Cells["HostMAC"].Value);
+                    Target2List.Rows.Add(row.Cells["HostIP"].Value.ToString(), row.Cells["HostMAC"].Value.ToString());
                     Target2List.Rows[Target2List.Rows.Count - 1].ContextMenuStrip = TargetListMenuStrip;
                 }
             }
