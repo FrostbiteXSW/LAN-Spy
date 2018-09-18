@@ -264,9 +264,7 @@ namespace LAN_Spy.Model {
                     poisonThread.Abort();
 
             // 等待毒化线程终止
-            var sleeper = new WaitTimeoutChecker(30000);
-            while (_poisonThreads.Any(item => item.IsAlive))
-                sleeper.ThreadSleep(100);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _poisonThreads.Any(item => item.IsAlive));
             _poisonThreads.Clear();
 
             // 向包转发线程发送终止信号
@@ -275,9 +273,7 @@ namespace LAN_Spy.Model {
                     retransmissionThread.Abort();
 
             // 等待包转发线程终止
-            sleeper = new WaitTimeoutChecker(30000);
-            while (_retransmissionThreads.Any(item => item.IsAlive))
-                sleeper.ThreadSleep(100);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _retransmissionThreads.Any(item => item.IsAlive));
             _poisonThreads.Clear();
             _retransmissionThreads.Clear();
 

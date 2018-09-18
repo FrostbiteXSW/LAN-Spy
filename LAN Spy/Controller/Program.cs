@@ -63,9 +63,7 @@ namespace LAN_Spy.Controller {
                                     将启动线程工作的一部分分摊给子线程
                     ----------------------------------------------------------------*/
 
-                    var sleeper = new WaitTimeoutChecker(30000);
-                    while (scannerThread.IsAlive || poisonerThread.IsAlive || watcherThread.IsAlive)
-                        sleeper.ThreadSleep(500);
+                    new WaitTimeoutChecker(30000).ThreadSleep(500, func => scannerThread.IsAlive || poisonerThread.IsAlive || watcherThread.IsAlive);
                 }
                 catch (ThreadAbortException) {
                     Environment.Exit(-1);

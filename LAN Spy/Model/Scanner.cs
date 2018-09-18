@@ -104,9 +104,7 @@ namespace LAN_Spy.Model {
                 sendThreads.Add(lastsendThread);
 
                 // 等待数据包发送完成
-                var sleeper = new WaitTimeoutChecker((int) (60 * 1000 * Math.Log(AddressCount, 254)));
-                while (sendThreads.Any(item => item.IsAlive))
-                    sleeper.ThreadSleep(500);
+                new WaitTimeoutChecker((int) (60 * 1000 * Math.Log(AddressCount, 254))).ThreadSleep(500, func => sendThreads.Any(item => item.IsAlive));
 
                 // 等待接收目标机反馈消息
                 Thread.Sleep((int) (8 * 1000 * Math.Log(AddressCount, 254)));
@@ -168,9 +166,7 @@ namespace LAN_Spy.Model {
                         analyzeThread.Abort();
 
                 // 等待分析线程终止
-                var sleeper = new WaitTimeoutChecker(30000);
-                while (analyzeThreads.Any(analyzeThread => analyzeThread.IsAlive))
-                    sleeper.ThreadSleep(500);
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => analyzeThreads.Any(analyzeThread => analyzeThread.IsAlive));
 
                 // 清理缓冲区及其他内容
                 lock (_hostList) {

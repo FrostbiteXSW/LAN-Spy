@@ -47,5 +47,27 @@ namespace LAN_Spy.Model.Classes {
                 throw new TimeoutException("等待已超时。");
             return _time > 0;
         }
+        
+        /// <summary>
+        ///     让当前线程循环等待，并检测是否超时，如果超时时间耗尽或条件为 <see langword="false"/> 将不会等待。
+        /// </summary>
+        /// <param name="time">等待的时间周期长度，以毫秒为单位。</param>
+        /// <param name="predicate">等待结束的条件，只要此条件返回 <see langword="true"/>，线程就会循环等待直到时间耗尽。</param>
+        /// <returns>若等待未超时返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+        /// <exception cref="TimeoutException">等待已超时。</exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        public bool ThreadSleep(int time, Func<WaitTimeoutChecker, bool> predicate) {
+            if (predicate is null)
+                throw new ArgumentNullException(nameof(predicate));
+            if (_time <= 0) return false;
+            while (predicate.Invoke(this)) {
+                Thread.Sleep(Math.Min(time, _time));
+                if ((_time -= time) > 0) continue;
+                if (_useException)
+                    throw new TimeoutException("等待已超时。");
+                return false;
+            }
+            return true;
+        }
     }
 }

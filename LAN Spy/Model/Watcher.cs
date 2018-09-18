@@ -255,9 +255,7 @@ namespace LAN_Spy.Model {
                     watchThread.Abort();
 
             // 等待监听线程终止
-            var sleeper = new WaitTimeoutChecker(30000);
-            while (_watchThreads.Any(item => item.IsAlive))
-                sleeper.ThreadSleep(100);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _watchThreads.Any(item => item.IsAlive));
             _watchThreads.Clear();
 
             // 向过期连接丢弃线程发送终止信号
@@ -265,9 +263,7 @@ namespace LAN_Spy.Model {
                 _dropOutdatedLinksThread.Abort();
 
                 // 等待过期连接丢弃线程终止
-                sleeper = new WaitTimeoutChecker(30000);
-                while (_dropOutdatedLinksThread.IsAlive)
-                    sleeper.ThreadSleep(100);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, func => _dropOutdatedLinksThread.IsAlive);
                 _dropOutdatedLinksThread = null;
             }
 

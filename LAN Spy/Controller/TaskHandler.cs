@@ -55,9 +55,7 @@ namespace LAN_Spy.Controller {
                             target.Abort();
 
                             // 等待任务结束
-                            var sleeper = new WaitTimeoutChecker(30000);
-                            while (target.IsAlive)
-                                sleeper.ThreadSleep(500);
+                            new WaitTimeoutChecker(30000).ThreadSleep(500, func => target.IsAlive);
 
                             // 任务成功中止
                             MessagePipe.SendOutMessage(new KeyValuePair<Message, Thread>(Message.TaskAborted, message.Value));
@@ -115,9 +113,7 @@ namespace LAN_Spy.Controller {
             WorkThreads.ForEach(thread => {
                 if (thread.IsAlive) thread.Abort();
             });
-            var sleeper = new WaitTimeoutChecker(30000);
-            while (WorkThreads.Any(thread => thread.IsAlive) || MessageReceiver.IsAlive || Inspector.IsAlive)
-                sleeper.ThreadSleep(500);
+            new WaitTimeoutChecker(30000).ThreadSleep(500, func => WorkThreads.Any(thread => thread.IsAlive) || MessageReceiver.IsAlive || Inspector.IsAlive);
             WorkThreads.Clear();
         }
     }

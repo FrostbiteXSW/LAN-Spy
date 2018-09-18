@@ -77,17 +77,17 @@ namespace LAN_Spy.View {
                 loading.ShowDialog();
 
                 // 等待结果
-                var sleeper = new WaitTimeoutChecker(30000);
-                while (true) {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
                     var msg = MessagePipe.GetNextOutMessage(task);
-                    if (msg == Message.NoAvailableMessage) {
-                        sleeper.ThreadSleep(500);
-                        continue;
+                    switch (msg) {
+                        case Message.NoAvailableMessage:
+                            return true;
+                        case Message.TaskOut:
+                            return false;
+                        default:
+                            throw new Exception($"无效的消息类型：{msg}");
                     }
-                    if (msg == Message.TaskOut)
-                        break;
-                    throw new Exception($"无效的消息类型：{msg}");
-                }
+                });
 
                 // 模块已停止
                 MessagePipe.ClearAllMessage(task);
@@ -110,9 +110,7 @@ namespace LAN_Spy.View {
                 Target1List.Rows.Clear();
                 Target2List.Rows.Clear();
                 ConnectionListUpdateTimer.Stop();
-                sleeper = new WaitTimeoutChecker(30000);
-                while (ConnectionListUpdateTimer.Enabled)
-                    sleeper.ThreadSleep(100);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
                 ConnectionList.Rows.Clear();
             }
 
@@ -159,18 +157,18 @@ namespace LAN_Spy.View {
             loading.ShowDialog();
 
             // 等待结果
-            var sleeper = new WaitTimeoutChecker(30000, false);
-            while (true) {
-                var msg = MessagePipe.GetNextOutMessage(task);
-                if (msg == Message.NoAvailableMessage) {
-                    if (!sleeper.ThreadSleep(500))
-                        Environment.Exit(-1);
-                    continue;
-                }
-                if (msg == Message.TaskOut)
-                    break;
-                throw new Exception($"无效的消息类型：{msg}");
-            }
+            if (!new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
+                    var msg = MessagePipe.GetNextOutMessage(task);
+                    switch (msg) {
+                        case Message.NoAvailableMessage:
+                            return true;
+                        case Message.TaskOut:
+                            return false;
+                        default:
+                            throw new Exception($"无效的消息类型：{msg}");
+                    }
+            }))
+                Environment.Exit(-1);
 
             // 模块已停止
             Environment.Exit(0);
@@ -191,17 +189,17 @@ namespace LAN_Spy.View {
             loading.ShowDialog();
 
             // 等待结果
-            var sleeper = new WaitTimeoutChecker(30000);
-            while (true) {
+            new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
                 var msg = MessagePipe.GetNextOutMessage(task);
-                if (msg == Message.NoAvailableMessage) {
-                    sleeper.ThreadSleep(500);
-                    continue;
+                switch (msg) {
+                    case Message.NoAvailableMessage:
+                        return true;
+                    case Message.TaskOut:
+                        return false;
+                    default:
+                        throw new Exception($"无效的消息类型：{msg}");
                 }
-                if (msg == Message.TaskOut)
-                    break;
-                throw new Exception($"无效的消息类型：{msg}");
-            }
+            });
 
             // 模块已停止
             MessagePipe.ClearAllMessage(task);
@@ -224,9 +222,7 @@ namespace LAN_Spy.View {
             Target1List.Rows.Clear();
             Target2List.Rows.Clear();
             ConnectionListUpdateTimer.Stop();
-            sleeper = new WaitTimeoutChecker(30000);
-            while (ConnectionListUpdateTimer.Enabled)
-                sleeper.ThreadSleep(100);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
             ConnectionList.Rows.Clear();
         }
 
@@ -308,18 +304,18 @@ namespace LAN_Spy.View {
                 loading.ShowDialog();
 
                 // 等待结果
-                var sleeper = new WaitTimeoutChecker(30000);
-                while (true) {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
                     var msg = MessagePipe.GetNextOutMessage(task);
-                    if (msg == Message.NoAvailableMessage) {
-                        sleeper.ThreadSleep(500);
-                        continue;
+                    switch (msg) {
+                        case Message.NoAvailableMessage:
+                            return true;
+                        case Message.TaskOut:
+                            return false;
+                        default:
+                            throw new Exception($"无效的消息类型：{msg}");
                     }
-                    if (msg == Message.TaskOut)
-                        break;
-                    throw new Exception($"无效的消息类型：{msg}");
-                }
-
+                });
+                
                 // 模块已停止
                 MessagePipe.ClearAllMessage(task);
                 MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -386,17 +382,13 @@ namespace LAN_Spy.View {
             loading.ShowDialog();
 
             // 等待结果
-            var sleeper = new WaitTimeoutChecker(30000);
-            Message result;
-            while ((result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage)
-                sleeper.ThreadSleep(500);
-
+            var result = Message.NoAvailableMessage;
+            new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
+            
             // 用户取消
             if (result == Message.UserCancel) {
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
-                sleeper = new WaitTimeoutChecker(30000);
-                while ((result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage)
-                    sleeper.ThreadSleep(500);
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                 switch (result) {
                     case Message.TaskAborted:
@@ -439,17 +431,13 @@ namespace LAN_Spy.View {
             loading.ShowDialog();
 
             // 等待结果
-            var sleeper = new WaitTimeoutChecker(30000);
-            Message result;
-            while ((result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage)
-                sleeper.ThreadSleep(500);
+            var result = Message.NoAvailableMessage;
+            new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
             // 用户取消
             if (result == Message.UserCancel) {
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
-                sleeper = new WaitTimeoutChecker(30000);
-                while ((result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage)
-                    sleeper.ThreadSleep(500);
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                 switch (result) {
                     case Message.TaskAborted:
@@ -517,16 +505,12 @@ namespace LAN_Spy.View {
             loading.ShowDialog();
 
             // 等待结果
-            var sleeper = new WaitTimeoutChecker(30000);
-            while (MessagePipe.GetNextOutMessage(task) != Message.UserCancel)
-                sleeper.ThreadSleep(500);
+            new WaitTimeoutChecker(30000).ThreadSleep(500, func => MessagePipe.GetNextOutMessage(task) != Message.UserCancel);
 
             // 用户取消
             MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
-            sleeper = new WaitTimeoutChecker(30000);
-            Message result;
-            while ((result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage)
-                sleeper.ThreadSleep(500);
+            var result = Message.NoAvailableMessage;
+            new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
             MessagePipe.ClearAllMessage(task);
 
             // 检查是否正确结束
@@ -589,17 +573,17 @@ namespace LAN_Spy.View {
                 loading.ShowDialog();
 
                 // 等待结果
-                var sleeper = new WaitTimeoutChecker(30000);
-                while (true) {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
                     var msg = MessagePipe.GetNextOutMessage(task);
-                    if (msg == Message.NoAvailableMessage) {
-                        sleeper.ThreadSleep(500);
-                        continue;
+                    switch (msg) {
+                        case Message.NoAvailableMessage:
+                            return true;
+                        case Message.TaskOut:
+                            return false;
+                        default:
+                            throw new Exception($"无效的消息类型：{msg}");
                     }
-                    if (msg == Message.TaskOut)
-                        break;
-                    throw new Exception($"无效的消息类型：{msg}");
-                }
+                });
 
                 // 模块已停止
                 MessagePipe.ClearAllMessage(task);
@@ -641,9 +625,7 @@ namespace LAN_Spy.View {
                     list = ConnectionList;
                     // 菜单打开时暂时停止更新列表
                     ConnectionListUpdateTimer.Stop();
-                    var sleeper = new WaitTimeoutChecker(30000);
-                    while (ConnectionListUpdateTimer.Enabled)
-                        sleeper.ThreadSleep(100);
+                    new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
                     break;
                 default:
                     return;
@@ -685,17 +667,17 @@ namespace LAN_Spy.View {
                 loading.ShowDialog();
 
                 // 等待结果
-                var sleeper = new WaitTimeoutChecker(30000);
-                while (true) {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
                     var msg = MessagePipe.GetNextOutMessage(task);
-                    if (msg == Message.NoAvailableMessage) {
-                        sleeper.ThreadSleep(500);
-                        continue;
+                    switch (msg) {
+                        case Message.NoAvailableMessage:
+                            return true;
+                        case Message.TaskOut:
+                            return false;
+                        default:
+                            throw new Exception($"无效的消息类型：{msg}");
                     }
-                    if (msg == Message.TaskOut)
-                        break;
-                    throw new Exception($"无效的消息类型：{msg}");
-                }
+                });
 
                 // 模块已停止
                 MessagePipe.ClearAllMessage(task);
@@ -703,9 +685,7 @@ namespace LAN_Spy.View {
                 启动监视模块ToolStripMenuItem.Text = "启动模块";
                 开始监视ToolStripMenuItem.Enabled = false;
                 ConnectionListUpdateTimer.Stop();
-                sleeper = new WaitTimeoutChecker(30000);
-                while (ConnectionListUpdateTimer.Enabled)
-                    sleeper.ThreadSleep(100);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
                 ConnectionList.Rows.Clear();
 
                 // TODO:新增模块时请更新此处的代码
@@ -835,17 +815,13 @@ namespace LAN_Spy.View {
                 loading.ShowDialog();
 
                 // 等待结果
-                var sleeper = new WaitTimeoutChecker(30000);
-                Message result;
-                while ((result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage)
-                    sleeper.ThreadSleep(500);
+                var result = Message.NoAvailableMessage;
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                 // 用户取消
                 if (result == Message.UserCancel) {
                     MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
-                    sleeper = new WaitTimeoutChecker(30000);
-                    while ((result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage)
-                        sleeper.ThreadSleep(500);
+                    new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                     switch (result) {
                         case Message.TaskAborted:
@@ -872,17 +848,17 @@ namespace LAN_Spy.View {
                 loading.ShowDialog();
 
                 // 等待结果
-                var sleeper = new WaitTimeoutChecker(30000);
-                while (true) {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
                     var msg = MessagePipe.GetNextOutMessage(task);
-                    if (msg == Message.NoAvailableMessage) {
-                        sleeper.ThreadSleep(500);
-                        continue;
+                    switch (msg) {
+                        case Message.NoAvailableMessage:
+                            return true;
+                        case Message.TaskOut:
+                            return false;
+                        default:
+                            throw new Exception($"无效的消息类型：{msg}");
                     }
-                    if (msg == Message.TaskOut)
-                        break;
-                    throw new Exception($"无效的消息类型：{msg}");
-                }
+                });
 
                 // 模块已停止
                 MessagePipe.ClearAllMessage(task);
@@ -913,17 +889,13 @@ namespace LAN_Spy.View {
                 loading.ShowDialog();
 
                 // 等待结果
-                var sleeper = new WaitTimeoutChecker(30000);
-                Message result;
-                while ((result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage)
-                    sleeper.ThreadSleep(500);
+                var result = Message.NoAvailableMessage;
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                 // 用户取消
                 if (result == Message.UserCancel) {
                     MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
-                    sleeper = new WaitTimeoutChecker(30000);
-                    while ((result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage)
-                        sleeper.ThreadSleep(500);
+                    new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                     switch (result) {
                         case Message.TaskAborted:
@@ -951,24 +923,22 @@ namespace LAN_Spy.View {
                 loading.ShowDialog();
 
                 // 等待结果
-                var sleeper = new WaitTimeoutChecker(30000);
-                while (true) {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
                     var msg = MessagePipe.GetNextOutMessage(task);
-                    if (msg == Message.NoAvailableMessage) {
-                        sleeper.ThreadSleep(500);
-                        continue;
+                    switch (msg) {
+                        case Message.NoAvailableMessage:
+                            return true;
+                        case Message.TaskOut:
+                            return false;
+                        default:
+                            throw new Exception($"无效的消息类型：{msg}");
                     }
-                    if (msg == Message.TaskOut)
-                        break;
-                    throw new Exception($"无效的消息类型：{msg}");
-                }
+                });
 
                 // 模块已停止
                 MessagePipe.ClearAllMessage(task);
                 ConnectionListUpdateTimer.Stop();
-                sleeper = new WaitTimeoutChecker(30000);
-                while (ConnectionListUpdateTimer.Enabled)
-                    sleeper.ThreadSleep(100);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
                 ConnectionList.Rows.Clear();
                 MessageBox.Show("监视工作已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 开始监视ToolStripMenuItem.Text = "开始监视";
@@ -1043,9 +1013,7 @@ namespace LAN_Spy.View {
         private void ConnectionList_KeyEvent(object sender, KeyEventArgs e) {
             if (ConnectionListUpdateTimer.Enabled) {
                 ConnectionListUpdateTimer.Stop();
-                var sleeper = new WaitTimeoutChecker(30000);
-                while (ConnectionListUpdateTimer.Enabled)
-                    sleeper.ThreadSleep(100);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
             }
             else {
                 ConnectionListUpdateTimer.Start();
@@ -1060,9 +1028,7 @@ namespace LAN_Spy.View {
         private void ConnectionList_MouseEvent(object sender, MouseEventArgs e) {
             if (ConnectionListUpdateTimer.Enabled) {
                 ConnectionListUpdateTimer.Stop();
-                var sleeper = new WaitTimeoutChecker(30000);
-                while (ConnectionListUpdateTimer.Enabled)
-                    sleeper.ThreadSleep(100);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
             }
             else {
                 ConnectionListUpdateTimer.Start();
@@ -1081,9 +1047,7 @@ namespace LAN_Spy.View {
 
             // 暂停列表更新
             ConnectionListUpdateTimer.Stop();
-            var sleeper = new WaitTimeoutChecker(30000);
-            while (ConnectionListUpdateTimer.Enabled)
-                sleeper.ThreadSleep(100);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
 
             // 去除已有本机流量数据
             var removeRows = ConnectionList.Rows.Cast<DataGridViewRow>().Where(row =>

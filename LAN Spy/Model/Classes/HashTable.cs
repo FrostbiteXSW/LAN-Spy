@@ -123,14 +123,9 @@ namespace LAN_Spy.Model.Classes {
                 temp.Insert(min + 1, new KeyValuePair<int, object>(key, key));
 
             temp.TrimExcess();
-
             _isReadEnabled = false;
-            var sleeper = new WaitTimeoutChecker(30000);
-            while (_readerCount != 0)
-                sleeper.ThreadSleep(100);
-
+            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _readerCount != 0);
             _table = temp.ToArray();
-
             _isReadEnabled = true;
         }
 
@@ -169,14 +164,83 @@ namespace LAN_Spy.Model.Classes {
             }
 
             temp.TrimExcess();
+            _isReadEnabled = false;
+            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _readerCount != 0);
+            _table = temp.ToArray();
+            _isReadEnabled = true;
+        }
+
+        /// <summary>
+        ///     从表中移除指定哈希值对应的对象。
+        /// </summary>
+        /// <param name="key">移除对象的哈希值。</param>
+        /// <exception cref="KeyNotFoundException">未找到指定对象的哈希值。</exception>
+        public void Remove(int key) {
+            if (_table.Length == 0)
+                throw new KeyNotFoundException("未找到指定对象的哈希值。");
+
+            var temp = new List<KeyValuePair<int, object>>(_table);
+            int min = 0, max = temp.Count - 1;
+            while (min < max) {
+                var ptr = temp[(min + max) / 2];
+                if (ptr.Key == key) {
+                    temp.Remove(ptr);
+                    temp.TrimExcess();
+                    _isReadEnabled = false;
+                    new WaitTimeoutChecker(30000).ThreadSleep(100, func => _readerCount != 0);
+                    _table = temp.ToArray();
+                    _isReadEnabled = true;
+                    return;
+                }
+                if (ptr.Key < key)
+                    max = (min + max) / 2 - 1;
+                else
+                    min = (min + max) / 2 + 1;
+            }
+
+            if (key != temp[min].Key) 
+                throw new KeyNotFoundException("未找到指定对象的哈希值。");
+
+            temp.RemoveAt(min);
+            temp.TrimExcess();
+            _isReadEnabled = false;
+            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _readerCount != 0);
+            _table = temp.ToArray();
+            _isReadEnabled = true;
+        }
+
+        /// <summary>
+        ///     从表中移除指定哈希值组对应的所有对象。
+        /// </summary>
+        /// <param name="keys">移除对象的哈希值组。</param>
+        /// <exception cref="KeyNotFoundException">未找到指定对象的哈希值。</exception>
+        public void RemoveRange(IEnumerable<int> keys) {
+            var temp = new List<KeyValuePair<int, object>>(_table);
+            foreach (var key in keys) {
+                if (temp.Count == 0) 
+                    throw new KeyNotFoundException("未找到指定对象的哈希值。");
+
+                int min = 0, max = temp.Count - 1;
+                while (min <= max) {
+                    var ptr = temp[(min + max) / 2];
+                    if (ptr.Key == key) {
+                        temp.Remove(ptr);
+                        temp.TrimExcess();
+                        break;
+                    }
+                    if (ptr.Key < key)
+                        max = (min + max) / 2 - 1;
+                    else
+                        min = (min + max) / 2 + 1;
+                }
+
+                if (min > max) 
+                    throw new KeyNotFoundException("未找到指定对象的哈希值。");
+            }
 
             _isReadEnabled = false;
-            var sleeper = new WaitTimeoutChecker(30000);
-            while (_readerCount != 0)
-                sleeper.ThreadSleep(100);
-
+            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _readerCount != 0);
             _table = temp.ToArray();
-
             _isReadEnabled = true;
         }
     }
