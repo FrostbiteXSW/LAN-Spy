@@ -36,8 +36,10 @@ namespace LAN_Spy.Model.Classes {
                 int min = 0, max = _table.Length - 1;
                 while (min <= max) {
                     var ptr = _table[(min + max) / 2];
-                    if (ptr.Key == key)
+                    if (ptr.Key == key) {
+                        _readerCount--;
                         return ptr.Value;
+                    }
                     if (ptr.Key < key)
                         max = (min + max) / 2 - 1;
                     else
