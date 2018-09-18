@@ -199,6 +199,10 @@ namespace LAN_Spy.Model {
                         if (ether.Type == EthernetPacketType.IPv4) {
                             // 解析IPv4包
                             var ipv4Packet = (IPv4Packet) ether.PayloadPacket;
+                            if (!(OnIPv4PacketReceive is null)) {
+                                OnIPv4PacketReceive.Invoke(ipv4Packet, out var isHandled);
+                                if (isHandled) continue;
+                            }
                             
                             // 组1或组2接收的数据包
                             if (_hashTable[ipv4Packet.DestinationAddress.GetHashCode()] is Host dest)
@@ -264,7 +268,7 @@ namespace LAN_Spy.Model {
                     poisonThread.Abort();
 
             // 等待毒化线程终止
-            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _poisonThreads.Any(item => item.IsAlive));
+            new WaitTimeoutChecker(30000).ThreadSleep(100, () => _poisonThreads.Any(item => item.IsAlive));
             _poisonThreads.Clear();
 
             // 向包转发线程发送终止信号
@@ -273,7 +277,7 @@ namespace LAN_Spy.Model {
                     retransmissionThread.Abort();
 
             // 等待包转发线程终止
-            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _retransmissionThreads.Any(item => item.IsAlive));
+            new WaitTimeoutChecker(30000).ThreadSleep(100, () => _retransmissionThreads.Any(item => item.IsAlive));
             _poisonThreads.Clear();
             _retransmissionThreads.Clear();
 
@@ -299,5 +303,17 @@ namespace LAN_Spy.Model {
             Gateway = null;
             ClearCaptures();
         }
+
+        /// <summary>
+        ///     转发线程中对数据包到达事件的委托。
+        /// </summary>
+        /// <param name="packet">要处理的到达数据包</param>
+        /// <param name="isHandled">表示此数据包是否已被处理不再需要转发。</param>
+        public delegate void OnPacketReceive(Packet packet, out bool isHandled);
+
+        /// <summary>
+        ///     转发线程遇到IPv4数据包时触发的事件。
+        /// </summary>
+        public event OnPacketReceive OnIPv4PacketReceive;
     }
 }

@@ -11,6 +11,7 @@ using PacketDotNet.Utils;
 using SharpPcap;
 
 namespace LAN_Spy.Model {
+    /// <inheritdoc />
     /// <summary>
     ///     子网主机扫描器。
     /// </summary>
@@ -104,7 +105,7 @@ namespace LAN_Spy.Model {
                 sendThreads.Add(lastsendThread);
 
                 // 等待数据包发送完成
-                new WaitTimeoutChecker((int) (60 * 1000 * Math.Log(AddressCount, 254))).ThreadSleep(500, func => sendThreads.Any(item => item.IsAlive));
+                new WaitTimeoutChecker((int) (60 * 1000 * Math.Log(AddressCount, 254))).ThreadSleep(500, () => sendThreads.Any(item => item.IsAlive));
 
                 // 等待接收目标机反馈消息
                 Thread.Sleep((int) (8 * 1000 * Math.Log(AddressCount, 254)));
@@ -166,7 +167,7 @@ namespace LAN_Spy.Model {
                         analyzeThread.Abort();
 
                 // 等待分析线程终止
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => analyzeThreads.Any(analyzeThread => analyzeThread.IsAlive));
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => analyzeThreads.Any(analyzeThread => analyzeThread.IsAlive));
 
                 // 清理缓冲区及其他内容
                 lock (_hostList) {

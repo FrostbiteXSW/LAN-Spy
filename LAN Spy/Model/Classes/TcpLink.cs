@@ -1,6 +1,7 @@
-﻿using System;
+﻿using PacketDotNet;
+using System;
+using System.Collections.Generic;
 using System.Net;
-using PacketDotNet;
 
 namespace LAN_Spy.Model.Classes {
     /// <summary>
@@ -57,6 +58,48 @@ namespace LAN_Spy.Model.Classes {
         /// </summary>
         public void UpdateTime() {
             Time = DateTime.Now;
+        }
+
+        /// <summary>
+        ///     比较指定 <see cref="TcpLink"/> 对象是否与当前对象相同。
+        /// </summary>
+        /// <param name="obj">需要比较的对象。</param>
+        /// <returns>如果两个对象表示的连接相同返回 <see langword="true"/>，否则返回<see langword="false"/>。</returns>
+        public bool Equals(TcpLink obj) {
+            if (obj is null) return false;
+
+            return obj.SrcAddress.Equals(SrcAddress) 
+                   && obj.SrcPort.Equals(SrcPort) 
+                   && obj.DstAddress.Equals(DstAddress) 
+                   && obj.DstPort.Equals(DstPort);
+        }
+        
+        /// <summary>
+        ///     获取对象的哈希值。
+        /// </summary>
+        /// <returns>对象的哈希值。</returns>
+        public override int GetHashCode() {
+            return (SrcAddress.ToString() + DstAddress + SrcPort + DstPort).GetHashCode();
+        }
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    ///     供 <see cref="T:LAN_Spy.Model.Classes.TcpLink" /> 类使用的比较器。
+    /// </summary>
+    public class TcpLinkEqualityComparer : IEqualityComparer<TcpLink> {
+        public bool Equals(TcpLink x, TcpLink y) {
+            if (x is null || y is null)
+                return x is null && y is null;
+
+            return x.SrcAddress.Equals(y.SrcAddress) 
+                   && x.SrcPort.Equals(y.SrcPort) 
+                   && x.DstAddress.Equals(y.DstAddress) 
+                   && x.DstPort.Equals(y.DstPort);
+        }
+
+        public int GetHashCode(TcpLink obj) {
+            return (obj.SrcAddress.ToString() + obj.DstAddress + obj.SrcPort + obj.DstPort).GetHashCode();
         }
     }
 }

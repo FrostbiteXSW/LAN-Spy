@@ -1,4 +1,11 @@
-﻿using System;
+﻿using LAN_Spy.Controller;
+using LAN_Spy.Controller.Classes;
+using LAN_Spy.Model;
+using LAN_Spy.Model.Classes;
+using PacketDotNet;
+using SharpPcap;
+using SharpPcap.WinPcap;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -6,12 +13,6 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using LAN_Spy.Controller;
-using LAN_Spy.Controller.Classes;
-using LAN_Spy.Model;
-using LAN_Spy.Model.Classes;
-using SharpPcap;
-using SharpPcap.WinPcap;
 using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View {
@@ -71,13 +72,13 @@ namespace LAN_Spy.View {
                 var result = false;
 
                 // 创建载入界面
-                var task = new Thread(stop => { result = StopModels(); }) {Name = RegistedThreadName.RestartStopAllModels.ToString()};
+                var task = new Thread(stop => { result = StopModels(); }) {Name = RegisteredThreadName.RestartStopAllModels.ToString()};
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
                 var loading = new Loading("正在停止，请稍候", task);
                 loading.ShowDialog();
 
                 // 等待结果
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => {
                     var msg = MessagePipe.GetNextOutMessage(task);
                     switch (msg) {
                         case Message.NoAvailableMessage:
@@ -105,12 +106,13 @@ namespace LAN_Spy.View {
                 开始监视ToolStripMenuItem.Enabled = false;
                 添加到目标组1ToolStripMenuItem.Enabled = false;
                 添加到目标组2ToolStripMenuItem.Enabled = false;
-                断开此连接ToolStripMenuItem.Enabled = false;
+                阻止此连接ToolStripMenuItem.Enabled = false;
                 HostList.Rows.Clear();
                 Target1List.Rows.Clear();
                 Target2List.Rows.Clear();
+                BlockList.Rows.Clear();
                 ConnectionListUpdateTimer.Stop();
-                new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, () => ConnectionListUpdateTimer.Enabled);
                 ConnectionList.Rows.Clear();
             }
 
@@ -128,7 +130,7 @@ namespace LAN_Spy.View {
                 开始监视ToolStripMenuItem.Enabled = true;
                 添加到目标组1ToolStripMenuItem.Enabled = true;
                 添加到目标组2ToolStripMenuItem.Enabled = true;
-                断开此连接ToolStripMenuItem.Enabled = true;
+                阻止此连接ToolStripMenuItem.Enabled = true;
             }
             else
                 MessageBox.Show("一个或多个模块未能成功初始化，请单独启动模块。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -151,13 +153,13 @@ namespace LAN_Spy.View {
         /// <param name="e">事件的参数。</param>
         private void 退出ToolStripMenuItem_Click(object sender, EventArgs e) {
             // 创建载入界面
-            var task = new Thread(stop => { StopModels(); }) {Name = RegistedThreadName.ExitStopAllModels.ToString()};
+            var task = new Thread(stop => { StopModels(); }) {Name = RegisteredThreadName.ExitStopAllModels.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
             var loading = new Loading("正在退出，请稍候", task);
             loading.ShowDialog();
 
             // 等待结果
-            if (!new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
+            if (!new WaitTimeoutChecker(30000).ThreadSleep(500, () => {
                     var msg = MessagePipe.GetNextOutMessage(task);
                     switch (msg) {
                         case Message.NoAvailableMessage:
@@ -183,13 +185,13 @@ namespace LAN_Spy.View {
             var result = false;
 
             // 创建载入界面
-            var task = new Thread(stop => { result = StopModels(); }) {Name = RegistedThreadName.StopAllModels.ToString()};
+            var task = new Thread(stop => { result = StopModels(); }) {Name = RegisteredThreadName.StopAllModels.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
             var loading = new Loading("正在停止，请稍候", task);
             loading.ShowDialog();
 
             // 等待结果
-            new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
+            new WaitTimeoutChecker(30000).ThreadSleep(500, () => {
                 var msg = MessagePipe.GetNextOutMessage(task);
                 switch (msg) {
                     case Message.NoAvailableMessage:
@@ -217,12 +219,13 @@ namespace LAN_Spy.View {
             开始监视ToolStripMenuItem.Enabled = false;
             添加到目标组1ToolStripMenuItem.Enabled = false;
             添加到目标组2ToolStripMenuItem.Enabled = false;
-            断开此连接ToolStripMenuItem.Enabled = false;
+            阻止此连接ToolStripMenuItem.Enabled = false;
             HostList.Rows.Clear();
             Target1List.Rows.Clear();
             Target2List.Rows.Clear();
+            BlockList.Rows.Clear();
             ConnectionListUpdateTimer.Stop();
-            new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, () => ConnectionListUpdateTimer.Enabled);
             ConnectionList.Rows.Clear();
         }
 
@@ -298,13 +301,13 @@ namespace LAN_Spy.View {
                 var task = new Thread(stop => {
                     Scanner.Reset();
                     Scanner.CurDevName = "";
-                }) {Name = RegistedThreadName.StopScanner.ToString()};
+                }) {Name = RegisteredThreadName.StopScanner.ToString()};
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
                 var loading = new Loading("正在停止，请稍候", task);
                 loading.ShowDialog();
 
                 // 等待结果
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => {
                     var msg = MessagePipe.GetNextOutMessage(task);
                     switch (msg) {
                         case Message.NoAvailableMessage:
@@ -376,19 +379,19 @@ namespace LAN_Spy.View {
                     foreach (var model in modelsList)
                         model.CurDevName = "";
                 }
-            }) {Name = RegistedThreadName.StartupModels.ToString()};
+            }) {Name = RegisteredThreadName.StartupModels.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
             var loading = new Loading("设置模块中，请稍候", task);
             loading.ShowDialog();
 
             // 等待结果
             var result = Message.NoAvailableMessage;
-            new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
+            new WaitTimeoutChecker(30000).ThreadSleep(500, () => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
             
             // 用户取消
             if (result == Message.UserCancel) {
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                 switch (result) {
                     case Message.TaskAborted:
@@ -425,19 +428,19 @@ namespace LAN_Spy.View {
                 catch (ThreadAbortException) {
                     Scanner.Reset();
                 }
-            }) {Name = RegistedThreadName.ScanForTarget.ToString()};
+            }) {Name = RegisteredThreadName.ScanForTarget.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
             var loading = new Loading("正在扫描，请稍候", task);
             loading.ShowDialog();
 
             // 等待结果
             var result = Message.NoAvailableMessage;
-            new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
+            new WaitTimeoutChecker(30000).ThreadSleep(500, () => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
             // 用户取消
             if (result == Message.UserCancel) {
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                 switch (result) {
                     case Message.TaskAborted:
@@ -499,18 +502,18 @@ namespace LAN_Spy.View {
                     Scanner.SpyForTarget();
                 }
                 catch (ThreadAbortException) { }
-            }) {Name = RegistedThreadName.SpyForTarget.ToString()};
+            }) {Name = RegisteredThreadName.SpyForTarget.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
             var loading = new Loading("正在侦测，取消以停止", task);
             loading.ShowDialog();
 
             // 等待结果
-            new WaitTimeoutChecker(30000).ThreadSleep(500, func => MessagePipe.GetNextOutMessage(task) != Message.UserCancel);
+            new WaitTimeoutChecker(30000).ThreadSleep(500, () => MessagePipe.GetNextOutMessage(task) != Message.UserCancel);
 
             // 用户取消
             MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
             var result = Message.NoAvailableMessage;
-            new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
+            new WaitTimeoutChecker(30000).ThreadSleep(500, () => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
             MessagePipe.ClearAllMessage(task);
 
             // 检查是否正确结束
@@ -553,12 +556,19 @@ namespace LAN_Spy.View {
                     MessageBox.Show("模块未能成功初始化，请检查。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 else if (Poisoner.CurDevName != "") {
+                    // 查找网关
+                    if (Poisoner.Gateway is null)
+                        foreach (var host in Scanner.HostList)
+                            if (Scanner.GatewayAddresses.Contains(host.IPAddress))
+                                Poisoner.Gateway = host;
+
                     MessageBox.Show("模块已成功设置。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     启动所有模块ToolStripMenuItem.Text = "重启所有模块";
                     启动毒化模块ToolStripMenuItem.Text = "停止模块";
                     开始毒化ToolStripMenuItem.Enabled = true;
                     添加到目标组1ToolStripMenuItem.Enabled = true;
                     添加到目标组2ToolStripMenuItem.Enabled = true;
+                    阻止此连接ToolStripMenuItem.Enabled = true;
                 }
             }
             else {
@@ -567,13 +577,13 @@ namespace LAN_Spy.View {
                     Poisoner.StopPoisoning();
                     Poisoner.Reset();
                     Poisoner.CurDevName = "";
-                }) {Name = RegistedThreadName.StopPoisoner.ToString()};
+                }) {Name = RegisteredThreadName.StopPoisoner.ToString()};
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
                 var loading = new Loading("正在停止，请稍候", task);
                 loading.ShowDialog();
 
                 // 等待结果
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => {
                     var msg = MessagePipe.GetNextOutMessage(task);
                     switch (msg) {
                         case Message.NoAvailableMessage:
@@ -592,8 +602,10 @@ namespace LAN_Spy.View {
                 开始毒化ToolStripMenuItem.Enabled = false;
                 添加到目标组1ToolStripMenuItem.Enabled = false;
                 添加到目标组2ToolStripMenuItem.Enabled = false;
+                阻止此连接ToolStripMenuItem.Enabled = false;
                 Target1List.Rows.Clear();
                 Target2List.Rows.Clear();
+                BlockList.Rows.Clear();
 
                 // TODO:新增模块时请更新此处的代码
                 if (启动扫描模块ToolStripMenuItem.Text == "启动模块"
@@ -625,7 +637,10 @@ namespace LAN_Spy.View {
                     list = ConnectionList;
                     // 菜单打开时暂时停止更新列表
                     ConnectionListUpdateTimer.Stop();
-                    new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
+                    new WaitTimeoutChecker(30000).ThreadSleep(100, () => ConnectionListUpdateTimer.Enabled);
+                    break;
+                case "BlockList":
+                    list = BlockList;
                     break;
                 default:
                     return;
@@ -661,13 +676,13 @@ namespace LAN_Spy.View {
                     Watcher.StopWatching();
                     Watcher.Reset();
                     Watcher.CurDevName = "";
-                }) {Name = RegistedThreadName.StopWatcher.ToString()};
+                }) {Name = RegisteredThreadName.StopWatcher.ToString()};
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
                 var loading = new Loading("正在停止，请稍候", task);
                 loading.ShowDialog();
 
                 // 等待结果
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => {
                     var msg = MessagePipe.GetNextOutMessage(task);
                     switch (msg) {
                         case Message.NoAvailableMessage:
@@ -685,7 +700,7 @@ namespace LAN_Spy.View {
                 启动监视模块ToolStripMenuItem.Text = "启动模块";
                 开始监视ToolStripMenuItem.Enabled = false;
                 ConnectionListUpdateTimer.Stop();
-                new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, () => ConnectionListUpdateTimer.Enabled);
                 ConnectionList.Rows.Clear();
 
                 // TODO:新增模块时请更新此处的代码
@@ -809,19 +824,19 @@ namespace LAN_Spy.View {
                         // 用户中止了操作
                         Poisoner.StopPoisoning();
                     }
-                }) {Name = RegistedThreadName.StartPoisoning.ToString()};
+                }) {Name = RegisteredThreadName.StartPoisoning.ToString()};
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
                 var loading = new Loading("正在毒化，请稍候", task);
                 loading.ShowDialog();
 
                 // 等待结果
                 var result = Message.NoAvailableMessage;
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                 // 用户取消
                 if (result == Message.UserCancel) {
                     MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
-                    new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
+                    new WaitTimeoutChecker(30000).ThreadSleep(500, () => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                     switch (result) {
                         case Message.TaskAborted:
@@ -842,13 +857,13 @@ namespace LAN_Spy.View {
             }
             else {
                 // 创建载入界面
-                var task = new Thread(stop => { Poisoner.StopPoisoning(); }) {Name = RegistedThreadName.StopPoisoning.ToString()};
+                var task = new Thread(stop => { Poisoner.StopPoisoning(); }) {Name = RegisteredThreadName.StopPoisoning.ToString()};
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
                 var loading = new Loading("正在停止，请稍候", task);
                 loading.ShowDialog();
 
                 // 等待结果
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => {
                     var msg = MessagePipe.GetNextOutMessage(task);
                     switch (msg) {
                         case Message.NoAvailableMessage:
@@ -883,19 +898,19 @@ namespace LAN_Spy.View {
                         // 用户中止了操作
                         Watcher.StopWatching();
                     }
-                }) {Name = RegistedThreadName.StartWatching.ToString()};
+                }) {Name = RegisteredThreadName.StartWatching.ToString()};
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
                 var loading = new Loading("正在启动监视，请稍候", task);
                 loading.ShowDialog();
 
                 // 等待结果
                 var result = Message.NoAvailableMessage;
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                 // 用户取消
                 if (result == Message.UserCancel) {
                     MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
-                    new WaitTimeoutChecker(30000).ThreadSleep(500, func => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
+                    new WaitTimeoutChecker(30000).ThreadSleep(500, () => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
 
                     switch (result) {
                         case Message.TaskAborted:
@@ -917,13 +932,13 @@ namespace LAN_Spy.View {
             }
             else {
                 // 创建载入界面
-                var task = new Thread(stop => { Watcher.StopWatching(); }) {Name = RegistedThreadName.StopWatching.ToString()};
+                var task = new Thread(stop => { Watcher.StopWatching(); }) {Name = RegisteredThreadName.StopWatching.ToString()};
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
                 var loading = new Loading("正在停止，请稍候", task);
                 loading.ShowDialog();
 
                 // 等待结果
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => {
                     var msg = MessagePipe.GetNextOutMessage(task);
                     switch (msg) {
                         case Message.NoAvailableMessage:
@@ -938,7 +953,7 @@ namespace LAN_Spy.View {
                 // 模块已停止
                 MessagePipe.ClearAllMessage(task);
                 ConnectionListUpdateTimer.Stop();
-                new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, () => ConnectionListUpdateTimer.Enabled);
                 ConnectionList.Rows.Clear();
                 MessageBox.Show("监视工作已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 开始监视ToolStripMenuItem.Text = "开始监视";
@@ -1013,9 +1028,9 @@ namespace LAN_Spy.View {
         private void ConnectionList_KeyEvent(object sender, KeyEventArgs e) {
             if (ConnectionListUpdateTimer.Enabled) {
                 ConnectionListUpdateTimer.Stop();
-                new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, () => ConnectionListUpdateTimer.Enabled);
             }
-            else {
+            else if (!ConnectionListMenuStrip.Visible) {
                 ConnectionListUpdateTimer.Start();
             }
         }
@@ -1028,9 +1043,9 @@ namespace LAN_Spy.View {
         private void ConnectionList_MouseEvent(object sender, MouseEventArgs e) {
             if (ConnectionListUpdateTimer.Enabled) {
                 ConnectionListUpdateTimer.Stop();
-                new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
+                new WaitTimeoutChecker(30000).ThreadSleep(100, () => ConnectionListUpdateTimer.Enabled);
             }
-            else {
+            else if (!ConnectionListMenuStrip.Visible) {
                 ConnectionListUpdateTimer.Start();
             }
         }
@@ -1047,7 +1062,7 @@ namespace LAN_Spy.View {
 
             // 暂停列表更新
             ConnectionListUpdateTimer.Stop();
-            new WaitTimeoutChecker(30000).ThreadSleep(100, func => ConnectionListUpdateTimer.Enabled);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, () => ConnectionListUpdateTimer.Enabled);
 
             // 去除已有本机流量数据
             var removeRows = ConnectionList.Rows.Cast<DataGridViewRow>().Where(row =>
@@ -1058,6 +1073,80 @@ namespace LAN_Spy.View {
 
             // 恢复列表更新
             ConnectionListUpdateTimer.Start();
+        }
+        
+        /// <summary>
+        ///     阻止的连接列表
+        /// </summary>
+        private readonly HashTable _blockTable = new HashTable();
+        
+        /// <summary>
+        ///     毒化器处理IPv4数据包到达事件的方法。
+        /// </summary>
+        /// <param name="packet">到达的 <see cref="IPv4Packet"/> 类型数据包。</param>
+        /// <param name="isHandled">指示数据包是否已被处理并且不需要被转发。</param>
+        private void Poisoner_OnIPv4PacketReceive(Packet packet, out bool isHandled) {
+            isHandled = false;
+
+            // 分析IPv4数据包
+            var ipv4 = (IPv4Packet) packet;
+
+            // 判断源IP和目标IP的通讯是否存在于禁止列表中
+            if (!(_blockTable[(ipv4.SourceAddress.ToString() + ipv4.DestinationAddress).GetHashCode()] is null)
+                || !(_blockTable[(ipv4.DestinationAddress.ToString() + ipv4.SourceAddress).GetHashCode()] is null))
+                isHandled = true;
+        }
+        
+        /// <summary>
+        ///     菜单项“阻止此连接”单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 阻止此连接ToolStripMenuItem_Click(object sender, EventArgs e) {
+            var needInit = _blockTable.Length == 0;
+            
+            foreach (DataGridViewRow row in ConnectionList.SelectedRows) {
+                string srcIP = row.Cells["SrcAddress"].Value.ToString().Substring(0, row.Cells["SrcAddress"].Value.ToString().IndexOf(':')),
+                       dstIP = row.Cells["DstAddress"].Value.ToString().Substring(0, row.Cells["DstAddress"].Value.ToString().IndexOf(':'));
+                
+                if (!(_blockTable[(srcIP + dstIP).GetHashCode()] is null)) 
+                    continue;
+
+                var target = new DataGridViewRow();
+
+                target.Cells.Add(new DataGridViewTextBoxCell {Value = srcIP});
+                target.Cells.Add(new DataGridViewTextBoxCell {Value = dstIP});
+                target.ContextMenuStrip = BlockListMenuStrip;
+                
+                BlockList.Rows.Add(target);
+                _blockTable.Add((srcIP + dstIP).GetHashCode(), target);
+            }
+
+            if (needInit)
+                Poisoner.OnIPv4PacketReceive += Poisoner_OnIPv4PacketReceive;
+        }
+        
+        /// <summary>
+        ///     菜单项“取消阻止”单击时的事件。
+        /// </summary>
+        /// <param name="sender">触发事件的控件对象。</param>
+        /// <param name="e">事件的参数。</param>
+        private void 取消阻止ToolStripMenuItem_Click(object sender, EventArgs e) {
+            var targets = new List<DataGridViewRow>();
+            var hashes = new List<int>();
+
+            foreach (DataGridViewRow row in BlockList.SelectedRows) {
+                var hash = (row.Cells["SrcIP"].Value.ToString() + row.Cells["DstIP"].Value).GetHashCode();
+                hashes.Add(hash);
+                targets.Add((DataGridViewRow) _blockTable[hash]);
+            }
+
+            _blockTable.RemoveRange(hashes);
+            foreach (var target in targets)
+                BlockList.Rows.Remove(target);
+
+            if (_blockTable.Length == 0)
+                Poisoner.OnIPv4PacketReceive -= Poisoner_OnIPv4PacketReceive;
         }
     }
 }

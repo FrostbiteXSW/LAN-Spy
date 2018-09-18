@@ -56,11 +56,11 @@ namespace LAN_Spy.Model.Classes {
         /// <returns>若等待未超时返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
         /// <exception cref="TimeoutException">等待已超时。</exception>
         /// <exception cref="ArgumentNullException"></exception>
-        public bool ThreadSleep(int time, Func<WaitTimeoutChecker, bool> predicate) {
+        public bool ThreadSleep(int time, Func<bool> predicate) {
             if (predicate is null)
                 throw new ArgumentNullException(nameof(predicate));
             if (_time <= 0) return false;
-            while (predicate.Invoke(this)) {
+            while (predicate.Invoke()) {
                 Thread.Sleep(Math.Min(time, _time));
                 if ((_time -= time) > 0) continue;
                 if (_useException)

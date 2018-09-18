@@ -36,11 +36,11 @@ namespace LAN_Spy.Model.Classes {
                 int min = 0, max = _table.Length - 1;
                 while (min <= max) {
                     var ptr = _table[(min + max) / 2];
-                    if (ptr.Key == key) {
+                    if (key == ptr.Key) {
                         _readerCount--;
                         return ptr.Value;
                     }
-                    if (ptr.Key < key)
+                    if (key < ptr.Key)
                         max = (min + max) / 2 - 1;
                     else
                         min = (min + max) / 2 + 1;
@@ -49,6 +49,13 @@ namespace LAN_Spy.Model.Classes {
                 _readerCount--;
                 return null;
             }
+        }
+        
+        /// <summary>
+        ///     初始化 <see cref="HashTable"/> 对象的空实例。
+        /// </summary>
+        public HashTable() {
+            _table = new KeyValuePair<int, object>[0];
         }
 
         /// <summary>
@@ -71,7 +78,7 @@ namespace LAN_Spy.Model.Classes {
                     var ptr = temp[(min + max) / 2];
                     if (ptr.Key == item.Key)
                         throw new ArgumentException("检测到哈希值碰撞。");
-                    if (ptr.Key < item.Key)
+                    if (item.Key < ptr.Key)
                         max = (min + max) / 2 - 1;
                     else
                         min = (min + max) / 2 + 1;
@@ -108,7 +115,7 @@ namespace LAN_Spy.Model.Classes {
                 var ptr = temp[(min + max) / 2];
                 if (ptr.Key == key)
                     throw new ArgumentException("检测到哈希值碰撞。");
-                if (ptr.Key < key)
+                if (key < ptr.Key)
                     max = (min + max) / 2 - 1;
                 else
                     min = (min + max) / 2 + 1;
@@ -124,7 +131,7 @@ namespace LAN_Spy.Model.Classes {
 
             temp.TrimExcess();
             _isReadEnabled = false;
-            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _readerCount != 0);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, () => _readerCount != 0);
             _table = temp.ToArray();
             _isReadEnabled = true;
         }
@@ -148,7 +155,7 @@ namespace LAN_Spy.Model.Classes {
                     var ptr = temp[(min + max) / 2];
                     if (ptr.Key == item.Key)
                         throw new ArgumentException("检测到哈希值碰撞。");
-                    if (ptr.Key < item.Key)
+                    if (item.Key < ptr.Key)
                         max = (min + max) / 2 - 1;
                     else
                         min = (min + max) / 2 + 1;
@@ -165,7 +172,7 @@ namespace LAN_Spy.Model.Classes {
 
             temp.TrimExcess();
             _isReadEnabled = false;
-            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _readerCount != 0);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, () => _readerCount != 0);
             _table = temp.ToArray();
             _isReadEnabled = true;
         }
@@ -187,12 +194,12 @@ namespace LAN_Spy.Model.Classes {
                     temp.Remove(ptr);
                     temp.TrimExcess();
                     _isReadEnabled = false;
-                    new WaitTimeoutChecker(30000).ThreadSleep(100, func => _readerCount != 0);
+                    new WaitTimeoutChecker(30000).ThreadSleep(100, () => _readerCount != 0);
                     _table = temp.ToArray();
                     _isReadEnabled = true;
                     return;
                 }
-                if (ptr.Key < key)
+                if (key < ptr.Key)
                     max = (min + max) / 2 - 1;
                 else
                     min = (min + max) / 2 + 1;
@@ -204,7 +211,7 @@ namespace LAN_Spy.Model.Classes {
             temp.RemoveAt(min);
             temp.TrimExcess();
             _isReadEnabled = false;
-            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _readerCount != 0);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, () => _readerCount != 0);
             _table = temp.ToArray();
             _isReadEnabled = true;
         }
@@ -228,7 +235,7 @@ namespace LAN_Spy.Model.Classes {
                         temp.TrimExcess();
                         break;
                     }
-                    if (ptr.Key < key)
+                    if (key < ptr.Key)
                         max = (min + max) / 2 - 1;
                     else
                         min = (min + max) / 2 + 1;
@@ -239,9 +246,24 @@ namespace LAN_Spy.Model.Classes {
             }
 
             _isReadEnabled = false;
-            new WaitTimeoutChecker(30000).ThreadSleep(100, func => _readerCount != 0);
+            new WaitTimeoutChecker(30000).ThreadSleep(100, () => _readerCount != 0);
             _table = temp.ToArray();
             _isReadEnabled = true;
         }
+
+        /// <summary>
+        ///     清空此哈希表。
+        /// </summary>
+        public void Clear() {
+            _isReadEnabled = false;
+            new WaitTimeoutChecker(30000).ThreadSleep(100, () => _readerCount != 0);
+            _table = new KeyValuePair<int, object>[0];
+            _isReadEnabled = true;
+        }
+
+        /// <summary>
+        ///     获取哈希表的长度。
+        /// </summary>
+        public int Length => _table.Length;
     }
 }

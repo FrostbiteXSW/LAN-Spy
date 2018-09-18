@@ -2,7 +2,7 @@
     /// <summary>
     ///     注册的无重复线程名称，为 <see cref="TaskHandler" /> 内区分线程的唯一标志，必须设置在线程的 Name 属性上。
     /// </summary>
-    public enum RegistedThreadName {
+    public enum RegisteredThreadName {
         /// <summary>
         ///     在Program.cs内，用以初始化程序。
         /// </summary>

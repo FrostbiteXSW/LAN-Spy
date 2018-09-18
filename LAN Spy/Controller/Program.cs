@@ -63,12 +63,12 @@ namespace LAN_Spy.Controller {
                                     将启动线程工作的一部分分摊给子线程
                     ----------------------------------------------------------------*/
 
-                    new WaitTimeoutChecker(30000).ThreadSleep(500, func => scannerThread.IsAlive || poisonerThread.IsAlive || watcherThread.IsAlive);
+                    new WaitTimeoutChecker(30000).ThreadSleep(500, () => scannerThread.IsAlive || poisonerThread.IsAlive || watcherThread.IsAlive);
                 }
                 catch (ThreadAbortException) {
                     Environment.Exit(-1);
                 }
-            }) {Name = RegistedThreadName.ProgramInit.ToString()};
+            }) {Name = RegisteredThreadName.ProgramInit.ToString()};
             MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
             var loading = new Loading("初始化中，请稍候", task);
             loading.ShowDialog();

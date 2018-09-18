@@ -24,18 +24,21 @@
         /// </summary>
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle46 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle47 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle48 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle49 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle50 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle51 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle52 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle53 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle54 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle55 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle56 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle57 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle58 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle59 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle60 = new System.Windows.Forms.DataGridViewCellStyle();
             this.MainMenu = new System.Windows.Forms.MenuStrip();
             this.开始ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.启动所有模块ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -81,6 +84,13 @@
             this.ConnectionListMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.断开此连接ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ConnectionListUpdateTimer = new System.Windows.Forms.Timer(this.components);
+            this.阻止此连接ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.BlockTab = new System.Windows.Forms.TabPage();
+            this.BlockList = new System.Windows.Forms.DataGridView();
+            this.SrcIP = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.DstIP = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.BlockListMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.取消阻止ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainMenu.SuspendLayout();
             this.HostListMenuStrip.SuspendLayout();
             this.PoisonerTab.SuspendLayout();
@@ -95,6 +105,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.ConnectionList)).BeginInit();
             this.TargetListMenuStrip.SuspendLayout();
             this.ConnectionListMenuStrip.SuspendLayout();
+            this.BlockTab.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.BlockList)).BeginInit();
+            this.BlockListMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // MainMenu
@@ -223,7 +236,7 @@
             // 启动监视模块ToolStripMenuItem
             // 
             this.启动监视模块ToolStripMenuItem.Name = "启动监视模块ToolStripMenuItem";
-            this.启动监视模块ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.启动监视模块ToolStripMenuItem.Size = new System.Drawing.Size(200, 30);
             this.启动监视模块ToolStripMenuItem.Text = "启动模块";
             this.启动监视模块ToolStripMenuItem.Click += new System.EventHandler(this.启动监视模块ToolStripMenuItem_Click);
             // 
@@ -231,7 +244,7 @@
             // 
             this.开始监视ToolStripMenuItem.Enabled = false;
             this.开始监视ToolStripMenuItem.Name = "开始监视ToolStripMenuItem";
-            this.开始监视ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.开始监视ToolStripMenuItem.Size = new System.Drawing.Size(200, 30);
             this.开始监视ToolStripMenuItem.Text = "开始监视";
             this.开始监视ToolStripMenuItem.Click += new System.EventHandler(this.开始监视ToolStripMenuItem_Click);
             this.开始监视ToolStripMenuItem.EnabledChanged += new System.EventHandler(this.开始监视ToolStripMenuItem_EnabledChanged);
@@ -240,7 +253,7 @@
             // 
             this.过滤本机流量ToolStripMenuItem.CheckOnClick = true;
             this.过滤本机流量ToolStripMenuItem.Name = "过滤本机流量ToolStripMenuItem";
-            this.过滤本机流量ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.过滤本机流量ToolStripMenuItem.Size = new System.Drawing.Size(200, 30);
             this.过滤本机流量ToolStripMenuItem.Text = "过滤本机流量";
             this.过滤本机流量ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.过滤本机流量ToolStripMenuItem_CheckedChanged);
             // 
@@ -312,38 +325,38 @@
             this.Target2List.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.Target2List.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.Target2List.BackgroundColor = System.Drawing.SystemColors.ButtonHighlight;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.Target2List.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle46.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle46.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle46.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle46.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle46.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle46.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle46.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.Target2List.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle46;
             this.Target2List.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.Target2List.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Target2IP,
             this.Target2MAC});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.Target2List.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle47.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle47.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle47.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle47.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle47.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle47.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle47.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.Target2List.DefaultCellStyle = dataGridViewCellStyle47;
             this.Target2List.Location = new System.Drawing.Point(8, 29);
             this.Target2List.Margin = new System.Windows.Forms.Padding(4);
             this.Target2List.Name = "Target2List";
             this.Target2List.ReadOnly = true;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.Target2List.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle48.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle48.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle48.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle48.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle48.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle48.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle48.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.Target2List.RowHeadersDefaultCellStyle = dataGridViewCellStyle48;
             this.Target2List.RowHeadersVisible = false;
             this.Target2List.RowTemplate.Height = 23;
             this.Target2List.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -383,38 +396,38 @@
             this.Target1List.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.Target1List.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.Target1List.BackgroundColor = System.Drawing.SystemColors.ButtonHighlight;
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.Target1List.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle49.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle49.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle49.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle49.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle49.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle49.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle49.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.Target1List.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle49;
             this.Target1List.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.Target1List.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Target1IP,
             this.Target1MAC});
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.Target1List.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle50.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle50.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle50.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle50.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle50.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle50.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle50.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.Target1List.DefaultCellStyle = dataGridViewCellStyle50;
             this.Target1List.Location = new System.Drawing.Point(8, 29);
             this.Target1List.Margin = new System.Windows.Forms.Padding(4);
             this.Target1List.Name = "Target1List";
             this.Target1List.ReadOnly = true;
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.Target1List.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle51.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle51.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle51.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle51.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle51.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle51.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle51.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.Target1List.RowHeadersDefaultCellStyle = dataGridViewCellStyle51;
             this.Target1List.RowHeadersVisible = false;
             this.Target1List.RowTemplate.Height = 23;
             this.Target1List.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -454,39 +467,39 @@
             this.HostList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.HostList.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.HostList.BackgroundColor = System.Drawing.SystemColors.ButtonHighlight;
-            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle7.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.HostList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle52.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle52.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle52.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle52.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle52.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle52.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle52.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.HostList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle52;
             this.HostList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.HostList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.HostIP,
             this.HostMAC,
             this.Information});
-            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle8.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.HostList.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle53.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle53.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle53.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle53.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle53.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle53.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle53.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.HostList.DefaultCellStyle = dataGridViewCellStyle53;
             this.HostList.Location = new System.Drawing.Point(9, 9);
             this.HostList.Margin = new System.Windows.Forms.Padding(4);
             this.HostList.Name = "HostList";
             this.HostList.ReadOnly = true;
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle9.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.HostList.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle54.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle54.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle54.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle54.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle54.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle54.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle54.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.HostList.RowHeadersDefaultCellStyle = dataGridViewCellStyle54;
             this.HostList.RowHeadersVisible = false;
             this.HostList.RowTemplate.Height = 23;
             this.HostList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -516,6 +529,7 @@
             this.MainTabContainer.Controls.Add(this.ScannerTab);
             this.MainTabContainer.Controls.Add(this.PoisonerTab);
             this.MainTabContainer.Controls.Add(this.WatcherTab);
+            this.MainTabContainer.Controls.Add(this.BlockTab);
             this.MainTabContainer.Location = new System.Drawing.Point(0, 40);
             this.MainTabContainer.Margin = new System.Windows.Forms.Padding(4);
             this.MainTabContainer.Name = "MainTabContainer";
@@ -543,38 +557,38 @@
             this.ConnectionList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.ConnectionList.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
             this.ConnectionList.BackgroundColor = System.Drawing.SystemColors.ButtonHighlight;
-            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle10.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle10.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle10.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle10.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle10.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle10.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.ConnectionList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle10;
+            dataGridViewCellStyle55.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle55.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle55.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle55.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle55.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle55.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle55.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.ConnectionList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle55;
             this.ConnectionList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.ConnectionList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.SrcAddress,
             this.DstAddress});
-            dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle11.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle11.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle11.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle11.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle11.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle11.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.ConnectionList.DefaultCellStyle = dataGridViewCellStyle11;
+            dataGridViewCellStyle56.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle56.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle56.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle56.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle56.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle56.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle56.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.ConnectionList.DefaultCellStyle = dataGridViewCellStyle56;
             this.ConnectionList.Location = new System.Drawing.Point(9, 9);
             this.ConnectionList.Margin = new System.Windows.Forms.Padding(4);
             this.ConnectionList.Name = "ConnectionList";
             this.ConnectionList.ReadOnly = true;
-            dataGridViewCellStyle12.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle12.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle12.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            dataGridViewCellStyle12.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle12.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle12.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle12.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.ConnectionList.RowHeadersDefaultCellStyle = dataGridViewCellStyle12;
+            dataGridViewCellStyle57.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle57.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle57.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle57.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle57.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle57.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle57.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.ConnectionList.RowHeadersDefaultCellStyle = dataGridViewCellStyle57;
             this.ConnectionList.RowHeadersVisible = false;
             this.ConnectionList.RowTemplate.Height = 23;
             this.ConnectionList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -617,9 +631,10 @@
             // 
             this.ConnectionListMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.ConnectionListMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.断开此连接ToolStripMenuItem});
+            this.断开此连接ToolStripMenuItem,
+            this.阻止此连接ToolStripMenuItem});
             this.ConnectionListMenuStrip.Name = "ConnectionListMenuStrip";
-            this.ConnectionListMenuStrip.Size = new System.Drawing.Size(171, 32);
+            this.ConnectionListMenuStrip.Size = new System.Drawing.Size(171, 60);
             this.ConnectionListMenuStrip.Closed += new System.Windows.Forms.ToolStripDropDownClosedEventHandler(this.ConnectionListMenuStrip_Closed);
             this.ConnectionListMenuStrip.Opened += new System.EventHandler(this.ContextMenuStrip_Opened);
             // 
@@ -634,6 +649,98 @@
             // 
             this.ConnectionListUpdateTimer.Interval = 1000;
             this.ConnectionListUpdateTimer.Tick += new System.EventHandler(this.ConnectionListUpdateTimer_Tick);
+            // 
+            // 阻止此连接ToolStripMenuItem
+            // 
+            this.阻止此连接ToolStripMenuItem.Name = "阻止此连接ToolStripMenuItem";
+            this.阻止此连接ToolStripMenuItem.Size = new System.Drawing.Size(240, 28);
+            this.阻止此连接ToolStripMenuItem.Text = "阻止此连接";
+            this.阻止此连接ToolStripMenuItem.Click += new System.EventHandler(this.阻止此连接ToolStripMenuItem_Click);
+            // 
+            // BlockTab
+            // 
+            this.BlockTab.Controls.Add(this.BlockList);
+            this.BlockTab.Location = new System.Drawing.Point(4, 28);
+            this.BlockTab.Name = "BlockTab";
+            this.BlockTab.Padding = new System.Windows.Forms.Padding(3);
+            this.BlockTab.Size = new System.Drawing.Size(868, 474);
+            this.BlockTab.TabIndex = 3;
+            this.BlockTab.Text = "阻止列表";
+            this.BlockTab.UseVisualStyleBackColor = true;
+            // 
+            // BlockList
+            // 
+            this.BlockList.AllowUserToAddRows = false;
+            this.BlockList.AllowUserToDeleteRows = false;
+            this.BlockList.AllowUserToResizeRows = false;
+            this.BlockList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.BlockList.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.DisplayedCells;
+            this.BlockList.BackgroundColor = System.Drawing.SystemColors.ButtonHighlight;
+            dataGridViewCellStyle58.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle58.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle58.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle58.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle58.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle58.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle58.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.BlockList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle58;
+            this.BlockList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.BlockList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.SrcIP,
+            this.DstIP});
+            dataGridViewCellStyle59.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle59.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle59.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle59.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle59.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle59.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle59.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.BlockList.DefaultCellStyle = dataGridViewCellStyle59;
+            this.BlockList.Location = new System.Drawing.Point(9, 9);
+            this.BlockList.Margin = new System.Windows.Forms.Padding(4);
+            this.BlockList.Name = "BlockList";
+            this.BlockList.ReadOnly = true;
+            dataGridViewCellStyle60.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle60.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle60.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            dataGridViewCellStyle60.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle60.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle60.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle60.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.BlockList.RowHeadersDefaultCellStyle = dataGridViewCellStyle60;
+            this.BlockList.RowHeadersVisible = false;
+            this.BlockList.RowTemplate.Height = 23;
+            this.BlockList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.BlockList.Size = new System.Drawing.Size(846, 448);
+            this.BlockList.TabIndex = 4;
+            // 
+            // SrcIP
+            // 
+            this.SrcIP.HeaderText = "源地址";
+            this.SrcIP.Name = "SrcIP";
+            this.SrcIP.ReadOnly = true;
+            // 
+            // DstIP
+            // 
+            this.DstIP.HeaderText = "目标地址";
+            this.DstIP.Name = "DstIP";
+            this.DstIP.ReadOnly = true;
+            // 
+            // BlockListMenuStrip
+            // 
+            this.BlockListMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.BlockListMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.取消阻止ToolStripMenuItem});
+            this.BlockListMenuStrip.Name = "TargetListMenuStrip";
+            this.BlockListMenuStrip.Size = new System.Drawing.Size(241, 65);
+            this.BlockListMenuStrip.Opened += new System.EventHandler(this.ContextMenuStrip_Opened);
+            // 
+            // 取消阻止ToolStripMenuItem
+            // 
+            this.取消阻止ToolStripMenuItem.Name = "取消阻止ToolStripMenuItem";
+            this.取消阻止ToolStripMenuItem.Size = new System.Drawing.Size(240, 28);
+            this.取消阻止ToolStripMenuItem.Text = "取消阻止";
+            this.取消阻止ToolStripMenuItem.Click += new System.EventHandler(this.取消阻止ToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -667,6 +774,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.ConnectionList)).EndInit();
             this.TargetListMenuStrip.ResumeLayout(false);
             this.ConnectionListMenuStrip.ResumeLayout(false);
+            this.BlockTab.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.BlockList)).EndInit();
+            this.BlockListMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -706,8 +816,6 @@
         private System.Windows.Forms.ToolStripMenuItem 断开此连接ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 开始毒化ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 开始监视ToolStripMenuItem;
-        private System.Windows.Forms.DataGridViewTextBoxColumn SrcAddress;
-        private System.Windows.Forms.DataGridViewTextBoxColumn DstAddress;
         private System.Windows.Forms.DataGridView Target2List;
         private System.Windows.Forms.DataGridView Target1List;
         private System.Windows.Forms.DataGridViewTextBoxColumn Target2IP;
@@ -719,5 +827,14 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Information;
         private System.Windows.Forms.Timer ConnectionListUpdateTimer;
         private System.Windows.Forms.ToolStripMenuItem 过滤本机流量ToolStripMenuItem;
+        private System.Windows.Forms.DataGridViewTextBoxColumn SrcAddress;
+        private System.Windows.Forms.DataGridViewTextBoxColumn DstAddress;
+        private System.Windows.Forms.TabPage BlockTab;
+        private System.Windows.Forms.DataGridView BlockList;
+        private System.Windows.Forms.DataGridViewTextBoxColumn SrcIP;
+        private System.Windows.Forms.DataGridViewTextBoxColumn DstIP;
+        private System.Windows.Forms.ToolStripMenuItem 阻止此连接ToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip BlockListMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem 取消阻止ToolStripMenuItem;
     }
 }

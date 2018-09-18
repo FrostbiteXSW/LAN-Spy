@@ -58,7 +58,7 @@ namespace LAN_Spy.Model.Classes {
                 if (!(_deviceList is null)) return _deviceList;
 
                 // 若设备列表实例被占用，则等待
-                new WaitTimeoutChecker(30000).ThreadSleep(500, func => {
+                new WaitTimeoutChecker(30000).ThreadSleep(500, () => {
                     try { _deviceList = CaptureDeviceList.New(); }
                     catch (PcapException) { }
                     return _deviceList is null;
