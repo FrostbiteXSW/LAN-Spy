@@ -52,7 +52,8 @@ namespace LAN_Spy.View {
             new Thread(getDeviceInfo => {
                 var collection = new List<string>();
                 foreach (var dev in CaptureDeviceList.Instance) {
-                    collection.Add(((WinPcapDevice) dev).Interface.FriendlyName);
+                    var devInterface = ((WinPcapDevice) dev).Interface;
+                    collection.Add(devInterface.FriendlyName ?? devInterface.Name);
                     _devName.Add(dev.Name);
                     var buf = dev.ToString();
                     buf = buf.Replace("\n\n", "\n");
