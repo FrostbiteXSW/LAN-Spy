@@ -1,13 +1,13 @@
-﻿using LAN_Spy.Model.Classes;
-using PacketDotNet;
-using PacketDotNet.Utils;
-using SharpPcap;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading;
+using LAN_Spy.Model.Classes;
+using PacketDotNet;
+using PacketDotNet.Utils;
+using SharpPcap;
 
 namespace LAN_Spy.Model {
     /// <inheritdoc />
@@ -15,6 +15,13 @@ namespace LAN_Spy.Model {
     ///     ARP毒化器。
     /// </summary>
     public class Poisoner : BasicClass {
+        /// <summary>
+        ///     转发线程中对数据包到达事件的委托。
+        /// </summary>
+        /// <param name="packet">要处理的到达数据包</param>
+        /// <param name="isHandled">表示此数据包是否已被处理不再需要转发。</param>
+        public delegate void OnPacketReceive(Packet packet, out bool isHandled);
+
         /// <summary>
         ///     毒化线程句柄。
         /// </summary>
@@ -24,16 +31,11 @@ namespace LAN_Spy.Model {
         ///     包转发线程句柄。
         /// </summary>
         private readonly List<Thread> _retransmissionThreads = new List<Thread>();
-        
+
         /// <summary>
         ///     毒化目标缓存。
         /// </summary>
         private readonly List<Host> _target1 = new List<Host>(), _target2 = new List<Host>();
-        
-        /// <summary>
-        ///     供转发线程使用的 <see cref="IPAddress"/> 二分查找哈希表。
-        /// </summary>
-        private HashTable _hashTable;
 
         /// <summary>
         ///     使用设备缓存。
@@ -49,6 +51,11 @@ namespace LAN_Spy.Model {
         ///     默认网关缓存。
         /// </summary>
         private Host _gateway;
+
+        /// <summary>
+        ///     供转发线程使用的 <see cref="IPAddress" /> 二分查找哈希表。
+        /// </summary>
+        private HashTable _hashTable;
 
         /// <summary>
         ///     默认网关。
@@ -93,9 +100,9 @@ namespace LAN_Spy.Model {
 
 
             // 深复制以缓存网关
-            _gateway = Gateway == null ? 
-                                  new Host(new IPAddress(new byte[] {0, 0, 0, 0}), new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0})) : 
-                                  new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
+            _gateway = Gateway == null ?
+                new Host(new IPAddress(new byte[] {0, 0, 0, 0}), new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0})) :
+                new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
 
             // 缓存并打开当前设备
             _device = StartCapture("arp [6:2] = 1 or ip");
@@ -203,7 +210,7 @@ namespace LAN_Spy.Model {
                                 OnIPv4PacketReceive.Invoke(ipv4Packet, out var isHandled);
                                 if (isHandled) continue;
                             }
-                            
+
                             // 组1或组2接收的数据包
                             if (_hashTable[ipv4Packet.DestinationAddress.GetHashCode()] is Host dest)
                                 ether.DestinationHwAddress = dest.PhysicalAddress;
@@ -221,9 +228,9 @@ namespace LAN_Spy.Model {
                         else if (ether.Type == EthernetPacketType.Arp) {
                             // 解析ARP包
                             var arp = (ARPPacket) ether.PayloadPacket;
-                            
+
                             // 非两组间发送的数据包，跳过
-                            if (_hashTable[arp.SenderProtocolAddress.GetHashCode()] is null 
+                            if (_hashTable[arp.SenderProtocolAddress.GetHashCode()] is null
                                 || _hashTable[arp.TargetProtocolAddress.GetHashCode()] is null)
                                 continue;
 
@@ -251,7 +258,9 @@ namespace LAN_Spy.Model {
                     }
                     else
                         // 队列尚未获得数据，挂起等待
+                    {
                         Thread.Sleep(100);
+                    }
                 }
             }
             catch (ThreadAbortException) { }
@@ -303,13 +312,6 @@ namespace LAN_Spy.Model {
             Gateway = null;
             ClearCaptures();
         }
-
-        /// <summary>
-        ///     转发线程中对数据包到达事件的委托。
-        /// </summary>
-        /// <param name="packet">要处理的到达数据包</param>
-        /// <param name="isHandled">表示此数据包是否已被处理不再需要转发。</param>
-        public delegate void OnPacketReceive(Packet packet, out bool isHandled);
 
         /// <summary>
         ///     转发线程遇到IPv4数据包时触发的事件。

@@ -18,7 +18,7 @@ namespace LAN_Spy.Model {
         ///     监测到的可能存在，仍等待进一步确认的Tcp连接列表，键值表示监测到的次数。
         /// </summary>
         private readonly Dictionary<TcpLink, int> _possibleTcpLinks = new Dictionary<TcpLink, int>(new TcpLinkEqualityComparer());
-        
+
         /// <summary>
         ///     监测到的Tcp连接列表。
         /// </summary>
@@ -48,26 +48,7 @@ namespace LAN_Spy.Model {
                 lock (_tcpLinks) {
                     tcpLinksCopy.AddRange(_tcpLinks);
                 }
-                tcpLinksCopy.Sort((a, b) => {
-                    // 比较源地址
-                    var result = string.CompareOrdinal(a.SrcAddress.ToString(), b.SrcAddress.ToString());
-                    if (result != 0) return result;
-
-                    // 比较源端口
-                    if (a.SrcPort > b.SrcPort) return 1;
-                    if (a.SrcPort < b.SrcPort) return -1;
-
-                    // 比较目标地址
-                    result = string.CompareOrdinal(a.DstAddress.ToString(), b.DstAddress.ToString());
-                    if (result != 0) return result;
-
-                    // 比较目标端口
-                    if (a.DstPort > b.DstPort) return 1;
-                    if (a.DstPort < b.DstPort) return -1;
-
-                    // 相等元素（理论上不可达，若出现此现象请检查）
-                    return 0;
-                });
+                tcpLinksCopy.Sort(TcpLink.SortMethod);
                 return tcpLinksCopy.AsReadOnly();
             }
         }
@@ -171,7 +152,9 @@ namespace LAN_Spy.Model {
                                         }
                                         else
                                             // 检测到Fin或Rst标志且Ack标志激活，则此连接的终止已被接受，移除连接
+                                        {
                                             _tcpLinks.Remove(tcpLink);
+                                        }
                                     }
                                 }
                             }
@@ -202,7 +185,9 @@ namespace LAN_Spy.Model {
                     }
                     else
                         // 队列尚未获得数据，挂起等待
+                    {
                         Thread.Sleep(100);
+                    }
                 }
             }
             catch (ThreadAbortException) { }

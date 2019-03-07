@@ -8,9 +8,9 @@ namespace LAN_Spy.Model.Classes {
     /// </summary>
     public class HashTable {
         /// <summary>
-        ///     存放哈希值及其对应对象的哈希表。
+        ///     当前是否允许读（表示是否要进入临界区写）。
         /// </summary>
-        private KeyValuePair<int, object>[] _table;
+        private bool _isReadEnabled = true;
 
         /// <summary>
         ///     当前读线程的个数。
@@ -18,48 +18,19 @@ namespace LAN_Spy.Model.Classes {
         private int _readerCount;
 
         /// <summary>
-        ///     当前是否允许读（表示是否要进入临界区写）。
+        ///     存放哈希值及其对应对象的哈希表。
         /// </summary>
-        private bool _isReadEnabled = true; 
+        private KeyValuePair<int, object>[] _table;
 
         /// <summary>
-        ///     折半查找哈希值对应的对象。
-        /// </summary>
-        /// <param name="key">指定对象的哈希值。</param>
-        /// <returns>哈希值对应的对象，若未找到则返回 <see langword="null"/> 。</returns>
-        public object this[int key] {
-            get {
-                while (!_isReadEnabled)
-                    Thread.Sleep(100);
-                _readerCount++;
-
-                int min = 0, max = _table.Length - 1;
-                while (min <= max) {
-                    var ptr = _table[(min + max) / 2];
-                    if (key == ptr.Key) {
-                        _readerCount--;
-                        return ptr.Value;
-                    }
-                    if (key < ptr.Key)
-                        max = (min + max) / 2 - 1;
-                    else
-                        min = (min + max) / 2 + 1;
-                }
-
-                _readerCount--;
-                return null;
-            }
-        }
-        
-        /// <summary>
-        ///     初始化 <see cref="HashTable"/> 对象的空实例。
+        ///     初始化 <see cref="HashTable" /> 对象的空实例。
         /// </summary>
         public HashTable() {
             _table = new KeyValuePair<int, object>[0];
         }
 
         /// <summary>
-        ///     以一组对象初始化 <see cref="HashTable"/> 对象的实例。
+        ///     以一组对象初始化 <see cref="HashTable" /> 对象的实例。
         /// </summary>
         /// <param name="objects">对象集合。</param>
         /// <exception cref="ArgumentException">检测到哈希值碰撞。</exception>
@@ -96,6 +67,40 @@ namespace LAN_Spy.Model.Classes {
             temp.TrimExcess();
             _table = temp.ToArray();
         }
+
+        /// <summary>
+        ///     折半查找哈希值对应的对象。
+        /// </summary>
+        /// <param name="key">指定对象的哈希值。</param>
+        /// <returns>哈希值对应的对象，若未找到则返回 <see langword="null" /> 。</returns>
+        public object this[int key] {
+            get {
+                while (!_isReadEnabled)
+                    Thread.Sleep(100);
+                _readerCount++;
+
+                int min = 0, max = _table.Length - 1;
+                while (min <= max) {
+                    var ptr = _table[(min + max) / 2];
+                    if (key == ptr.Key) {
+                        _readerCount--;
+                        return ptr.Value;
+                    }
+                    if (key < ptr.Key)
+                        max = (min + max) / 2 - 1;
+                    else
+                        min = (min + max) / 2 + 1;
+                }
+
+                _readerCount--;
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///     获取哈希表的长度。
+        /// </summary>
+        public int Length => _table.Length;
 
         /// <summary>
         ///     向表中插入一个新对象并关闭读权限直到插入完成。
@@ -205,7 +210,7 @@ namespace LAN_Spy.Model.Classes {
                     min = (min + max) / 2 + 1;
             }
 
-            if (key != temp[min].Key) 
+            if (key != temp[min].Key)
                 throw new KeyNotFoundException("未找到指定对象的哈希值。");
 
             temp.RemoveAt(min);
@@ -224,7 +229,7 @@ namespace LAN_Spy.Model.Classes {
         public void RemoveRange(IEnumerable<int> keys) {
             var temp = new List<KeyValuePair<int, object>>(_table);
             foreach (var key in keys) {
-                if (temp.Count == 0) 
+                if (temp.Count == 0)
                     throw new KeyNotFoundException("未找到指定对象的哈希值。");
 
                 int min = 0, max = temp.Count - 1;
@@ -241,7 +246,7 @@ namespace LAN_Spy.Model.Classes {
                         min = (min + max) / 2 + 1;
                 }
 
-                if (min > max) 
+                if (min > max)
                     throw new KeyNotFoundException("未找到指定对象的哈希值。");
             }
 
@@ -260,10 +265,5 @@ namespace LAN_Spy.Model.Classes {
             _table = new KeyValuePair<int, object>[0];
             _isReadEnabled = true;
         }
-
-        /// <summary>
-        ///     获取哈希表的长度。
-        /// </summary>
-        public int Length => _table.Length;
     }
 }

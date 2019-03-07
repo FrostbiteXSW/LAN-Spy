@@ -100,9 +100,9 @@ namespace LAN_Spy.Model {
                 }
 
                 // 最后一个发送线程
-                var lastsendThread = new Thread(ScanPacketSendThread);
-                lastsendThread.Start(ipAddresses);
-                sendThreads.Add(lastsendThread);
+                var lastSendThread = new Thread(ScanPacketSendThread);
+                lastSendThread.Start(ipAddresses);
+                sendThreads.Add(lastSendThread);
 
                 // 等待数据包发送完成
                 new WaitTimeoutChecker((int) (60 * 1000 * Math.Log(AddressCount, 254))).ThreadSleep(500, () => sendThreads.Any(item => item.IsAlive));
@@ -123,7 +123,7 @@ namespace LAN_Spy.Model {
 
                 // 清理缓冲区及其他内容
                 lock (_hostList) {
-                    _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
+                    _hostList.Sort(Host.SortMethod);
                 }
                 StopCapture(device);
                 ClearCaptures();
@@ -171,7 +171,7 @@ namespace LAN_Spy.Model {
 
                 // 清理缓冲区及其他内容
                 lock (_hostList) {
-                    _hostList.Sort((a, b) => string.CompareOrdinal(a.IPAddress.ToString(), b.IPAddress.ToString()));
+                    _hostList.Sort(Host.SortMethod);
                 }
                 StopCapture(device);
                 ClearCaptures();

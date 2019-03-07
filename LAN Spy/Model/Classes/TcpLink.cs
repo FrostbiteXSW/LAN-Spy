@@ -1,7 +1,7 @@
-﻿using PacketDotNet;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using PacketDotNet;
 
 namespace LAN_Spy.Model.Classes {
     /// <summary>
@@ -61,25 +61,78 @@ namespace LAN_Spy.Model.Classes {
         }
 
         /// <summary>
-        ///     比较指定 <see cref="TcpLink"/> 对象是否与当前对象相同。
+        ///     比较指定 <see cref="TcpLink" /> 对象是否与当前对象相同。
         /// </summary>
         /// <param name="obj">需要比较的对象。</param>
-        /// <returns>如果两个对象表示的连接相同返回 <see langword="true"/>，否则返回<see langword="false"/>。</returns>
+        /// <returns>如果两个对象表示的连接相同返回 <see langword="true" />，否则返回<see langword="false" />。</returns>
         public bool Equals(TcpLink obj) {
             if (obj is null) return false;
 
-            return obj.SrcAddress.Equals(SrcAddress) 
-                   && obj.SrcPort.Equals(SrcPort) 
-                   && obj.DstAddress.Equals(DstAddress) 
+            return obj.SrcAddress.Equals(SrcAddress)
+                   && obj.SrcPort.Equals(SrcPort)
+                   && obj.DstAddress.Equals(DstAddress)
                    && obj.DstPort.Equals(DstPort);
         }
-        
+
         /// <summary>
         ///     获取对象的哈希值。
         /// </summary>
         /// <returns>对象的哈希值。</returns>
         public override int GetHashCode() {
             return (SrcAddress.ToString() + DstAddress + SrcPort + DstPort).GetHashCode();
+        }
+
+        /// <summary>
+        ///     为 <see cref="TcpLink" /> 对象排序提供比较方法
+        /// </summary>
+        /// <param name="a">第一个排序对象</param>
+        /// <param name="b">第二个排序对象</param>
+        /// <returns>默认以IP地址及端口升序规则返回结果</returns>
+        public static int SortMethod(TcpLink a, TcpLink b) {
+            int result;
+
+            // 比较源地址
+            var aBytes = a.SrcAddress.GetAddressBytes();
+            var bBytes = b.SrcAddress.GetAddressBytes();
+            try {
+                for (var i = 0; i < 4; i++) {
+                    if ((aBytes[i] & 0xFF) < (bBytes[i] & 0xFF))
+                        return -1;
+                    if ((aBytes[i] & 0xFF) > (bBytes[i] & 0xFF))
+                        return 1;
+                }
+            }
+            catch (Exception) {
+                result = string.CompareOrdinal(a.SrcAddress.ToString(), b.SrcAddress.ToString());
+                if (result != 0) return result;
+            }
+
+            // 比较源端口
+            if (a.SrcPort > b.SrcPort) return 1;
+            if (a.SrcPort < b.SrcPort) return -1;
+
+            // 比较目标地址
+            aBytes = a.DstAddress.GetAddressBytes();
+            bBytes = b.DstAddress.GetAddressBytes();
+            try {
+                for (var i = 0; i < 4; i++) {
+                    if ((aBytes[i] & 0xFF) < (bBytes[i] & 0xFF))
+                        return -1;
+                    if ((aBytes[i] & 0xFF) > (bBytes[i] & 0xFF))
+                        return 1;
+                }
+            }
+            catch (Exception) {
+                result = string.CompareOrdinal(a.SrcAddress.ToString(), b.SrcAddress.ToString());
+                if (result != 0) return result;
+            }
+
+            // 比较目标端口
+            if (a.DstPort > b.DstPort) return 1;
+            if (a.DstPort < b.DstPort) return -1;
+
+            // 相等元素（理论上不可达，若出现此现象请检查）
+            return 0;
         }
     }
 
@@ -92,9 +145,9 @@ namespace LAN_Spy.Model.Classes {
             if (x is null || y is null)
                 return x is null && y is null;
 
-            return x.SrcAddress.Equals(y.SrcAddress) 
-                   && x.SrcPort.Equals(y.SrcPort) 
-                   && x.DstAddress.Equals(y.DstAddress) 
+            return x.SrcAddress.Equals(y.SrcAddress)
+                   && x.SrcPort.Equals(y.SrcPort)
+                   && x.DstAddress.Equals(y.DstAddress)
                    && x.DstPort.Equals(y.DstPort);
         }
 

@@ -1,11 +1,4 @@
-﻿using LAN_Spy.Controller;
-using LAN_Spy.Controller.Classes;
-using LAN_Spy.Model;
-using LAN_Spy.Model.Classes;
-using PacketDotNet;
-using SharpPcap;
-using SharpPcap.WinPcap;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -13,10 +6,22 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using LAN_Spy.Controller;
+using LAN_Spy.Controller.Classes;
+using LAN_Spy.Model;
+using LAN_Spy.Model.Classes;
+using PacketDotNet;
+using SharpPcap;
+using SharpPcap.WinPcap;
 using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View {
     public partial class MainForm : Form {
+        /// <summary>
+        ///     阻止的连接列表
+        /// </summary>
+        private readonly HashTable _blockTable = new HashTable();
+
         /// <inheritdoc />
         /// <summary>
         ///     初始化 <see cref="MainForm" /> 窗口。
@@ -132,8 +137,9 @@ namespace LAN_Spy.View {
                 添加到目标组2ToolStripMenuItem.Enabled = true;
                 阻止此连接ToolStripMenuItem.Enabled = true;
             }
-            else
+            else {
                 MessageBox.Show("一个或多个模块未能成功初始化，请单独启动模块。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
@@ -160,15 +166,15 @@ namespace LAN_Spy.View {
 
             // 等待结果
             if (!new WaitTimeoutChecker(30000).ThreadSleep(500, () => {
-                    var msg = MessagePipe.GetNextOutMessage(task);
-                    switch (msg) {
-                        case Message.NoAvailableMessage:
-                            return true;
-                        case Message.TaskOut:
-                            return false;
-                        default:
-                            throw new Exception($"无效的消息类型：{msg}");
-                    }
+                var msg = MessagePipe.GetNextOutMessage(task);
+                switch (msg) {
+                    case Message.NoAvailableMessage:
+                        return true;
+                    case Message.TaskOut:
+                        return false;
+                    default:
+                        throw new Exception($"无效的消息类型：{msg}");
+                }
             }))
                 Environment.Exit(-1);
 
@@ -318,7 +324,7 @@ namespace LAN_Spy.View {
                             throw new Exception($"无效的消息类型：{msg}");
                     }
                 });
-                
+
                 // 模块已停止
                 MessagePipe.ClearAllMessage(task);
                 MessageBox.Show("模块已停止。", "消息", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -387,7 +393,7 @@ namespace LAN_Spy.View {
             // 等待结果
             var result = Message.NoAvailableMessage;
             new WaitTimeoutChecker(30000).ThreadSleep(500, () => (result = MessagePipe.GetNextOutMessage(task)) == Message.NoAvailableMessage);
-            
+
             // 用户取消
             if (result == Message.UserCancel) {
                 MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskCancel, task));
@@ -1074,16 +1080,11 @@ namespace LAN_Spy.View {
             // 恢复列表更新
             ConnectionListUpdateTimer.Start();
         }
-        
-        /// <summary>
-        ///     阻止的连接列表
-        /// </summary>
-        private readonly HashTable _blockTable = new HashTable();
-        
+
         /// <summary>
         ///     毒化器处理IPv4数据包到达事件的方法。
         /// </summary>
-        /// <param name="packet">到达的 <see cref="IPv4Packet"/> 类型数据包。</param>
+        /// <param name="packet">到达的 <see cref="IPv4Packet" /> 类型数据包。</param>
         /// <param name="isHandled">指示数据包是否已被处理并且不需要被转发。</param>
         private void Poisoner_OnIPv4PacketReceive(Packet packet, out bool isHandled) {
             isHandled = false;
@@ -1096,7 +1097,7 @@ namespace LAN_Spy.View {
                 || !(_blockTable[(ipv4.DestinationAddress.ToString() + ipv4.SourceAddress).GetHashCode()] is null))
                 isHandled = true;
         }
-        
+
         /// <summary>
         ///     菜单项“阻止此连接”单击时的事件。
         /// </summary>
@@ -1104,12 +1105,12 @@ namespace LAN_Spy.View {
         /// <param name="e">事件的参数。</param>
         private void 阻止此连接ToolStripMenuItem_Click(object sender, EventArgs e) {
             var needInit = _blockTable.Length == 0;
-            
+
             foreach (DataGridViewRow row in ConnectionList.SelectedRows) {
                 string srcIP = row.Cells["SrcAddress"].Value.ToString().Substring(0, row.Cells["SrcAddress"].Value.ToString().IndexOf(':')),
-                       dstIP = row.Cells["DstAddress"].Value.ToString().Substring(0, row.Cells["DstAddress"].Value.ToString().IndexOf(':'));
-                
-                if (!(_blockTable[(srcIP + dstIP).GetHashCode()] is null)) 
+                    dstIP = row.Cells["DstAddress"].Value.ToString().Substring(0, row.Cells["DstAddress"].Value.ToString().IndexOf(':'));
+
+                if (!(_blockTable[(srcIP + dstIP).GetHashCode()] is null))
                     continue;
 
                 var target = new DataGridViewRow();
@@ -1117,7 +1118,7 @@ namespace LAN_Spy.View {
                 target.Cells.Add(new DataGridViewTextBoxCell {Value = srcIP});
                 target.Cells.Add(new DataGridViewTextBoxCell {Value = dstIP});
                 target.ContextMenuStrip = BlockListMenuStrip;
-                
+
                 BlockList.Rows.Add(target);
                 _blockTable.Add((srcIP + dstIP).GetHashCode(), target);
             }
@@ -1125,7 +1126,7 @@ namespace LAN_Spy.View {
             if (needInit)
                 Poisoner.OnIPv4PacketReceive += Poisoner_OnIPv4PacketReceive;
         }
-        
+
         /// <summary>
         ///     菜单项“取消阻止”单击时的事件。
         /// </summary>
