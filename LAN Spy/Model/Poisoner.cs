@@ -101,8 +101,8 @@ namespace LAN_Spy.Model {
 
             // 深复制以缓存网关
             _gateway = Gateway == null ?
-                new Host(new IPAddress(new byte[] {0, 0, 0, 0}), new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0})) :
-                new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
+                           new Host(new IPAddress(new byte[] {0, 0, 0, 0}), new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0})) :
+                           new Host(Gateway.IPAddress, Gateway.PhysicalAddress);
 
             // 缓存并打开当前设备
             _device = StartCapture("arp [6:2] = 1 or ip");
@@ -141,13 +141,13 @@ namespace LAN_Spy.Model {
 
             // 构建包信息
             var ether = new EthernetPacket(_device.MacAddress,
-                host.PhysicalAddress,
-                EthernetPacketType.Arp);
+                                           host.PhysicalAddress,
+                                           EthernetPacketType.Arp);
             var arp = new ARPPacket(ARPOperation.Response,
-                host.PhysicalAddress,
-                host.IPAddress,
-                _device.MacAddress,
-                new IPAddress(new byte[] {0, 0, 0, 0})) {
+                                    host.PhysicalAddress,
+                                    host.IPAddress,
+                                    _device.MacAddress,
+                                    new IPAddress(new byte[] {0, 0, 0, 0})) {
                 HardwareAddressType = LinkLayers.Ethernet,
                 ProtocolAddressType = EthernetPacketType.IPv4
             };
@@ -231,19 +231,19 @@ namespace LAN_Spy.Model {
 
                             // 非两组间发送的数据包，跳过
                             if (_hashTable[arp.SenderProtocolAddress.GetHashCode()] is null
-                                || _hashTable[arp.TargetProtocolAddress.GetHashCode()] is null)
+                             || _hashTable[arp.TargetProtocolAddress.GetHashCode()] is null)
                                 continue;
 
                             // 构建包信息
                             var e = new EthernetPacket(_device.MacAddress,
-                                arp.SenderHardwareAddress,
-                                EthernetPacketType.Arp);
+                                                       arp.SenderHardwareAddress,
+                                                       EthernetPacketType.Arp);
                             e.UpdateCalculatedValues();
                             var a = new ARPPacket(ARPOperation.Response,
-                                arp.SenderHardwareAddress,
-                                arp.SenderProtocolAddress,
-                                _device.MacAddress,
-                                arp.TargetProtocolAddress) {
+                                                  arp.SenderHardwareAddress,
+                                                  arp.SenderProtocolAddress,
+                                                  _device.MacAddress,
+                                                  arp.TargetProtocolAddress) {
                                 HardwareAddressType = LinkLayers.Ethernet,
                                 ProtocolAddressType = EthernetPacketType.IPv4
                             };
@@ -266,11 +266,12 @@ namespace LAN_Spy.Model {
             catch (ThreadAbortException) { }
         }
 
+        /// <inheritdoc />
         /// <summary>
         ///     停止ARP毒化中间人攻击。
         /// </summary>
-        /// <exception cref="TimeoutException">等待线程结束超时。</exception>
-        public void StopPoisoning() {
+        /// <exception cref="T:System.TimeoutException">等待线程结束超时。</exception>
+        public override void Stop() {
             // 向毒化线程发送终止信号
             foreach (var poisonThread in _poisonThreads)
                 if (poisonThread.IsAlive)
@@ -303,10 +304,11 @@ namespace LAN_Spy.Model {
             ClearCaptures();
         }
 
+        /// <inheritdoc />
         /// <summary>
         ///     重置目标、默认网关设置并清空数据包缓冲区，不会对正在进行的毒化工作的设置造成影响。
         /// </summary>
-        public void Reset() {
+        public override void Reset() {
             Target1.Clear();
             Target2.Clear();
             Gateway = null;

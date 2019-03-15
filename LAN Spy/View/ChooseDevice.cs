@@ -134,8 +134,8 @@ namespace LAN_Spy.View {
         /// <param name="e">事件的参数。</param>
         private void DeviceList_KeyUp(object sender, KeyEventArgs e) {
             if (e.KeyCode != Keys.Enter
-                || DeviceList.SelectedIndex < 0
-                || DeviceList.SelectedIndex >= _devName.Count)
+             || DeviceList.SelectedIndex < 0
+             || DeviceList.SelectedIndex >= _devName.Count)
                 return;
             CommitButton_Click(sender, e);
             e.Handled = true;

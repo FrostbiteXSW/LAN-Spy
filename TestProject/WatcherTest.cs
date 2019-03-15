@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Threading;
 using LAN_Spy.Model;
+using LAN_Spy.Model.Classes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestProject {
@@ -14,7 +15,7 @@ namespace TestProject {
             var watcher = new Watcher {CurDevName = "WLAN"};
             watcher.StartWatching();
             Thread.Sleep(30 * 1000);
-            watcher.StopWatching();
+            ((BasicClass) watcher).Stop();
             foreach (var tcpLink in watcher.TcpLinks)
                 Trace.WriteLine(tcpLink.SrcAddress + " --> " + tcpLink.DstAddress);
             watcher.Reset();

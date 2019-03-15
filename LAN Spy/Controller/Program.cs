@@ -1,16 +1,9 @@
 ﻿//#define TEST_CONSOLE
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
-using LAN_Spy.Controller.Classes;
-using LAN_Spy.Model;
-using LAN_Spy.Model.Classes;
-using LAN_Spy.View;
+using LAN_Spy.View.MainForm;
 using SharpPcap;
-using SharpPcap.WinPcap;
 
 namespace LAN_Spy.Controller {
     internal static class Program {
@@ -35,56 +28,11 @@ namespace LAN_Spy.Controller {
                 return;
             }
 
-            // 初始化模块
-            TaskHandler.Init();
-            Scanner scanner = null;
-            Poisoner poisoner = null;
-            Watcher watcher = null;
-            var task = new Thread(load => {
-                try {
-                    var scannerThread = new Thread(init => { scanner = new Scanner(); });
-                    var poisonerThread = new Thread(init => { poisoner = new Poisoner(); });
-                    var watcherThread = new Thread(init => {
-                        scannerThread.Start();
-                        watcher = new Watcher();
-                    });
-
-                    watcherThread.Start();
-                    poisonerThread.Start();
-
-                    /*----------------------------------------------------------------
-                                               （时间段1）
-                            mainThread ---------------------------> watcherThread
-                                |                                         |
-                                |              （时间段2）                |
-                                V                                         V
-                          poisonerThread                            scannerThread
-        
-                                    将启动线程工作的一部分分摊给子线程
-                    ----------------------------------------------------------------*/
-
-                    new WaitTimeoutChecker(30000).ThreadSleep(500, () => scannerThread.IsAlive || poisonerThread.IsAlive || watcherThread.IsAlive);
-                }
-                catch (ThreadAbortException) {
-                    Environment.Exit(-1);
-                }
-            }) {Name = RegisteredThreadName.ProgramInit.ToString()};
-            MessagePipe.SendInMessage(new KeyValuePair<Message, Thread>(Message.TaskIn, task));
-            var loading = new Loading("初始化中，请稍候", task);
-            loading.ShowDialog();
-
-            // 用户取消
-            if (MessagePipe.GetNextOutMessage(task) == Message.UserCancel)
-                Environment.Exit(-1);
-
-            // 初始化完成（由loading判断得到）
-            MessagePipe.ClearAllMessage(task);
-
-            var models = new BasicClass[] {scanner, poisoner, watcher};
-            Application.Run(new MainForm(ref models));
+            Application.Run(new MainForm());
 #endif
         }
 
+#if TEST_CONSOLE
         /// <summary>
         ///     控制台用测试程序。
         /// </summary>
@@ -225,5 +173,6 @@ namespace LAN_Spy.Controller {
             }
             Console.WriteLine("Stopped. Thanks for using.");
         }
+#endif
     }
 }

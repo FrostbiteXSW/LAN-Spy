@@ -102,8 +102,8 @@ namespace LAN_Spy.Model {
 
                         // 获取IP数据包内的源地址、目标地址以及设备上的子网掩码
                         byte[] src = ipv4.SourceAddress.GetAddressBytes(),
-                            dst = ipv4.DestinationAddress.GetAddressBytes(),
-                            netmask = Netmask.GetAddressBytes();
+                               dst = ipv4.DestinationAddress.GetAddressBytes(),
+                               netmask = Netmask.GetAddressBytes();
 
                         // 通过子网掩码计算网络号
                         for (var i = 0; i < 4; i++) {
@@ -135,7 +135,7 @@ namespace LAN_Spy.Model {
                                 lock (_tcpLinks) {
                                     // 查找连接信息
                                     if (_tcpLinks.All(item => !(item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort)
-                                                              || !(item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort))) {
+                                                           || !(item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort))) {
                                         // 此连接也不存在于TCP连接列表中
                                         if (!tcp.Fin && !tcp.Rst)
                                             // 增加新连接到列表中
@@ -224,11 +224,12 @@ namespace LAN_Spy.Model {
             catch (ThreadAbortException) { }
         }
 
+        /// <inheritdoc />
         /// <summary>
         ///     停止监听网路连接并关闭设备。
         /// </summary>
-        /// <exception cref="TimeoutException">等待线程结束超时。</exception>
-        public void StopWatching() {
+        /// <exception cref="T:System.TimeoutException">等待线程结束超时。</exception>
+        public override void Stop() {
             // 向监听线程发送终止信号
             foreach (var watchThread in _watchThreads)
                 if (watchThread.IsAlive)
@@ -265,10 +266,11 @@ namespace LAN_Spy.Model {
             ClearCaptures();
         }
 
+        /// <inheritdoc />
         /// <summary>
         ///     重置TCP连接列表为空并清空数据包缓冲区。
         /// </summary>
-        public void Reset() {
+        public override void Reset() {
             lock (_tcpLinks) {
                 _tcpLinks.Clear();
             }
@@ -289,11 +291,11 @@ namespace LAN_Spy.Model {
             // 寻找指定目标
             lock (_tcpLinks) {
                 if (_tcpLinks.All(item => !(item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort)
-                                          || !(item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort)))
+                                       || !(item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort)))
                     return false;
                 ether = new EthernetPacket(_tcpLinks.Find(item => item.SrcAddress.Equals(srcAddress) && item.SrcPort == srcPort
                                                                                                      && item.DstAddress.Equals(dstAddress) && item.DstPort == dstPort)
-                    .LastPacket.BytesHighPerformance);
+                                                    .LastPacket.BytesHighPerformance);
             }
 
             // 解析包数据

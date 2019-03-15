@@ -71,13 +71,13 @@ namespace LAN_Spy.Model.Classes {
         }
 
         /// <summary>
-        ///     获取或设置当前使用的设备编号。
+        ///     获取或设置当前使用的设备名称。
         /// </summary>
         public string CurDevName {
             get => _curDevName;
             set {
                 if (value.Length != 0
-                    && DeviceList.All(device => !device.Name.Equals(value)))
+                 && DeviceList.All(device => !device.Name.Equals(value)))
                     throw new IndexOutOfRangeException("无效的设备名称。");
                 _curDevName = value;
                 if (_curDevName == "") _deviceList = null;
@@ -118,6 +118,16 @@ namespace LAN_Spy.Model.Classes {
         ///     获取当前选中设备所在网段的广播地址。
         /// </summary>
         public IPAddress BroadcastAddress => new IPAddress(_broadcastAddress.GetAddressBytes());
+
+        /// <summary>
+        ///     抽象重置方法。
+        /// </summary>
+        public abstract void Reset();
+
+        /// <summary>
+        ///     抽象停止方法。
+        /// </summary>
+        public abstract void Stop();
 
         /// <summary>
         ///     根据当前设置的设备名称对设备进行设置并开始抓包。

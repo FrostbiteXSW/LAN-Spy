@@ -27,7 +27,7 @@ namespace LAN_Spy.Model {
         public double AddressCount {
             get {
                 byte[] minAddress = NetworkNumber.GetAddressBytes(),
-                    maxAddress = BroadcastAddress.GetAddressBytes();
+                       maxAddress = BroadcastAddress.GetAddressBytes();
                 double count = maxAddress[3] - minAddress[3] + 1;
                 for (var j = 0; j < 3; j++)
                     count *= maxAddress[j] - minAddress[j] + 1;
@@ -75,14 +75,14 @@ namespace LAN_Spy.Model {
 
                 // 去除网络号和广播地址，产生地址集合
                 byte[] minAddress = NetworkNumber.GetAddressBytes(),
-                    maxAddress = BroadcastAddress.GetAddressBytes(),
-                    tempAddress = minAddress;
+                       maxAddress = BroadcastAddress.GetAddressBytes(),
+                       tempAddress = minAddress;
                 var ipAddresses = new List<IPAddress>();
                 tempAddress[3]++;
                 while (!(tempAddress[0] == maxAddress[0]
-                         && tempAddress[1] == maxAddress[1]
-                         && tempAddress[2] == maxAddress[2]
-                         && tempAddress[3] == maxAddress[3])) {
+                      && tempAddress[1] == maxAddress[1]
+                      && tempAddress[2] == maxAddress[2]
+                      && tempAddress[3] == maxAddress[3])) {
                     ipAddresses.Add(new IPAddress(tempAddress));
                     if (ipAddresses.Count >= (AddressCount / 8 >= 254 ? 254 : AddressCount / 8)) {
                         // 创建发包线程
@@ -192,13 +192,13 @@ namespace LAN_Spy.Model {
 
                 // 构建包信息
                 var ether = new EthernetPacket(device.MacAddress,
-                    new PhysicalAddress(new byte[] {255, 255, 255, 255, 255, 255}),
-                    EthernetPacketType.Arp);
+                                               new PhysicalAddress(new byte[] {255, 255, 255, 255, 255, 255}),
+                                               EthernetPacketType.Arp);
                 var arp = new ARPPacket(ARPOperation.Request,
-                    new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0}),
-                    new IPAddress(new byte[] {0, 0, 0, 0}),
-                    device.MacAddress,
-                    Ipv4Address) {
+                                        new PhysicalAddress(new byte[] {0, 0, 0, 0, 0, 0}),
+                                        new IPAddress(new byte[] {0, 0, 0, 0}),
+                                        device.MacAddress,
+                                        Ipv4Address) {
                     HardwareAddressType = LinkLayers.Ethernet,
                     ProtocolAddressType = EthernetPacketType.IPv4
                 };
@@ -245,14 +245,21 @@ namespace LAN_Spy.Model {
             catch (ThreadAbortException) { }
         }
 
+        /// <inheritdoc />
         /// <summary>
         ///     重置主机列表及数据包缓冲区。
         /// </summary>
-        public void Reset() {
+        public override void Reset() {
             lock (_hostList) {
                 _hostList.Clear();
             }
             ClearCaptures();
         }
+
+        /// <inheritdoc />
+        /// <summary>
+        ///     此方法继承自父类，而不进行任何动作。
+        /// </summary>
+        public override void Stop() { }
     }
 }

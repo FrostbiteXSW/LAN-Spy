@@ -93,16 +93,22 @@
     <Compile Include="View\ChooseDevice.Designer.cs">
       <DependentUpon>ChooseDevice.cs</DependentUpon>
     </Compile>
+    <Compile Include="View\MainForm\Poisoner.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="View\MainForm\Scanner.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="View\Loading.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="View\Loading.Designer.cs">
       <DependentUpon>Loading.cs</DependentUpon>
     </Compile>
-    <Compile Include="View\MainForm.cs">
+    <Compile Include="View\MainForm\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="View\MainForm.Designer.cs">
+    <Compile Include="View\MainForm\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\Classes\BasicClass.cs" />
@@ -113,6 +119,9 @@
     <Compile Include="Controller\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Model\Scanner.cs" />
+    <Compile Include="View\MainForm\Watcher.cs">
+      <SubType>Form</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -127,7 +136,7 @@
     <EmbeddedResource Include="View\Loading.resx">
       <DependentUpon>Loading.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="View\MainForm.resx">
+    <EmbeddedResource Include="View\MainForm\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>

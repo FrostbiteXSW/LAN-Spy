@@ -69,9 +69,9 @@ namespace LAN_Spy.Model.Classes {
             if (obj is null) return false;
 
             return obj.SrcAddress.Equals(SrcAddress)
-                   && obj.SrcPort.Equals(SrcPort)
-                   && obj.DstAddress.Equals(DstAddress)
-                   && obj.DstPort.Equals(DstPort);
+                && obj.SrcPort.Equals(SrcPort)
+                && obj.DstAddress.Equals(DstAddress)
+                && obj.DstPort.Equals(DstPort);
         }
 
         /// <summary>
@@ -146,9 +146,9 @@ namespace LAN_Spy.Model.Classes {
                 return x is null && y is null;
 
             return x.SrcAddress.Equals(y.SrcAddress)
-                   && x.SrcPort.Equals(y.SrcPort)
-                   && x.DstAddress.Equals(y.DstAddress)
-                   && x.DstPort.Equals(y.DstPort);
+                && x.SrcPort.Equals(y.SrcPort)
+                && x.DstAddress.Equals(y.DstAddress)
+                && x.DstPort.Equals(y.DstPort);
         }
 
         public int GetHashCode(TcpLink obj) {

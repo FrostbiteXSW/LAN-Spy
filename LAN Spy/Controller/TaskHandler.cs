@@ -25,50 +25,50 @@ namespace LAN_Spy.Controller {
 
                     // 根据消息类型进行处理
                     switch (message.Key) {
-                        // 新任务到达
-                        case Message.TaskIn:
-                            var task = message.Value;
-                            task.Start();
-                            lock (WorkThreads) {
-                                WorkThreads.Add(task);
-                            }
+                    // 新任务到达
+                    case Message.TaskIn:
+                        var task = message.Value;
+                        task.Start();
+                        lock (WorkThreads) {
+                            WorkThreads.Add(task);
+                        }
+                        break;
+
+                    // 取消任务
+                    case Message.TaskCancel:
+                        MessagePipe.GetNextInMessage();
+
+                        // 查找目标
+                        if (WorkThreads.All(item => item.Name != message.Value.Name)) {
+                            MessagePipe.SendOutMessage(new KeyValuePair<Message, Thread>(Message.TaskNotFound, message.Value));
                             break;
+                        }
+                        Thread target;
+                        lock (WorkThreads) {
+                            target = WorkThreads.Find(item => item.Name == message.Value.Name);
+                        }
 
-                        // 取消任务
-                        case Message.TaskCancel:
-                            MessagePipe.GetNextInMessage();
+                        // 尝试中止任务
+                        lock (WorkThreads) {
+                            WorkThreads.Remove(target);
+                        }
+                        target.Abort();
 
-                            // 查找目标
-                            if (WorkThreads.All(item => item.Name != message.Value.Name)) {
-                                MessagePipe.SendOutMessage(new KeyValuePair<Message, Thread>(Message.TaskNotFound, message.Value));
-                                break;
-                            }
-                            Thread target;
-                            lock (WorkThreads) {
-                                target = WorkThreads.Find(item => item.Name == message.Value.Name);
-                            }
+                        // 等待任务结束
+                        new WaitTimeoutChecker(30000).ThreadSleep(500, () => target.IsAlive);
 
-                            // 尝试中止任务
-                            lock (WorkThreads) {
-                                WorkThreads.Remove(target);
-                            }
-                            target.Abort();
+                        // 任务成功中止
+                        MessagePipe.SendOutMessage(new KeyValuePair<Message, Thread>(Message.TaskAborted, message.Value));
+                        break;
 
-                            // 等待任务结束
-                            new WaitTimeoutChecker(30000).ThreadSleep(500, () => target.IsAlive);
+                    // 无等待接收消息
+                    case Message.NoAvailableMessage:
+                        Thread.Sleep(1000);
+                        break;
 
-                            // 任务成功中止
-                            MessagePipe.SendOutMessage(new KeyValuePair<Message, Thread>(Message.TaskAborted, message.Value));
-                            break;
-
-                        // 无等待接收消息
-                        case Message.NoAvailableMessage:
-                            Thread.Sleep(1000);
-                            break;
-
-                        // 无效消息
-                        default:
-                            throw new Exception($"消息队列传出无效消息：{message.Key.ToString()}");
+                    // 无效消息
+                    default:
+                        throw new Exception($"消息队列传出无效消息：{message.Key.ToString()}");
                     }
                 }
             }
