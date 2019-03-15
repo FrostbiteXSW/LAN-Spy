@@ -1,21 +1,22 @@
-﻿using System;
+﻿using LAN_Spy.Controller;
+using LAN_Spy.Controller.Classes;
+using LAN_Spy.Model;
+using LAN_Spy.Model.Classes;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
-using LAN_Spy.Controller;
-using LAN_Spy.Controller.Classes;
-using LAN_Spy.Model;
-using LAN_Spy.Model.Classes;
 using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View.MainForm {
-    public partial class MainForm {
+    public partial class MainPart {
         /// <summary>
         ///     阻止的连接列表
         /// </summary>
-        private readonly HashTable _blockTable = new HashTable();
+        private readonly Hashtable _blockTable = new Hashtable();
 
         /// <summary>
         ///     <see cref="Model.Watcher" /> 模块实例。
@@ -222,7 +223,7 @@ namespace LAN_Spy.View.MainForm {
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
         private void 阻止此连接ToolStripMenuItem_Click(object sender, EventArgs e) {
-            var needInit = _blockTable.Length == 0;
+            var needInit = _blockTable.Count == 0;
 
             foreach (DataGridViewRow row in ConnectionList.SelectedRows) {
                 string srcIP = row.Cells["SrcAddress"].Value.ToString().Substring(0, row.Cells["SrcAddress"].Value.ToString().IndexOf(':')),
@@ -252,19 +253,17 @@ namespace LAN_Spy.View.MainForm {
         /// <param name="e">事件的参数。</param>
         private void 取消阻止ToolStripMenuItem_Click(object sender, EventArgs e) {
             var targets = new List<DataGridViewRow>();
-            var hashes = new List<int>();
 
             foreach (DataGridViewRow row in BlockList.SelectedRows) {
                 var hash = (row.Cells["SrcIP"].Value.ToString() + row.Cells["DstIP"].Value).GetHashCode();
-                hashes.Add(hash);
                 targets.Add((DataGridViewRow) _blockTable[hash]);
+                _blockTable.Remove(hash);
             }
 
-            _blockTable.RemoveRange(hashes);
             foreach (var target in targets)
                 BlockList.Rows.Remove(target);
 
-            if (_blockTable.Length == 0)
+            if (_blockTable.Count == 0)
                 Poisoner.OnIPv4PacketReceive -= Poisoner_OnIPv4PacketReceive;
         }
 

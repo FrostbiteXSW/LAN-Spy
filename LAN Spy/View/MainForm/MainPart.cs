@@ -12,12 +12,12 @@ using SharpPcap.WinPcap;
 using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View.MainForm {
-    public partial class MainForm : Form {
+    public partial class MainPart : Form {
         /// <inheritdoc />
         /// <summary>
-        ///     初始化 <see cref="MainForm" /> 窗口。
+        ///     初始化 <see cref="MainPart" /> 窗口。
         /// </summary>
-        public MainForm() {
+        public MainPart() {
             // 初始化模块
             TaskHandler.Init();
             var task = new Thread(load => {
@@ -261,7 +261,7 @@ namespace LAN_Spy.View.MainForm {
         }
 
         /// <summary>
-        ///     <see cref="MainForm" /> 激活时的事件。
+        ///     <see cref="MainPart" /> 激活时的事件。
         /// </summary>
         /// <param name="sender">触发事件的控件对象。</param>
         /// <param name="e">事件的参数。</param>
@@ -312,7 +312,7 @@ namespace LAN_Spy.View.MainForm {
             }
 
             var index = list.PointToClient(MousePosition).Y / list.ColumnHeadersHeight - 1 + list.FirstDisplayedScrollingRowIndex;
-            if (list.Rows[index].Selected) return;
+            if (index >= list.Rows.Count || list.Rows[index].Selected) return; // 避免屏幕缩放比导致的索引越界 
             list.ClearSelection();
             list.Rows[index].Selected = true;
         }

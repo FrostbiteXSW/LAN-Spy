@@ -1,5 +1,5 @@
 ﻿namespace LAN_Spy.View.MainForm {
-    partial class MainForm {
+    partial class MainPart {
         /// <summary>
         /// Required designer variable.
         /// </summary>

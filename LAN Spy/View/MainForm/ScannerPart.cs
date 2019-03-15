@@ -11,7 +11,7 @@ using LAN_Spy.Model.Classes;
 using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View.MainForm {
-    public partial class MainForm {
+    public partial class MainPart {
         /// <summary>
         ///     <see cref="Model.Scanner" /> 模块实例。
         /// </summary>

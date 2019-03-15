@@ -28,7 +28,7 @@ namespace LAN_Spy.Controller {
                 return;
             }
 
-            Application.Run(new MainForm());
+            Application.Run(new MainPart());
 #endif
         }
 

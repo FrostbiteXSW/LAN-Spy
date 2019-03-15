@@ -13,7 +13,7 @@ using PacketDotNet;
 using Message = LAN_Spy.Controller.Message;
 
 namespace LAN_Spy.View.MainForm {
-    public partial class MainForm {
+    public partial class MainPart {
         /// <summary>
         ///     <see cref="Model.Poisoner" /> 模块实例。
         /// </summary>

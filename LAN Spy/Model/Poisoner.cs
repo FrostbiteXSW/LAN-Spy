@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -55,7 +56,7 @@ namespace LAN_Spy.Model {
         /// <summary>
         ///     供转发线程使用的 <see cref="IPAddress" /> 二分查找哈希表。
         /// </summary>
-        private HashTable _hashTable;
+        private Hashtable _hashTable;
 
         /// <summary>
         ///     默认网关。
@@ -81,22 +82,22 @@ namespace LAN_Spy.Model {
             _target2.AddRange(Target2);
 
             // 构建哈希表
-            var hashList = new List<KeyValuePair<int, object>>();
+            var hashList = new Dictionary<int, Host>();
             foreach (var host in Target1) {
-                if (hashList.Any(item => ((Host) item.Value).IPAddress.Equals(host.IPAddress))) {
+                if (hashList.Any(item => item.Value.IPAddress.Equals(host.IPAddress))) {
                     Console.Error.WriteLine($"警告：检测到目标列表中存在重复的IP地址 {host.IPAddress} ，将忽略此条信息。");
                     continue;
                 }
-                hashList.Add(new KeyValuePair<int, object>(host.IPAddress.GetHashCode(), host));
+                hashList.Add(host.IPAddress.GetHashCode(), host);
             }
             foreach (var host in Target2) {
-                if (hashList.Any(item => ((Host) item.Value).IPAddress.Equals(host.IPAddress))) {
+                if (hashList.Any(item => item.Value.IPAddress.Equals(host.IPAddress))) {
                     Console.Error.WriteLine($"警告：检测到目标列表中存在重复的IP地址 {host.IPAddress} ，将忽略此条信息。");
                     continue;
                 }
-                hashList.Add(new KeyValuePair<int, object>(host.IPAddress.GetHashCode(), host));
+                hashList.Add(host.IPAddress.GetHashCode(), host);
             }
-            _hashTable = new HashTable(hashList);
+            _hashTable = new Hashtable(hashList);
 
 
             // 深复制以缓存网关
