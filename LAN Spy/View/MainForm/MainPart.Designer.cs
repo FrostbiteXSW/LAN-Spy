@@ -178,7 +178,7 @@
             // 启动扫描模块ToolStripMenuItem
             // 
             this.启动扫描模块ToolStripMenuItem.Name = "启动扫描模块ToolStripMenuItem";
-            this.启动扫描模块ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.启动扫描模块ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
             this.启动扫描模块ToolStripMenuItem.Text = "启动模块";
             this.启动扫描模块ToolStripMenuItem.Click += new System.EventHandler(this.启动扫描模块ToolStripMenuItem_Click);
             // 
@@ -186,7 +186,7 @@
             // 
             this.扫描主机ToolStripMenuItem.Enabled = false;
             this.扫描主机ToolStripMenuItem.Name = "扫描主机ToolStripMenuItem";
-            this.扫描主机ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.扫描主机ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
             this.扫描主机ToolStripMenuItem.Text = "扫描主机";
             this.扫描主机ToolStripMenuItem.Click += new System.EventHandler(this.扫描主机ToolStripMenuItem_Click);
             // 
@@ -194,7 +194,7 @@
             // 
             this.侦测主机ToolStripMenuItem.Enabled = false;
             this.侦测主机ToolStripMenuItem.Name = "侦测主机ToolStripMenuItem";
-            this.侦测主机ToolStripMenuItem.Size = new System.Drawing.Size(252, 30);
+            this.侦测主机ToolStripMenuItem.Size = new System.Drawing.Size(164, 30);
             this.侦测主机ToolStripMenuItem.Text = "侦测主机";
             this.侦测主机ToolStripMenuItem.Click += new System.EventHandler(this.侦测主机ToolStripMenuItem_Click);
             // 
@@ -742,9 +742,10 @@
             this.取消阻止ToolStripMenuItem.Text = "取消阻止";
             this.取消阻止ToolStripMenuItem.Click += new System.EventHandler(this.取消阻止ToolStripMenuItem_Click);
             // 
-            // MainForm
+            // MainPart
             // 
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(144F, 144F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(876, 542);
             this.Controls.Add(this.MainTabContainer);
             this.Controls.Add(this.SplitLine);
@@ -754,7 +755,7 @@
             this.MainMenuStrip = this.MainMenu;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
-            this.Name = "MainForm";
+            this.Name = "MainPart";
             this.ShowIcon = false;
             this.Text = "GUI for LAN Spy";
             this.Activated += new System.EventHandler(this.MainForm_Activated);
