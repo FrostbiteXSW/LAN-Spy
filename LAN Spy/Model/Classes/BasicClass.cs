@@ -91,10 +91,7 @@ namespace LAN_Spy.Model.Classes {
         protected RawCapture NextRawCapture {
             get {
                 lock (_rawCaptures) {
-                    if (_rawCaptures.Count <= 0) return null;
-                    var packet = _rawCaptures.Peek();
-                    _rawCaptures.Dequeue();
-                    return packet;
+                    return _rawCaptures.Count <= 0 ? null : _rawCaptures.Dequeue();
                 }
             }
         }

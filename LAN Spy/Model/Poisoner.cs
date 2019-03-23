@@ -54,7 +54,7 @@ namespace LAN_Spy.Model {
         private Host _gateway;
 
         /// <summary>
-        ///     供转发线程使用的 <see cref="IPAddress" /> 二分查找哈希表。
+        ///     供转发线程使用的 <see cref="IPAddress" /> 哈希表。
         /// </summary>
         private Hashtable _hashTable;
 
@@ -202,12 +202,13 @@ namespace LAN_Spy.Model {
                         var ether = new EthernetPacket(new ByteArraySegment(packet.Data));
 
                         // 由本机发出的数据包，忽略
-                        if (ether.SourceHwAddress.ToString().Equals(_device.MacAddress.ToString())) continue;
+                        if (ether.SourceHwAddress.Equals(_device.MacAddress)) 
+                            continue;
 
                         if (ether.Type == EthernetPacketType.IPv4) {
                             // 解析IPv4包
                             var ipv4Packet = (IPv4Packet) ether.PayloadPacket;
-                            if (!(OnIPv4PacketReceive is null)) {
+                            if (OnIPv4PacketReceive != null) {
                                 OnIPv4PacketReceive.Invoke(ipv4Packet, out var isHandled);
                                 if (isHandled) continue;
                             }
@@ -231,8 +232,8 @@ namespace LAN_Spy.Model {
                             var arp = (ARPPacket) ether.PayloadPacket;
 
                             // 非两组间发送的数据包，跳过
-                            if (_hashTable[arp.SenderProtocolAddress.GetHashCode()] is null
-                             || _hashTable[arp.TargetProtocolAddress.GetHashCode()] is null)
+                            if (_hashTable[arp.SenderProtocolAddress.GetHashCode()] == null
+                             || _hashTable[arp.TargetProtocolAddress.GetHashCode()] == null)
                                 continue;
 
                             // 构建包信息
@@ -260,7 +261,7 @@ namespace LAN_Spy.Model {
                     else
                         // 队列尚未获得数据，挂起等待
                     {
-                        Thread.Sleep(100);
+                        Thread.Sleep(10);
                     }
                 }
             }
@@ -293,7 +294,7 @@ namespace LAN_Spy.Model {
             _retransmissionThreads.Clear();
 
             // 关闭设备
-            if (!(_device is null)) {
+            if (!(_device == null)) {
                 StopCapture(_device);
                 _device = null;
             }
